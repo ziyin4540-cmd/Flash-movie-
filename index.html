@@ -11,11 +11,9 @@
         .intro-title { font-size: 32px; font-weight: bold; color: #fff; letter-spacing: 5px; display: flex; gap: 5px; }
         .intro-title span { opacity: 0; transform: translateY(20px); animation: fadeInChar 0.4s forwards; }
         @keyframes fadeInChar { to { opacity: 1; transform: translateY(0); } }
-        
         #broadcastBanner { background: #1e1e1e; color: #38bdf8; padding: 8px 0; overflow: hidden; white-space: nowrap; border-bottom: 1px solid #333; font-size: 13px; font-weight: bold; display: none; }
         #broadcastBanner span { display: inline-block; padding-left: 100%; animation: marquee 15s linear infinite; }
         @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
-
         header { background: #0f0f0f; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #222; }
         .logo { color: #ff0000; font-size: 20px; font-weight: bold; cursor: pointer; }
         .search-bar { display: flex; align-items: center; background: #121212; border: 1px solid #333; border-radius: 20px; padding: 5px 15px; width: 50%; }
@@ -32,8 +30,8 @@
         .page-section.active-page { display: block; }
         .player { width: 100%; background: #000; max-height: 350px; display: flex; justify-content: center; position: relative; align-items: center; }
         .player video, .player img, .player audio { width: 100%; max-height: 350px; object-fit: contain; }
-        .actions { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; font-size: 13px; border-bottom: 1px solid #222; }
-        .btn-action { background: #272727; padding: 6px 12px; border-radius: 15px; cursor: pointer; white-space: nowrap; }
+        .actions { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; font-size: 13px; border-bottom: 1px solid #222; align-items: center; }
+        .btn-action { background: #272727; padding: 6px 12px; border-radius: 15px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
         nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #212121; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; z-index: 1000; }
         nav div { text-align: center; font-size: 11px; color: #aaa; cursor: pointer; }
         nav div.active { color: #fff; }
@@ -43,14 +41,11 @@
         .modal-content input, .modal-content textarea, .modal-content select { width: 100%; padding: 10px; margin: 8px 0; background: #121212; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box; }
         .btn { background: #ff0000; color: #fff; border: none; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-sec { background: #333; }
-        
         .lightning-bar-container { width: 100%; background: #111; border-radius: 8px; margin-top: 10px; overflow: hidden; border: 1px solid #38bdf8; position: relative; height: 22px; display: none; }
         .lightning-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc, #38bdf8); background-size: 200% 100%; animation: lightningFlow 1.2s linear infinite; text-align: center; font-size: 11px; font-weight: bold; color: #fff; line-height: 22px; text-shadow: 0 0 5px #000; }
         @keyframes lightningFlow { 0% { background-position: 200% 0; } 100% { background-position: 0 0; } }
-
         #animeToast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: linear-gradient(135deg, #1e1b4b, #312e81); border: 2px solid #38bdf8; color: #fff; padding: 12px 24px; border-radius: 30px; z-index: 99999; box-shadow: 0 0 20px rgba(56, 189, 248, 0.6); font-weight: bold; transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); pointer-events: none; }
         #animeToast.show { transform: translateX(-50%) translateY(0); }
-
         .admin-tabs { display: flex; gap: 5px; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .admin-tab-btn { background: #272727; border: none; color: #aaa; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; }
         .admin-tab-btn.active { background: #3b82f6; color: #fff; }
@@ -68,8 +63,12 @@
     <header>
         <div class="logo" onclick="switchPage('homePage')">▶ Flâsh Movie</div>
         <div class="search-bar"><input type="text" id="search" placeholder="Search..." onkeyup="renderFeed()"></div>
-        <div style="font-size:20px; cursor:pointer;" onclick="openAdminPage()">🛡️</div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <div style="font-size:18px; cursor:pointer;" onclick="openInboxPage()" title="Messages">💬</div>
+            <div style="font-size:20px; cursor:pointer;" onclick="openAdminPage()" title="Admin">🛡️</div>
+        </div>
     </header>
+
     <div class="container page-section active-page" id="homePage">
         <div style="display:flex; gap:10px; margin-bottom:15px;">
             <button class="btn" style="width:auto; margin:0; background:#272727;" onclick="filterFeed('all')">All</button>
@@ -78,7 +77,6 @@
         </div>
         <div class="grid" id="feedGrid"></div>
     </div>
-
     <div class="container page-section" id="shortsPage">
         <h3>Shorts Feed</h3>
         <div class="grid" id="shortsGrid"></div>
@@ -89,7 +87,6 @@
         <div class="grid" id="postsGrid"></div>
     </div>
 
-    <!-- Upload Page with Playlist ON/OFF toggle -->
     <div class="container page-section" id="uploadPage">
         <h2>⚡ Upload New Content</h2>
         <div style="background:#1a1a1a; padding:20px; border-radius:12px; border:1px solid #333;">
@@ -126,19 +123,73 @@
             <button class="btn btn-sec" onclick="switchPage('homePage')">Cancel</button>
         </div>
     </div>
+    <div class="container page-section" id="inboxPage">
+        <h2>💬 Messages & Chats</h2>
+        <div id="inboxList" style="margin-top:10px;"></div>
+    </div>
 
-    <!-- Dedicated Settings Page -->
+    <div class="container page-section" id="chatRoomPage">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="btn" style="width:auto; padding:4px 10px; background:#333; margin:0;" onclick="openInboxPage()">⬅</button>
+                <div id="chatAvatar" style="width:36px; height:36px; background:#3b82f6; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; font-weight:bold;">U</div>
+                <div>
+                    <b id="chatName" style="font-size:14px; display:block;">User</b>
+                    <span id="chatStatus" style="font-size:11px; color:#10b981;">Online</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="chatMessages" style="height:320px; overflow-y:auto; background:#121212; padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:8px;"></div>
+        
+        <div id="stickerBox" style="display:none; background:#1a1a1a; padding:10px; border-radius:8px; margin-top:5px; border:1px solid #333; display:flex; gap:10px; flex-wrap:wrap;">
+            <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('🔥')">🔥</span>
+            <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('❤️')">❤️</span>
+            <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('😂')">😂</span>
+            <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('👍')">👍</span>
+            <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('😎')">😎</span>
+            <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('✨')">✨</span>
+            <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('🚀')">🚀</span>
+        </div>
+
+        <div style="display:flex; gap:5px; margin-top:10px; align-items:center;">
+            <button class="btn" style="width:auto; padding:8px 12px; background:#272727; margin:0;" onclick="toggleStickerBox()" title="Stickers">🎨</button>
+            <input type="file" id="chatMediaFile" accept="image/*,video/*,audio/*,.zip,.rar" style="display:none;" onchange="sendMediaFile(this)">
+            <button class="btn" style="width:auto; padding:8px 12px; background:#272727; margin:0;" onclick="document.getElementById('chatMediaFile').click()" title="Send Media/File">📎</button>
+            <input type="text" id="chatInput" placeholder="Type a message..." style="flex:1; background:#121212; border:1px solid #333; color:#fff; padding:10px; border-radius:6px; margin:0;" onkeypress="if(event.key === 'Enter') sendTextMessage()">
+            <button class="btn" style="width:auto; padding:8px 16px; margin:0;" onclick="sendTextMessage()">Send</button>
+        </div>
+        <div style="margin-top:5px; text-align:right;">
+            <button class="btn" style="width:auto; padding:4px 8px; font-size:11px; background:#8b5cf6; margin:0;" onclick="convertMediaToStickerPrompt()">🖼️ Make Sticker from Media</button>
+        </div>
+    </div>
+
     <div class="container page-section" id="settingsPage">
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
             <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="switchPage('profilePage')">⬅ Back</button>
-            <h2>⚙️ App Settings</h2>
+            <h2>⚙️ App & Profile Settings</h2>
         </div>
         <div style="background:#1f1f1f; padding:15px; border-radius:8px; max-width:500px; margin:auto;">
+            <div style="background:#121212; padding:10px; border-radius:6px; margin-bottom:12px; border:1px solid #333;">
+                <label style="font-size:11px; color:#38bdf8; display:block;">Account Created Date & Duration:</label>
+                <b id="accCreatedDateDisplay" style="font-size:13px; display:block; margin-top:2px;">-</b>
+                <span id="accDurationLive" style="font-size:12px; color:#f59e0b; display:block; margin-top:4px; font-family:monospace;">0Y / 0M / 0D / 0H / 0M / 0S</span>
+            </div>
+
+            <label style="font-size:12px; color:#38bdf8;">Account Name (Display Name):</label>
+            <input type="text" id="setAccountName" placeholder="Your Display Name" style="background:#121212; border:1px solid #333; color:#fff; padding:8px; width:100%; margin-bottom:10px; box-sizing:border-box;">
+            
+            <label style="font-size:12px; color:#38bdf8;">Profile Photo URL / File:</label>
+            <input type="file" id="setAvatarFile" accept="image/*" style="border:none; padding:0; margin-bottom:10px; width:100%;">
+            <input type="text" id="setAvatarUrl" placeholder="Or Image URL" style="background:#121212; border:1px solid #333; color:#fff; padding:8px; width:100%; margin-bottom:10px; box-sizing:border-box;">
+            
+            <button class="btn" onclick="saveProfileSettings()" style="margin-bottom:15px;">Save Profile Info</button>
+
             <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; margin-bottom:12px;">
-                <span>Auto Resume:</span> <input type="checkbox" id="setResume" onchange="saveSettings()" style="width:20px; height:20px;">
+                <span>Auto Resume:</span> <input type="checkbox" id="setResume" onchange="saveAppSettings()" style="width:20px; height:20px;">
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; margin-bottom:12px;">
-                <span>Background Play Default:</span> <input type="checkbox" id="setBgPlay" onchange="saveSettings()" style="width:20px; height:20px;">
+                <span>Background Play Default:</span> <input type="checkbox" id="setBgPlay" onchange="saveAppSettings()" style="width:20px; height:20px;">
             </div>
             <hr style="border-color:#333; margin:15px 0;">
             <label style="font-size:12px; color:#aaa;">Current Password:</label>
@@ -149,8 +200,6 @@
             <button class="btn" style="background:#ef4444; margin-top:10px;" onclick="signOut()">Sign Out</button>
         </div>
     </div>
-
-    <!-- Dedicated Admin Page -->
     <div class="container page-section" id="adminPage">
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
             <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="switchPage('homePage')">⬅ Back to Home</button>
@@ -182,6 +231,21 @@
         </div>
     </div>
 
+    <div class="container page-section" id="userProfilePage">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
+            <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="switchPage('homePage')">⬅ Back</button>
+            <button class="btn" style="width:auto; padding:5px 12px; background:#3b82f6; margin:0;" onclick="openChatRoom(selectedCreator)">💬 Message</button>
+        </div>
+        <div style="text-align:center; background:#1a1a1a; padding:20px; border-radius:12px; margin-bottom:15px;">
+            <div style="width:70px; height:70px; background:#3b82f6; border-radius:50%; margin:auto; display:flex; align-items:center; justify-content:center; overflow:hidden;" id="creatorAvatarBox"></div>
+            <h2 id="creatorName" style="margin:10px 0 5px 0;">Name</h2>
+            <p id="creatorUsername" style="color:#aaa; font-size:12px; margin:0 0 10px 0;">@username</p>
+            <button class="btn" style="width:auto; padding:6px 20px; margin:auto;" id="creatorFollowBtn" onclick="toggleCreatorFollow()">Follow</button>
+        </div>
+        <h3>Uploads</h3>
+        <div class="grid" id="creatorGrid"></div>
+    </div>
+
     <div class="container page-section" id="detailPage">
         <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
             <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="switchPage('homePage')">⬅ Back to Home</button>
@@ -191,16 +255,25 @@
         <div class="player" id="detailMedia"></div>
         <div style="padding:10px 0; border-bottom:1px solid #222;">
             <h3 id="detTitle" style="margin:0 0 5px 0;"></h3>
-            <p id="detStats" style="color:#aaa; font-size:12px; margin:0;"></p>
+            <p id="detUploadTime" style="font-size:11px; color:#38bdf8; margin:0 0 5px 0;"></p>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin:10px 0;">
+                <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openCreatorProfile(currItem.uploader)">
+                    <div id="detUploaderAvatar" style="width:36px; height:36px; background:#3b82f6; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; font-weight:bold;">U</div>
+                    <div>
+                        <b id="detUploaderName" style="font-size:14px; display:block;">Uploader Name</b>
+                        <span id="detUploaderId" style="font-size:11px; color:#aaa;">@username</span>
+                    </div>
+                </div>
+                <button class="btn" style="width:auto; padding:4px 12px; background:#3b82f6; margin:0;" onclick="openChatRoom(currItem.uploader)">💬 Message</button>
+            </div>
             <div class="actions">
                 <div class="btn-action" onclick="playPrevVideo()">⏮ Previous</div>
-                <div class="btn-action" onclick="toggleFollow()" id="followBtn">👤 Follow</div>
-                <div class="btn-action" onclick="toggleLike()" id="likeBtn">👍 Like</div>
+                <div class="btn-action" onclick="toggleLike()" id="likeBtn">👍 Like (0)</div>
+                <div class="btn-action" onclick="playNextVideo()">⏭ Next</div>
                 <div class="btn-action" onclick="toggleBgPlay()" id="bgPlayBtn" style="background:#3b82f6;">🎵 Background Play: OFF</div>
                 <div class="btn-action" onclick="downloadContent()" id="downloadBtn" style="background:#10b981; display:none;">📥 Download</div>
-                <div class="btn-action" onclick="playNextVideo()">⏭ Next</div>
                 <div class="btn-action" onclick="notInterested()" style="color:#f59e0b;">🚫 Not Interested</div>
-                <div class="btn-action" onclick="blockUser()" style="color:#ef4444;">⛔ Block User</div>
+                <div class="btn-action" onclick="blockUser()" style="color:#ef4444;">⛔ Block</div>
                 <div class="btn-action" onclick="reportItem('Content')" style="color:#ef4444;">⚠️ Report</div>
             </div>
         </div>
@@ -212,15 +285,15 @@
             <div id="commList" style="margin-top:10px; font-size:13px;"></div>
         </div>
     </div>
-
     <div class="container page-section" id="profilePage">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <div style="background:#1e293b; padding:8px 12px; border-radius:8px; font-size:12px; color:#38bdf8;">📱 Device Accounts: <b id="deviceCount">0</b> / 2</div>
             <div onclick="openSettingsPage()" style="background:#272727; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:16px;" title="Settings">⚙️</div>
         </div>
         <div style="text-align:center; border-bottom:1px solid #222; padding-bottom:15px;">
-            <div style="width:60px; height:60px; background:#3b82f6; border-radius:50%; margin:auto; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:bold;" id="profAvatar">U</div>
-            <h2 id="profName" style="margin:10px 0 5px 0;">@User</h2>
+            <div style="width:70px; height:70px; background:#3b82f6; border-radius:50%; margin:auto; display:flex; align-items:center; justify-content:center; overflow:hidden;" id="profAvatarBox">U</div>
+            <h2 id="profName" style="margin:10px 0 2px 0;">Name</h2>
+            <p id="profUsername" style="color:#aaa; font-size:12px; margin:0 0 10px 0;">@User</p>
             <div style="display:flex; justify-content:center; gap:20px; font-size:13px; color:#aaa; margin-bottom:10px;">
                 <span>Followers: <b id="followerCount" style="color:#fff;">0</b></span>
                 <span>Following: <b id="followingCount" style="color:#fff;">0</b></span>
@@ -233,6 +306,7 @@
         </div>
         <div class="grid" id="profGrid"></div>
     </div>
+
     <div class="modal" id="loginModal">
         <div class="modal-content" style="text-align:center;">
             <h3>Login / Register</h3>
@@ -260,10 +334,7 @@
             return new Promise((resolve, reject) => {
                 let request = indexedDB.open(dbName, 1);
                 request.onerror = event => reject("IndexedDB error: " + event.target.error);
-                request.onsuccess = event => {
-                    db = event.target.result;
-                    resolve(db);
-                };
+                request.onsuccess = event => { db = event.target.result; resolve(db); };
                 request.onupgradeneeded = event => {
                     let database = event.target.result;
                     if (!database.objectStoreNames.contains(storeName)) {
@@ -303,6 +374,50 @@
             });
         }
 
+        function formatDurationDetailed(startTime) {
+            let diff = Math.floor((Date.now() - startTime) / 1000);
+            if(diff < 0) diff = 0;
+            let seconds = diff % 60;
+            let totalMins = Math.floor(diff / 60);
+            let minutes = totalMins % 60;
+            let totalHours = Math.floor(totalMins / 60);
+            let hours = totalHours % 24;
+            let totalDays = Math.floor(totalHours / 24);
+            let days = totalDays % 30;
+            let totalMonths = Math.floor(totalDays / 30);
+            let months = totalMonths % 12;
+            let years = Math.floor(totalMonths / 12);
+            return `${years}Y / ${months}M / ${days}D / ${hours}H / ${minutes}M / ${seconds}S`;
+        }
+
+        function formatTimeAgo(timestamp) {
+            let diff = Math.floor((Date.now() - timestamp) / 1000);
+            if(diff < 5) return 'Just now';
+            if(diff < 60) return diff + 's ago';
+            let mins = Math.floor(diff / 60);
+            if(mins < 60) return mins + 'm ago';
+            let hours = Math.floor(mins / 60);
+            if(hours < 24) return hours + 'h ago';
+            let days = Math.floor(hours / 24);
+            if(days < 30) return days + 'd ago';
+            let months = Math.floor(days / 30);
+            if(months < 12) return months + 'mo ago';
+            let years = Math.floor(months / 12);
+            return years + 'y ago';
+        }
+        let contents = [];
+        let users = JSON.parse(localStorage.getItem('flash_users')) || [];
+        let deviceAccounts = JSON.parse(localStorage.getItem('flash_device_accs')) || [];
+        let reports = JSON.parse(localStorage.getItem('flash_reports')) || [];
+        let blockedUsers = JSON.parse(localStorage.getItem('flash_blocked')) || [];
+        let following = JSON.parse(localStorage.getItem('flash_following')) || [];
+        let notInterestedList = JSON.parse(localStorage.getItem('flash_not_interested')) || [];
+        let currUser = JSON.parse(localStorage.getItem('flash_curr')) || null;
+        let appSettings = JSON.parse(localStorage.getItem('flash_settings')) || { resume: true, bgPlay: false };
+        let currItem = null;
+        let filterType = 'all';
+        let currentChatUser = null;
+
         window.addEventListener('DOMContentLoaded', async () => {
             await initIndexedDB();
             contents = await dbGetAllContents();
@@ -317,14 +432,21 @@
             });
             setTimeout(() => {
                 let intro = document.getElementById('introScreen');
-                if(intro) {
-                    intro.style.opacity = '0';
-                    setTimeout(() => intro.style.display = 'none', 800);
-                }
+                if(intro) { intro.style.opacity = '0'; setTimeout(() => intro.style.display = 'none', 800); }
             }, 2200);
 
             checkBroadcastBanner();
             switchPage('homePage');
+
+            setInterval(() => {
+                if(currUser) localStorage.setItem('flash_last_active_' + currUser.username, Date.now());
+                let durElem = document.getElementById('accDurationLive');
+                if(durElem && currUser && currUser.createdAt) {
+                    durElem.innerText = formatDurationDetailed(currUser.createdAt);
+                }
+            }, 1000);
+
+            setInterval(() => { if(currentChatUser) renderChatMessages(); }, 2000);
         });
 
         function checkBroadcastBanner() {
@@ -335,9 +457,7 @@
                 let bData = JSON.parse(bMsg);
                 bText.innerText = "📢 " + bData.title + ": " + bData.msg;
                 banner.style.display = 'block';
-            } else {
-                banner.style.display = 'none';
-            }
+            } else { banner.style.display = 'none'; }
         }
 
         function showAnimeToast(msg) {
@@ -347,24 +467,13 @@
             setTimeout(() => { t.classList.remove('show'); }, 2500);
         }
 
-        let contents = [];
-        let users = JSON.parse(localStorage.getItem('flash_users')) || [];
-        let deviceAccounts = JSON.parse(localStorage.getItem('flash_device_accs')) || [];
-        let reports = JSON.parse(localStorage.getItem('flash_reports')) || [];
-        let blockedUsers = JSON.parse(localStorage.getItem('flash_blocked')) || [];
-        let following = JSON.parse(localStorage.getItem('flash_following')) || [];
-        let notInterestedList = JSON.parse(localStorage.getItem('flash_not_interested')) || [];
-        let currUser = JSON.parse(localStorage.getItem('flash_curr')) || null;
-        let appSettings = JSON.parse(localStorage.getItem('flash_settings')) || { resume: true, bgPlay: false };
-        let currItem = null;
-        let filterType = 'all';
-
         function switchPage(pageId) {
             document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active-page'));
             document.getElementById(pageId).classList.add('active-page');
             if(pageId === 'homePage') renderFeed();
             if(pageId === 'shortsPage') renderShorts();
             if(pageId === 'postsPage') renderPosts();
+            if(pageId === 'inboxPage') renderInbox();
         }
 
         function openModal(id) { 
@@ -385,9 +494,10 @@
                 if(usr.password !== p) return showAnimeToast('Wrong password');
                 if(usr.status !== 'Approved') return showAnimeToast('Pending admin approval');
                 currUser = usr;
+                if(!currUser.createdAt) currUser.createdAt = Date.now();
             } else {
                 if(deviceAccounts.length >= 2) return showAnimeToast('Device limit reached!');
-                usr = { username: f, password: p, status: 'Pending' };
+                usr = { username: f, password: p, accountName: f.substring(1), avatar: '', createdAt: Date.now(), status: 'Pending' };
                 users.push(usr);
                 if(!deviceAccounts.includes(f)) deviceAccounts.push(f);
                 showAnimeToast('Account created! Wait for approval.');
@@ -396,6 +506,8 @@
                 if(deviceAccounts.length >= 2) return showAnimeToast('Device limit reached!');
                 deviceAccounts.push(currUser.username);
             }
+            if(!currUser.accountName) currUser.accountName = currUser.username.substring(1);
+            if(!currUser.createdAt) currUser.createdAt = Date.now();
             localStorage.setItem('flash_curr', JSON.stringify(currUser));
             localStorage.setItem('flash_users', JSON.stringify(users));
             localStorage.setItem('flash_device_accs', JSON.stringify(deviceAccounts));
@@ -403,23 +515,12 @@
             showAnimeToast('Successfully Signed In!');
         }
 
-        function signOut() {
-            currUser = null;
-            localStorage.removeItem('flash_curr');
-            switchPage('homePage');
-            showAnimeToast('Signed out successfully');
-        }
-
-        function checkUpload() {
-            if(!currUser || currUser.status !== 'Approved') return showAnimeToast('Get admin approval first');
-            switchPage('uploadPage');
-        }
-
+        function signOut() { currUser = null; localStorage.removeItem('flash_curr'); switchPage('homePage'); showAnimeToast('Signed out successfully'); }
+        function checkUpload() { if(!currUser || currUser.status !== 'Approved') return showAnimeToast('Get admin approval first'); switchPage('uploadPage'); }
         function togglePlaylistInput() {
             let isChecked = document.getElementById('playlistToggle').checked;
             document.getElementById('playlistInputBox').style.display = isChecked ? 'block' : 'none';
         }
-
         async function uploadContent() {
             let type = document.getElementById('upType').value;
             let isPlaylistOn = document.getElementById('playlistToggle').checked;
@@ -439,7 +540,6 @@
             bar.innerText = '0% (⚡ Lightning Upload...)';
 
             let reader = new FileReader();
-            
             reader.onprogress = function(e) {
                 if (e.lengthComputable) {
                     let percentLoaded = Math.round((e.loaded / e.total) * 100);
@@ -453,8 +553,7 @@
                 bar.innerText = '100% (⚡ SUCCESSFUL!)';
                 let newObj = { 
                     id: Date.now(), type, playlist, title: title || 'Untitled', url: e.target.result, fileType: file ? file.type : '',
-                    uploader: currUser.username, privacy, allowDownload, 
-                    likes: [], comments: [] 
+                    uploader: currUser.username, privacy, allowDownload, createdAt: Date.now(), likes: [], comments: [] 
                 };
                 await dbSaveContent(newObj);
                 contents = await dbGetAllContents();
@@ -470,22 +569,18 @@
                 }, 800);
             };
 
-            if(file) {
-                reader.readAsDataURL(file);
-            } else {
+            if(file) { reader.readAsDataURL(file); } 
+            else {
                 let newObj = { 
                     id: Date.now(), type, playlist, title: title || 'Untitled', url: '', fileType: '',
-                    uploader: currUser.username, privacy, allowDownload, 
-                    likes: [], comments: [] 
+                    uploader: currUser.username, privacy, allowDownload, createdAt: Date.now(), likes: [], comments: [] 
                 };
                 await dbSaveContent(newObj);
                 contents = await dbGetAllContents();
                 let p = 0;
                 let tInt = setInterval(() => {
-                    p += 34;
-                    if(p >= 100) p = 100;
-                    bar.style.width = p + '%';
-                    bar.innerText = p + '% (⚡ SUCCESSFUL!)';
+                    p += 34; if(p >= 100) p = 100;
+                    bar.style.width = p + '%'; bar.innerText = p + '% (⚡ SUCCESSFUL!)';
                     if(p === 100) {
                         clearInterval(tInt);
                         setTimeout(() => {
@@ -503,7 +598,6 @@
         }
 
         function filterFeed(t) { filterType = t; renderFeed(); }
-
         function checkPrivacy(c) {
             if(c.uploader === currUser?.username) return true;
             if(c.privacy === 'public' || !c.privacy) return true;
@@ -511,6 +605,133 @@
             return false;
         }
 
+        function getUploaderInfo(username) {
+            let u = users.find(x => x.username === username);
+            return { name: u ? (u.accountName || username.substring(1)) : username.substring(1), avatar: u && u.avatar ? u.avatar : '' };
+        }
+
+        function getUserStatus(username) {
+            let lastActive = localStorage.getItem('flash_last_active_' + username);
+            if(!lastActive) return '<span style="color:#ef4444;">Offline</span>';
+            let diff = Date.now() - parseInt(lastActive);
+            if(diff < 15000) return '<span style="color:#10b981;">Online</span>';
+            let mins = Math.floor(diff / 60000);
+            if(mins < 60) return `<span style="color:#aaa;">Last ${mins}m ago (Offline)</span>`;
+            return '<span style="color:#ef4444;">Offline</span>';
+        }
+
+        function openInboxPage() {
+            if(!currUser || currUser.status !== 'Approved') return openModal('loginModal');
+            switchPage('inboxPage');
+            let list = document.getElementById('inboxList');
+            list.innerHTML = '';
+            let otherUsers = users.filter(u => u.username !== currUser.username && u.status === 'Approved');
+            if(otherUsers.length === 0) { list.innerHTML = '<p style="color:#aaa;">No other users available.</p>'; return; }
+            otherUsers.forEach(u => {
+                let upInfo = getUploaderInfo(u.username);
+                let avHtml = upInfo.avatar ? `<img src="${upInfo.avatar}" style="width:100%; height:100%; object-fit:cover;">` : upInfo.name.charAt(0).toUpperCase();
+                list.innerHTML += `
+                    <div onclick="openChatRoom('${u.username}')" style="background:#1a1a1a; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; align-items:center; gap:12px; cursor:pointer; border:1px solid #333;">
+                        <div style="width:45px; height:45px; background:#3b82f6; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; font-weight:bold;">${avHtml}</div>
+                        <div style="flex:1;">
+                            <h4 style="margin:0 0 4px 0;">${upInfo.name} <small style="color:#aaa; font-weight:normal;">(${u.username})</small></h4>
+                            <p style="margin:0; font-size:12px;">${getUserStatus(u.username)}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openChatRoom(username) {
+            if(!currUser || currUser.status !== 'Approved') return openModal('loginModal');
+            currentChatUser = username;
+            switchPage('chatRoomPage');
+            let upInfo = getUploaderInfo(username);
+            document.getElementById('chatName').innerText = upInfo.name;
+            let cAv = document.getElementById('chatAvatar');
+            if(upInfo.avatar) cAv.innerHTML = `<img src="${upInfo.avatar}" style="width:100%; height:100%; object-fit:cover;">`;
+            else cAv.innerHTML = upInfo.name.charAt(0).toUpperCase();
+            document.getElementById('chatStatus').innerHTML = getUserStatus(username);
+            renderChatMessages();
+        }
+
+        function getChatKey(u1, u2) { return 'flash_chat_' + [u1, u2].sort().join('_'); }
+        function getChatMessagesList() { return JSON.parse(localStorage.getItem(getChatKey(currUser.username, currentChatUser))) || []; }
+        function saveChatMessagesList(msgs) { localStorage.setItem(getChatKey(currUser.username, currentChatUser), JSON.stringify(msgs)); }
+
+        function renderChatMessages() {
+            let box = document.getElementById('chatMessages');
+            let msgs = getChatMessagesList();
+            box.innerHTML = '';
+            if(msgs.length === 0) { box.innerHTML = '<p style="color:#aaa; text-align:center;">No messages yet. Say hello!</p>'; return; }
+            let updated = false;
+            msgs.forEach(m => {
+                if(m.receiver === currUser.username && m.status !== 'Seen') { m.status = 'Seen'; updated = true; }
+                let isMe = m.sender === currUser.username;
+                let bg = isMe ? '#3b82f6' : '#272727';
+                let align = isMe ? 'margin-left:auto;' : 'margin-right:auto;';
+                let statusMark = isMe ? `<span style="font-size:10px; color:#cbd5e1; float:right; margin-left:8px;">${m.status || 'Sent'}</span>` : '';
+                let contentHtml = m.type === 'sticker' ? `<div style="font-size:36px;">${m.text}</div>` : (m.type === 'image' ? `<img src="${m.url}" style="max-width:180px; border-radius:6px;"><br>${m.text || ''}` : (m.type === 'video' ? `<video src="${m.url}" controls style="max-width:180px; border-radius:6px;"></video><br>${m.text || ''}` : (m.type === 'audio' ? `<audio controls src="${m.url}" style="max-width:180px;"></audio><br>${m.text || ''}` : (m.type === 'file' ? `<a href="${m.url}" download="file" style="color:#38bdf8;">📁 Download File</a><br>${m.text || ''}` : `<span>${m.text}</span>`))));
+                box.innerHTML += `<div style="background:${bg}; padding:8px 12px; border-radius:8px; max-width:70%; ${align} word-break:break-word; font-size:13px; position:relative;">${contentHtml}<div style="clear:both; margin-top:2px;"><span style="font-size:9px; color:#aaa;">${formatTimeAgo(m.id)}</span>${statusMark}</div></div>`;
+            });
+            if(updated) saveChatMessagesList(msgs);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function sendTextMessage() {
+            let txt = document.getElementById('chatInput').value.trim();
+            if(!txt) return;
+            let msgs = getChatMessagesList();
+            msgs.push({ id: Date.now(), sender: currUser.username, receiver: currentChatUser, type: 'text', text: txt, status: 'Sending' });
+            saveChatMessagesList(msgs);
+            document.getElementById('chatInput').value = '';
+            renderChatMessages();
+            setTimeout(() => {
+                let mList = getChatMessagesList();
+                let last = mList.find(x => x.id === msgs[msgs.length-1].id);
+                if(last) last.status = 'Sent';
+                saveChatMessagesList(mList);
+                renderChatMessages();
+            }, 600);
+        }
+
+        function toggleStickerBox() {
+            let box = document.getElementById('stickerBox');
+            box.style.display = box.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function sendSticker(emoji) {
+            let msgs = getChatMessagesList();
+            msgs.push({ id: Date.now(), sender: currUser.username, receiver: currentChatUser, type: 'sticker', text: emoji, status: 'Sent' });
+            saveChatMessagesList(msgs);
+            toggleStickerBox();
+            renderChatMessages();
+        }
+
+        function sendMediaFile(input) {
+            let file = input.files[0];
+            if(!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let t = file.type.startsWith('image') ? 'image' : (file.type.startsWith('video') ? 'video' : (file.type.startsWith('audio') ? 'audio' : 'file'));
+                let msgs = getChatMessagesList();
+                msgs.push({ id: Date.now(), sender: currUser.username, receiver: currentChatUser, type: t, url: e.target.result, text: file.name, status: 'Sent' });
+                saveChatMessagesList(msgs);
+                renderChatMessages();
+                showAnimeToast('Media sent successfully!');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function convertMediaToStickerPrompt() {
+            let url = prompt('Enter Image / Video / GIF URL to convert to Sticker:');
+            if(!url) return;
+            let msgs = getChatMessagesList();
+            msgs.push({ id: Date.now(), sender: currUser.username, receiver: currentChatUser, type: 'image', url: url, text: '✨ [Sticker]', status: 'Sent' });
+            saveChatMessagesList(msgs);
+            renderChatMessages();
+            showAnimeToast('✨ Converted & Sent as Sticker!');
+        }
         function renderFeed() {
             let grid = document.getElementById('feedGrid');
             grid.innerHTML = '';
@@ -522,7 +743,8 @@
             data.forEach(c => {
                 let m = `<video src="${c.url}" preload="metadata" muted></video>`;
                 let playlistTag = c.playlist ? ` [${c.playlist}]` : '';
-                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>${playlistTag} ${c.title}</h4><p>${c.uploader}</p></div></div>`;
+                let upInfo = getUploaderInfo(c.uploader);
+                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>${playlistTag} ${c.title}</h4><p>${upInfo.name} • ${formatTimeAgo(c.createdAt || c.id)}</p></div></div>`;
             });
         }
 
@@ -536,7 +758,8 @@
             if(shorts.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No shorts available.</p>'; return; }
             shorts.forEach(c => {
                 let playlistTag = c.playlist ? ` [${c.playlist}]` : '';
-                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb"><video src="${c.url}" preload="metadata" muted></video></div><div class="meta"><h4>${playlistTag} ${c.title}</h4><p>${c.uploader}</p></div></div>`;
+                let upInfo = getUploaderInfo(c.uploader);
+                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb"><video src="${c.url}" preload="metadata" muted></video></div><div class="meta"><h4>${playlistTag} ${c.title}</h4><p>${upInfo.name} • ${formatTimeAgo(c.createdAt || c.id)}</p></div></div>`;
             });
         }
 
@@ -548,107 +771,125 @@
             posts.forEach(c => {
                 let m = c.url ? (c.fileType && c.fileType.startsWith('image') ? `<img src="${c.url}">` : (c.fileType && c.fileType.startsWith('audio') ? `<audio controls src="${c.url}"></audio>` : `<video src="${c.url}"></video>`)) : `<div style="padding:20px; text-align:center;">📝</div>`;
                 let playlistTag = c.playlist ? ` [${c.playlist}]` : '';
-                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>${playlistTag} ${c.title}</h4><p>${c.uploader}</p></div></div>`;
+                let upInfo = getUploaderInfo(c.uploader);
+                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>${playlistTag} ${c.title}</h4><p>${upInfo.name} • ${formatTimeAgo(c.createdAt || c.id)}</p></div></div>`;
             });
         }
+
         function openDetail(id) {
             if(!currUser || currUser.status !== 'Approved') return showAnimeToast('Sign in and get approval first');
             currItem = contents.find(x => x.id === id);
             switchPage('detailPage');
             let mb = document.getElementById('detailMedia');
-            
             if(currItem.type === 'post') {
-                if(!currItem.url) {
-                    mb.innerHTML = `<div style="padding:40px; text-align:center;"><h3>${currItem.title}</h3></div>`;
-                } else if(currItem.fileType && currItem.fileType.startsWith('image')) {
-                    mb.innerHTML = `<img src="${currItem.url}">`;
-                } else if(currItem.fileType && currItem.fileType.startsWith('audio')) {
-                    mb.innerHTML = `<audio controls autoplay src="${currItem.url}"></audio>`;
-                } else {
-                    mb.innerHTML = `<video src="${currItem.url}" controls autoplay playsinline id="activeVideo" onended="playNextVideo()"></video>`;
-                }
+                if(!currItem.url) mb.innerHTML = `<div style="padding:40px; text-align:center;"><h3>${currItem.title}</h3></div>`;
+                else if(currItem.fileType && currItem.fileType.startsWith('image')) mb.innerHTML = `<img src="${currItem.url}">`;
+                else if(currItem.fileType && currItem.fileType.startsWith('audio')) mb.innerHTML = `<audio controls autoplay src="${currItem.url}"></audio>`;
+                else mb.innerHTML = `<video src="${currItem.url}" controls autoplay playsinline id="activeVideo" onended="playNextVideo()"></video>`;
             } else {
                 mb.innerHTML = `<video src="${currItem.url}" controls autoplay playsinline id="activeVideo" onloadedmetadata="adjustVideoOrientation(this)" onended="playNextVideo()"></video>`;
             }
 
             document.getElementById('detTitle').innerText = currItem.title;
-            document.getElementById('detStats').innerText = "Uploader: " + currItem.uploader;
-            
+            document.getElementById('detUploadTime').innerText = "Uploaded: " + new Date(currItem.createdAt || currItem.id).toLocaleString() + " (" + formatTimeAgo(currItem.createdAt || currItem.id) + ")";
+            let upInfo = getUploaderInfo(currItem.uploader);
+            document.getElementById('detUploaderName').innerText = upInfo.name;
+            document.getElementById('detUploaderId').innerText = currItem.uploader;
+            let avBox = document.getElementById('detUploaderAvatar');
+            if(upInfo.avatar) avBox.innerHTML = `<img src="${upInfo.avatar}" style="width:100%; height:100%; object-fit:cover;">`;
+            else avBox.innerHTML = upInfo.name.charAt(0).toUpperCase();
+
             let playlistBadge = document.getElementById('playlistBadge');
-            if(currItem.playlist) {
-                playlistBadge.innerText = "🎬 Playlist: " + currItem.playlist;
-                playlistBadge.style.display = 'block';
-            } else {
-                playlistBadge.style.display = 'none';
-            }
+            if(currItem.playlist) { playlistBadge.innerText = "🎬 Playlist: " + currItem.playlist; playlistBadge.style.display = 'block'; }
+            else playlistBadge.style.display = 'none';
 
-            let nextTitle = getNextVideoTitle();
-            document.getElementById('nextVideoBadge').innerText = "⏭ Next: " + nextTitle;
-
+            document.getElementById('nextVideoBadge').innerText = "⏭ Next: " + getNextVideoTitle();
             let dlBtn = document.getElementById('downloadBtn');
             if(currItem.allowDownload === 'yes' && currItem.url) dlBtn.style.display = 'block'; else dlBtn.style.display = 'none';
 
-            updateFollowBtn();
             updateLikeBtnUI();
             currentBgPlayState = false;
             updateBgPlayBtnUI();
             renderComments();
         }
 
+        let selectedCreator = null;
+        function openCreatorProfile(username) {
+            selectedCreator = username;
+            switchPage('userProfilePage');
+            let u = users.find(x => x.username === username) || { username, accountName: username.substring(1), avatar: '' };
+            document.getElementById('creatorName').innerText = u.accountName || username.substring(1);
+            document.getElementById('creatorUsername').innerText = username;
+            let cBox = document.getElementById('creatorAvatarBox');
+            if(u.avatar) cBox.innerHTML = `<img src="${u.avatar}" style="width:100%; height:100%; object-fit:cover;">`;
+            else cBox.innerHTML = (u.accountName || username.substring(1)).charAt(0).toUpperCase();
+            updateCreatorFollowBtn();
+            renderCreatorUploads(username);
+        }
+
+        function updateCreatorFollowBtn() {
+            let btn = document.getElementById('creatorFollowBtn');
+            if(!currUser || selectedCreator === currUser.username) { btn.style.display = 'none'; return; }
+            btn.style.display = 'block';
+            if(following.includes(selectedCreator)) { btn.innerText = 'Following'; btn.style.background = '#333'; }
+            else { btn.innerText = 'Follow'; btn.style.background = '#ff0000'; }
+        }
+
+        function toggleCreatorFollow() {
+            if(!selectedCreator || selectedCreator === currUser.username) return;
+            if(following.includes(selectedCreator)) { following = following.filter(x => x !== selectedCreator); showAnimeToast('Unfollowed ' + selectedCreator); }
+            else { following.push(selectedCreator); showAnimeToast('Followed ' + selectedCreator); }
+            localStorage.setItem('flash_following', JSON.stringify(following));
+            updateCreatorFollowBtn();
+        }
+
+        async function renderCreatorUploads(username) {
+            let grid = document.getElementById('creatorGrid');
+            grid.innerHTML = '';
+            contents = await dbGetAllContents();
+            let items = contents.filter(c => c.uploader === username && checkPrivacy(c));
+            if(items.length === 0) { grid.innerHTML = '<p style="color:#aaa; grid-column:1/-1;">No uploads found.</p>'; return; }
+            items.forEach(c => {
+                let m = c.type === 'post' ? (c.url ? (c.fileType && c.fileType.startsWith('image') ? `<img src="${c.url}">` : `<video src="${c.url}"></video>`) : `<div style="padding:20px; text-align:center;">📝</div>`) : `<video src="${c.url}"></video>`;
+                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>${c.playlist ? `[${c.playlist}] ` : ''}${c.title}</h4></div></div>`;
+            });
+        }
+
         function getActivePlaylist() {
-            if(currItem.playlist) {
-                return contents.filter(c => c.playlist === currItem.playlist && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id) && checkPrivacy(c));
-            }
+            if(currItem.playlist) return contents.filter(c => c.playlist === currItem.playlist && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id) && checkPrivacy(c));
             return contents.filter(c => !c.playlist && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id) && checkPrivacy(c));
         }
 
         function getNextVideoTitle() {
             let list = getActivePlaylist();
             let idx = list.findIndex(x => x.id === currItem.id);
-            if(idx > -1 && idx + 1 < list.length) {
-                return list[idx + 1].title;
-            }
+            if(idx > -1 && idx + 1 < list.length) return list[idx + 1].title;
             return "None (End)";
         }
 
         function playNextVideo() {
             let list = getActivePlaylist();
             let idx = list.findIndex(x => x.id === currItem.id);
-            if(idx > -1 && idx + 1 < list.length) {
-                openDetail(list[idx + 1].id);
-            } else {
-                showAnimeToast('✨ End of list reached!');
-            }
+            if(idx > -1 && idx + 1 < list.length) openDetail(list[idx + 1].id);
+            else showAnimeToast('✨ End of list reached!');
         }
 
         function playPrevVideo() {
             let list = getActivePlaylist();
             let idx = list.findIndex(x => x.id === currItem.id);
-            if(idx > 0) {
-                openDetail(list[idx - 1].id);
-            } else {
-                showAnimeToast('✨ This is the first video!');
-            }
+            if(idx > 0) openDetail(list[idx - 1].id);
+            else showAnimeToast('✨ This is the first video!');
         }
 
         function adjustVideoOrientation(v) {
-            if(v.videoHeight > v.videoWidth) {
-                v.style.maxHeight = '350px';
-                v.style.objectFit = 'contain';
-            } else {
-                v.style.maxHeight = '220px';
-                v.style.objectFit = 'contain';
-            }
+            if(v.videoHeight > v.videoWidth) { v.style.maxHeight = '350px'; v.style.objectFit = 'contain'; }
+            else { v.style.maxHeight = '220px'; v.style.objectFit = 'contain'; }
         }
 
         function downloadContent() {
             if(!currItem || !currItem.url) return;
-            let a = document.createElement('a');
-            a.href = currItem.url;
-            a.download = currItem.title || 'download';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            let a = document.createElement('a'); a.href = currItem.url; a.download = currItem.title || 'download';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
             showAnimeToast('📥 Downloading file...');
         }
 
@@ -656,66 +897,21 @@
         function toggleBgPlay() {
             currentBgPlayState = !currentBgPlayState;
             let v = document.getElementById('activeVideo');
-            if(v) {
-                if(currentBgPlayState) {
-                    v.removeAttribute('controls');
-                } else {
-                    v.setAttribute('controls', 'true');
-                }
-            }
+            if(v) { if(currentBgPlayState) v.removeAttribute('controls'); else v.setAttribute('controls', 'true'); }
             updateBgPlayBtnUI();
         }
 
         function updateBgPlayBtnUI() {
             let btn = document.getElementById('bgPlayBtn');
-            if(currentBgPlayState) {
-                btn.innerText = '🎵 Background Play: ON';
-                btn.style.background = '#10b981';
-            } else {
-                btn.innerText = '🎵 Background Play: OFF';
-                btn.style.background = '#3b82f6';
-            }
-        }
-
-        function toggleFollow() {
-            if(currItem.uploader === currUser.username) return showAnimeToast("You cannot follow yourself!");
-            if(following.includes(currItem.uploader)) {
-                following = following.filter(u => u !== currItem.uploader);
-                showAnimeToast('Unfollowed ' + currItem.uploader);
-            } else {
-                following.push(currItem.uploader);
-                showAnimeToast('Followed ' + currItem.uploader);
-            }
-            localStorage.setItem('flash_following', JSON.stringify(following));
-            updateFollowBtn();
-        }
-
-        function updateFollowBtn() {
-            let btn = document.getElementById('followBtn');
-            if(currItem.uploader === currUser.username) {
-                btn.style.display = 'none';
-                return;
-            }
-            btn.style.display = 'block';
-            if(following.includes(currItem.uploader)) {
-                btn.innerText = '👤 Following';
-                btn.style.color = '#38bdf8';
-            } else {
-                btn.innerText = '👤 Follow';
-                btn.style.color = '#fff';
-            }
+            if(currentBgPlayState) { btn.innerText = '🎵 Background Play: ON'; btn.style.background = '#10b981'; }
+            else { btn.innerText = '🎵 Background Play: OFF'; btn.style.background = '#3b82f6'; }
         }
 
         function toggleLike() {
             if(!currItem.likes) currItem.likes = [];
             let idx = currItem.likes.indexOf(currUser.username);
-            if(idx > -1) {
-                currItem.likes.splice(idx, 1);
-                showAnimeToast('Like removed');
-            } else {
-                currItem.likes.push(currUser.username);
-                showAnimeToast('Liked!');
-            }
+            if(idx > -1) { currItem.likes.splice(idx, 1); showAnimeToast('Like removed'); }
+            else { currItem.likes.push(currUser.username); showAnimeToast('Liked!'); }
             dbSaveContent(currItem);
             updateLikeBtnUI();
         }
@@ -723,13 +919,9 @@
         function updateLikeBtnUI() {
             let btn = document.getElementById('likeBtn');
             let liked = currItem.likes && currItem.likes.includes(currUser.username);
-            if(liked) {
-                btn.innerText = `👍 Liked (${currItem.likes.length})`;
-                btn.style.color = '#38bdf8';
-            } else {
-                btn.innerText = `👍 Like (${currItem.likes ? currItem.likes.length : 0})`;
-                btn.style.color = '#fff';
-            }
+            let count = currItem.likes ? currItem.likes.length : 0;
+            if(liked) { btn.innerText = `👍 Liked (${count})`; btn.style.color = '#38bdf8'; }
+            else { btn.innerText = `👍 Like (${count})`; btn.style.color = '#fff'; }
         }
 
         function notInterested() {
@@ -773,8 +965,9 @@
             list.innerHTML = '';
             (currItem.comments || []).forEach(c => {
                 let im = c.img ? `<br><img src="${c.img}" style="max-width:100px; margin-top:5px;">` : '';
+                let uInfo = getUploaderInfo(c.user);
                 let delBtn = (c.user === currUser.username || currItem.uploader === currUser.username) ? `<span style="float:right; color:red; cursor:pointer;" onclick="deleteComment(${c.id})">🗑️ Delete</span>` : '';
-                list.innerHTML += `<div style="background:#121212; padding:8px; margin-top:5px; border-radius:4px;"><p style="margin:0;"><b>${c.user}:</b> ${c.text} ${im} ${delBtn}</p></div>`;
+                list.innerHTML += `<div style="background:#121212; padding:8px; margin-top:5px; border-radius:4px;"><p style="margin:0 0 4px 0;"><b>${uInfo.name}:</b> ${c.text} ${im} ${delBtn}</p><span style="font-size:10px; color:#38bdf8;">${formatTimeAgo(c.id)}</span></div>`;
             });
         }
 
@@ -787,17 +980,50 @@
         function openProfile() {
             if(!currUser || currUser.status !== 'Approved') return openModal('loginModal');
             switchPage('profilePage');
-            document.getElementById('profName').innerText = currUser.username;
-            document.getElementById('profAvatar').innerText = currUser.username.charAt(1).toUpperCase();
+            document.getElementById('profName').innerText = currUser.accountName || currUser.username.substring(1);
+            document.getElementById('profUsername').innerText = currUser.username;
+            let pBox = document.getElementById('profAvatarBox');
+            if(currUser.avatar) pBox.innerHTML = `<img src="${currUser.avatar}" style="width:100%; height:100%; object-fit:cover;">`;
+            else pBox.innerHTML = (currUser.accountName || currUser.username.substring(1)).charAt(0).toUpperCase();
             document.getElementById('deviceCount').innerText = deviceAccounts.length;
+            document.getElementById('followerCount').innerText = users.filter(u => following.includes(u.username)).length;
+            document.getElementById('followingCount').innerText = following.length;
             switchTab('video');
         }
 
         function openSettingsPage() {
             switchPage('settingsPage');
+            document.getElementById('setAccountName').value = currUser.accountName || currUser.username.substring(1);
+            document.getElementById('setAvatarUrl').value = currUser.avatar || '';
             document.getElementById('currPassView').value = currUser.password;
             document.getElementById('setResume').checked = appSettings.resume;
             document.getElementById('setBgPlay').checked = appSettings.bgPlay;
+            document.getElementById('accCreatedDateDisplay').innerText = currUser.createdAt ? new Date(currUser.createdAt).toLocaleString() : 'N/A';
+            document.getElementById('accDurationLive').innerText = currUser.createdAt ? formatDurationDetailed(currUser.createdAt) : '0Y / 0M / 0D / 0H / 0M / 0S';
+        }
+
+        function saveProfileSettings() {
+            let name = document.getElementById('setAccountName').value.trim();
+            let url = document.getElementById('setAvatarUrl').value.trim();
+            let file = document.getElementById('setAvatarFile').files[0];
+            if(name) currUser.accountName = name;
+            if(file) {
+                let reader = new FileReader();
+                reader.onload = function(e) { currUser.avatar = e.target.result; updateUserStorage(); };
+                reader.readAsDataURL(file);
+            } else {
+                if(url) currUser.avatar = url;
+                updateUserStorage();
+            }
+        }
+
+        function updateUserStorage() {
+            let u = users.find(x => x.username === currUser.username);
+            if(u) { u.accountName = currUser.accountName; u.avatar = currUser.avatar; }
+            localStorage.setItem('flash_curr', JSON.stringify(currUser));
+            localStorage.setItem('flash_users', JSON.stringify(users));
+            showAnimeToast('Profile updated successfully!');
+            openProfile();
         }
 
         function openAdminPage() {
@@ -807,7 +1033,7 @@
             document.getElementById('admPass').value = '';
         }
 
-        function saveSettings() {
+        function saveAppSettings() {
             appSettings.resume = document.getElementById('setResume').checked;
             appSettings.bgPlay = document.getElementById('setBgPlay').checked;
             localStorage.setItem('flash_settings', JSON.stringify(appSettings));
@@ -835,23 +1061,16 @@
             if(items.length === 0) { grid.innerHTML = '<p style="color:#aaa; grid-column:1/-1;">No items uploaded.</p>'; return; }
             items.forEach(c => {
                 let m = c.type === 'post' ? (c.url ? (c.fileType && c.fileType.startsWith('image') ? `<img src="${c.url}">` : `<video src="${c.url}"></video>`) : `<div style="padding:20px; text-align:center;">📝</div>`) : `<video src="${c.url}"></video>`;
-                let playlistTag = c.playlist ? ` [${c.playlist}]` : '';
-                grid.innerHTML += `
-                    <div class="card">
-                        <div class="thumb" onclick="openDetail(${c.id})">${m}</div>
-                        <div class="meta" onclick="openDetail(${c.id})"><h4>${playlistTag} ${c.title}</h4></div>
-                        <div style="padding:0 8px 8px 8px;"><button onclick="deleteMyContent(${c.id})" style="background:red; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; width:100%; cursor:pointer;">Delete Content</button></div>
-                    </div>
-                `;
+                grid.innerHTML += `<div class="card"><div class="thumb" onclick="openDetail(${c.id})">${m}</div><div class="meta" onclick="openDetail(${c.id})"><h4>${c.title}</h4></div><div style="padding:0 8px 8px 8px;"><button onclick="deleteMyContent(${c.id})" style="background:red; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; width:100%; cursor:pointer;">Delete</button></div></div>`;
             });
         }
 
         async function deleteMyContent(id) {
-            if(confirm('Are you sure you want to delete this content?')) {
+            if(confirm('Delete this content?')) {
                 await dbDeleteContent(id);
                 contents = await dbGetAllContents();
                 openProfile();
-                showAnimeToast('Content deleted successfully.');
+                showAnimeToast('Content deleted.');
             }
         }
 
@@ -877,63 +1096,41 @@
             let uList = document.getElementById('admUsersList');
             uList.innerHTML = '';
             users.forEach((u, i) => {
-                uList.innerHTML += `
-                    <div style="background:#121212; padding:10px; border-radius:6px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                        <div><b>${u.username}</b><br><small style="color:#aaa;">Pass: ${u.password} | ${u.status}</small></div>
-                        <div style="display:flex; gap:5px;">
-                            ${u.status !== 'Approved' ? `<button onclick="approveAdminUser(${i})" style="background:green; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Accept</button>` : ''}
-                            <button onclick="deleteAdminUser(${i})" style="background:red; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Delete</button>
-                        </div>
-                    </div>
-                `;
+                uList.innerHTML += `<div style="background:#121212; padding:10px; border-radius:6px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;"><div><b>${u.accountName || u.username}</b> (${u.username})<br><small style="color:#aaa;">${u.status}</small></div><div style="display:flex; gap:5px;">${u.status !== 'Approved' ? `<button onclick="approveAdminUser(${i})" style="background:green; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Accept</button>` : ''}<button onclick="deleteAdminUser(${i})" style="background:red; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Delete</button></div></div>`;
             });
 
             let cList = document.getElementById('admContentList');
-            cList.innerHTML = '';
-            if(contents.length === 0) cList.innerHTML = '<p style="color:#aaa;">No content uploaded.</p>';
+            cList.innerHTML = contents.length === 0 ? '<p style="color:#aaa;">No content.</p>' : '';
             contents.forEach(c => {
-                let playlistTag = c.playlist ? ` [${c.playlist}]` : '';
-                cList.innerHTML += `
-                    <div style="background:#121212; padding:8px; border-radius:6px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                        <span><b>${playlistTag}</b> ${c.title} (${c.uploader})</span>
-                        <button onclick="adminDeleteContent(${c.id})" style="background:red; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Delete</button>
-                    </div>
-                `;
+                cList.innerHTML += `<div style="background:#121212; padding:8px; border-radius:6px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;"><span>${c.title} (${c.uploader})</span><button onclick="adminDeleteContent(${c.id})" style="background:red; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Delete</button></div>`;
             });
 
             let rList = document.getElementById('admReportsList');
-            rList.innerHTML = '';
-            if(reports.length === 0) rList.innerHTML = '<p style="color:#aaa;">No reports found.</p>';
+            rList.innerHTML = reports.length === 0 ? '<p style="color:#aaa;">No reports.</p>' : '';
             reports.forEach((r, i) => {
-                rList.innerHTML += `
-                    <div style="background:#121212; padding:8px; border-radius:6px; margin-bottom:5px;">
-                        <p style="margin:0;"><b>[${r.type}]</b> Target: ${r.target} (By: ${r.by})</p>
-                        <button onclick="clearReport(${i})" style="background:gray; color:white; border:none; padding:2px 6px; margin-top:4px; border-radius:4px; cursor:pointer;">Clear</button>
-                    </div>
-                `;
+                rList.innerHTML += `<div style="background:#121212; padding:8px; border-radius:6px; margin-bottom:5px;"><p style="margin:0;"><b>[${r.type}]</b> ${r.target} (By: ${r.by})</p><button onclick="clearReport(${i})" style="background:gray; color:white; border:none; padding:2px 6px; margin-top:4px; border-radius:4px; cursor:pointer;">Clear</button></div>`;
             });
         }
 
-        function approveAdminUser(i) { users[i].status = 'Approved'; localStorage.setItem('flash_users', JSON.stringify(users)); renderAdmin(); showAnimeToast('User Approved'); }
-        function deleteAdminUser(i) { users.splice(i, 1); localStorage.setItem('flash_users', JSON.stringify(users)); renderAdmin(); showAnimeToast('User Deleted'); }
-        async function adminDeleteContent(id) { await dbDeleteContent(id); contents = await dbGetAllContents(); renderAdmin(); renderFeed(); showAnimeToast('Content Deleted'); }
-        function clearReport(i) { reports.splice(i, 1); localStorage.setItem('flash_reports', JSON.stringify(reports)); renderAdmin(); showAnimeToast('Report Cleared'); }
-        
+        function approveAdminUser(i) { users[i].status = 'Approved'; localStorage.setItem('flash_users', JSON.stringify(users)); renderAdmin(); showAnimeToast('Approved'); }
+        function deleteAdminUser(i) { users.splice(i, 1); localStorage.setItem('flash_users', JSON.stringify(users)); renderAdmin(); showAnimeToast('Deleted'); }
+        async function adminDeleteContent(id) { await dbDeleteContent(id); contents = await dbGetAllContents(); renderAdmin(); renderFeed(); showAnimeToast('Deleted'); }
+        function clearReport(i) { reports.splice(i, 1); localStorage.setItem('flash_reports', JSON.stringify(reports)); renderAdmin(); showAnimeToast('Cleared'); }
+
         function sendBroadcast() {
             let title = document.getElementById('bcTitle').value;
             let msg = document.getElementById('bcMsg').value;
-            if(!title || !msg) return showAnimeToast('Enter title and message');
+            if(!title || !msg) return showAnimeToast('Enter title & msg');
             localStorage.setItem('flash_broadcast_alert', JSON.stringify({ title, msg }));
             checkBroadcastBanner();
-            showAnimeToast('📢 Broadcast Alert Sent!');
-            document.getElementById('bcTitle').value = '';
-            document.getElementById('bcMsg').value = '';
+            showAnimeToast('📢 Broadcast Sent!');
+            document.getElementById('bcTitle').value = ''; document.getElementById('bcMsg').value = '';
         }
 
         function clearBroadcast() {
             localStorage.removeItem('flash_broadcast_alert');
             checkBroadcastBanner();
-            showAnimeToast('🗑️ Broadcast Alert Cleared!');
+            showAnimeToast('🗑️ Broadcast Cleared!');
         }
 
         function switchNav(index) {
