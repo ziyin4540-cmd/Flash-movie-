@@ -1427,3 +1427,78 @@ cardMarkup = function(c) {
     const html = flashOriginalCardMarkup(c);
     return html.replace(/<video src="([^"]+)" preload="metadata" muted>/g, '<video src="$1" preload="auto" muted playsinline onloadeddata="this.currentTime=0.1">');
 };
+
+
+/* ---------- Device/account-limit correctness fix ---------- */
+function getDeviceID() {
+    let id = localStorage.getItem('flash_device_id');
+    if (!id) {
+        const match = document.cookie.match(/(?:^|; )flash_device_id=([^;]+)/);
+        id = match ? decodeURIComponent(match[1]) : '';
+    }
+    if (!id) id = 'DEV_' + (crypto.randomUUID ? crypto.randomUUID().replaceAll('-', '').slice(0, 16).toUpperCase() : Math.random().toString(36).slice(2, 18).toUpperCase());
+    localStorage.setItem('flash_device_id', id);
+    document.cookie = `flash_device_id=${encodeURIComponent(id)}; max-age=31536000; path=/; SameSite=Lax`;
+    return id;
+}
+function normalizeUserDevices(user) {
+    if (!user) return [];
+    const ids = Array.isArray(user.deviceIds) ? user.deviceIds : [];
+    if (user.deviceId) ids.push(user.deviceId);
+    user.deviceIds = [...new Set(ids.filter(Boolean))];
+    if (!user.deviceIds.length) user.deviceIds.push(getDeviceID());
+    user.deviceId = user.deviceIds[0];
+    return user.deviceIds;
+}
+function getDeviceAccountsFor(deviceId = getDeviceID()) {
+    users.forEach(normalizeUserDevices);
+    const names = [...new Set(users.filter(u => normalizeUserDevices(u).includes(deviceId)).map(u => u.username))];
+    deviceAccounts = names;
+    localStorage.setItem('flash_device_accs', JSON.stringify(names));
+    localStorage.setItem('flash_users', JSON.stringify(users));
+    return names;
+}
+function getDeviceLimits() {
+    const limits = JSON.parse(localStorage.getItem('flash_device_limits') || '{}');
+    return Math.max(1, Number(limits[getDeviceID()] || 2));
+}
+function persistAuthState() {
+    localStorage.setItem('flash_users', JSON.stringify(users));
+    localStorage.setItem('flash_device_accs', JSON.stringify(getDeviceAccountsFor()));
+    if (currUser) localStorage.setItem('flash_curr', JSON.stringify(currUser));
+}
+function handleAuth() {
+    const raw = document.getElementById('authU').value.trim(), password = document.getElementById('authP').value;
+    if (!raw || !password) return showAnimeToast('Enter details');
+    const username = raw.startsWith('@') ? raw : '@' + raw;
+    const deviceId = getDeviceID(), limit = getDeviceLimits(), accounts = getDeviceAccountsFor(deviceId);
+    let user = users.find(x => x.username === username);
+    if (user) {
+        if (user.password !== password) return showAnimeToast('Wrong password');
+        if (user.status !== 'Approved') return showAnimeToast('Pending admin approval');
+        const ids = normalizeUserDevices(user);
+        if (!ids.includes(deviceId)) {
+            if (accounts.length >= limit) return showAnimeToast(`Device limit reached: ${limit} accounts`);
+            ids.push(deviceId); user.deviceIds = [...new Set(ids)];
+        }
+        currUser = user;
+        if (!currUser.createdAt) currUser.createdAt = Date.now();
+        persistAuthState(); closeModal('loginModal'); showAnimeToast('Successfully Signed In!'); return;
+    }
+    if (accounts.length >= limit) return showAnimeToast(`Device limit reached: ${limit} accounts`);
+    if (!confirm(`Allow this website to register Device ID ${deviceId} for account management?`)) return showAnimeToast('Permission denied');
+    user = { username, password, accountName: username.slice(1), avatar: '', deviceId, deviceIds: [deviceId], createdAt: Date.now(), status: 'Pending', followView: true, followerView: true };
+    users.push(user); persistAuthState();
+    document.getElementById('authP').value = '';
+    closeModal('loginModal'); showAnimeToast('Account created. Wait for admin approval.');
+}
+function openModal(id) {
+    if (id === 'loginModal' && !currUser) {
+        const limit = getDeviceLimits(), count = getDeviceAccountsFor().length;
+        document.getElementById('modalLimitText').innerText = limit;
+        if (count >= limit) return showAnimeToast(`Device limit reached: ${limit} accounts`);
+    }
+    document.getElementById(id).style.display = 'flex';
+}
+const flashOriginalOpenProfile = openProfile;
+openProfile = function() { getDeviceAccountsFor(); flashOriginalOpenProfile(); };
