@@ -305,7 +305,8 @@
         function uploadContent() {
             let type = document.getElementById('upType').value;
             let title = document.getElementById('upTitle').value;
-            let file = document.getElementById('upFile').files[0];
+            let fileInput = document.getElementById('upFile');
+            let file = fileInput.files[0];
             let privacy = document.getElementById('upPrivacy').value;
             let allowDownload = document.getElementById('upDownload').value;
 
@@ -317,7 +318,7 @@
 
             let percent = 0;
             let interval = setInterval(() => {
-                percent += 20;
+                percent += 25;
                 bar.style.width = percent + '%';
                 bar.innerText = percent + '%';
                 if(percent >= 100) {
@@ -326,9 +327,9 @@
                         progBox.style.display = 'none';
                         bar.style.width = '0%';
 
-                        let saveAndFinish = (fileUrl) => {
+                        let saveAndFinish = (fileUrl, fileType) => {
                             contents.unshift({ 
-                                id: Date.now(), type, title: title || 'Untitled Post', url: fileUrl, 
+                                id: Date.now(), type, title: title || 'Untitled Post', url: fileUrl, fileType: fileType || '',
                                 uploader: currUser.username, privacy, allowDownload, 
                                 likes: [], comments: [] 
                             });
@@ -340,10 +341,12 @@
 
                         if(file) {
                             let reader = new FileReader();
-                            reader.onload = function(e) { saveAndFinish(e.target.result); };
+                            reader.onload = function(e) { 
+                                saveAndFinish(e.target.result, file.type); 
+                            };
                             reader.readAsDataURL(file);
                         } else {
-                            saveAndFinish('');
+                            saveAndFinish('', '');
                         }
                     }, 300);
                 }
@@ -368,7 +371,7 @@
             if(filterType !== 'all') data = data.filter(c => c.type === filterType);
             if(data.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No data found.</p>'; return; }
             data.forEach(c => {
-                let m = `<video src="${c.url}#t=0.5" preload="metadata" muted></video>`;
+                let m = `<video src="${c.url}" preload="metadata" muted></video>`;
                 grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>[${c.type.toUpperCase()}] ${c.title}</h4><p>${c.uploader}</p></div></div>`;
             });
         }
@@ -382,7 +385,7 @@
             let shorts = contents.filter(c => c.type === 'short' && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id) && checkPrivacy(c));
             if(shorts.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No shorts available.</p>'; return; }
             shorts.forEach(c => {
-                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb"><video src="${c.url}#t=0.5" preload="metadata" muted></video></div><div class="meta"><h4>${c.title}</h4><p>${c.uploader}</p></div></div>`;
+                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb"><video src="${c.url}" preload="metadata" muted></video></div><div class="meta"><h4>${c.title}</h4><p>${c.uploader}</p></div></div>`;
             });
         }
 
@@ -392,7 +395,7 @@
             let posts = contents.filter(c => c.type === 'post' && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id) && checkPrivacy(c));
             if(posts.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No posts available.</p>'; return; }
             posts.forEach(c => {
-                let m = c.url ? (c.url.startsWith('data:image') ? `<img src="${c.url}">` : (c.url.startsWith('data:audio') ? `<audio controls src="${c.url}"></audio>` : `<video src="${c.url}"></video>`)) : `<div style="padding:20px; text-align:center;">📝</div>`;
+                let m = c.url ? (c.fileType && c.fileType.startsWith('image') ? `<img src="${c.url}">` : (c.fileType && c.fileType.startsWith('audio') ? `<audio controls src="${c.url}"></audio>` : `<video src="${c.url}"></video>`)) : `<div style="padding:20px; text-align:center;">📝</div>`;
                 grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>${c.title}</h4><p>${c.uploader}</p></div></div>`;
             });
         }
@@ -405,9 +408,9 @@
             if(currItem.type === 'post') {
                 if(!currItem.url) {
                     mb.innerHTML = `<div style="padding:40px; text-align:center;"><h3>${currItem.title}</h3></div>`;
-                } else if(currItem.url.startsWith('data:image')) {
+                } else if(currItem.fileType && currItem.fileType.startsWith('image')) {
                     mb.innerHTML = `<img src="${currItem.url}">`;
-                } else if(currItem.url.startsWith('data:audio')) {
+                } else if(currItem.fileType && currItem.fileType.startsWith('audio')) {
                     mb.innerHTML = `<audio controls autoplay src="${currItem.url}"></audio>`;
                 } else {
                     mb.innerHTML = `<video src="${currItem.url}" controls autoplay playsinline id="activeVideo"></video>`;
@@ -618,7 +621,7 @@
             let items = contents.filter(c => c.uploader === currUser.username && c.type === t);
             if(items.length === 0) { grid.innerHTML = '<p style="color:#aaa; grid-column:1/-1;">No items uploaded.</p>'; return; }
             items.forEach(c => {
-                let m = c.type === 'post' ? (c.url ? (c.url.startsWith('data:image') ? `<img src="${c.url}">` : `<video src="${c.url}"></video>`) : `<div style="padding:20px; text-align:center;">📝</div>`) : `<video src="${c.url}"></video>`;
+                let m = c.type === 'post' ? (c.url ? (c.fileType && c.fileType.startsWith('image') ? `<img src="${c.url}">` : `<video src="${c.url}"></video>`) : `<div style="padding:20px; text-align:center;">📝</div>`) : `<video src="${c.url}"></video>`;
                 grid.innerHTML += `
                     <div class="card">
                         <div class="thumb" onclick="openDetail(${c.id})">${m}</div>
