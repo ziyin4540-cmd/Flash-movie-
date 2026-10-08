@@ -43,12 +43,23 @@
         .modal-content input, .modal-content textarea, .modal-content select { width: 100%; padding: 10px; margin: 8px 0; background: #121212; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box; }
         .btn { background: #ff0000; color: #fff; border: none; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-sec { background: #333; }
+        
+        /* Anime Lightning Progress Bar Effect */
+        .lightning-bar-container { width: 100%; background: #111; border-radius: 8px; margin-top: 10px; overflow: hidden; border: 1px solid #38bdf8; position: relative; height: 22px; display: none; }
+        .lightning-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc, #38bdf8); background-size: 200% 100%; animation: lightningFlow 1.2s linear infinite; text-align: center; font-size: 11px; font-weight: bold; color: #fff; line-height: 22px; text-shadow: 0 0 5px #000; }
+        @keyframes lightningFlow { 0% { background-position: 200% 0; } 100% { background-position: 0 0; } }
+
+        /* Anime Notification Popup */
+        #animeToast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: linear-gradient(135deg, #1e1b4b, #312e81); border: 2px solid #38bdf8; color: #fff; padding: 12px 24px; border-radius: 30px; z-index: 99999; box-shadow: 0 0 20px rgba(56, 189, 248, 0.6); font-weight: bold; transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; align-items: center; gap: 10px; }
+        #animeToast.show { transform: translateX(-50%) translateY(0); }
+
         .admin-tabs { display: flex; gap: 5px; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .admin-tab-btn { background: #272727; border: none; color: #aaa; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; }
         .admin-tab-btn.active { background: #3b82f6; color: #fff; }
     </style>
 </head>
 <body>
+    <div id="animeToast">✨ <span id="toastMsg">Success!</span> ✨</div>
     <div id="introScreen">
         <div class="intro-city">⚡ Futuristic City Stream ⚡</div>
         <div class="intro-title" id="introTitleContainer"></div>
@@ -81,15 +92,21 @@
     </div>
 
     <div class="container page-section" id="detailPage">
+        <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+            <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="switchPage('homePage')">⬅ Back to Home</button>
+            <div id="nextVideoBadge" style="font-size:12px; color:#38bdf8; background:#1e293b; padding:4px 10px; border-radius:15px; border:1px solid #334155;">⏭ Next: None</div>
+        </div>
         <div class="player" id="detailMedia"></div>
         <div style="padding:10px 0; border-bottom:1px solid #222;">
             <h3 id="detTitle" style="margin:0 0 5px 0;"></h3>
             <p id="detStats" style="color:#aaa; font-size:12px; margin:0;"></p>
             <div class="actions">
+                <div class="btn-action" onclick="playPrevVideo()">⏮ Previous</div>
                 <div class="btn-action" onclick="toggleFollow()" id="followBtn">👤 Follow</div>
                 <div class="btn-action" onclick="toggleLike()" id="likeBtn">👍 Like</div>
                 <div class="btn-action" onclick="toggleBgPlay()" id="bgPlayBtn" style="background:#3b82f6;">🎵 Background Play: OFF</div>
                 <div class="btn-action" onclick="downloadContent()" id="downloadBtn" style="background:#10b981; display:none;">📥 Download</div>
+                <div class="btn-action" onclick="playNextVideo()">⏭ Next</div>
                 <div class="btn-action" onclick="notInterested()" style="color:#f59e0b;">🚫 Not Interested</div>
                 <div class="btn-action" onclick="blockUser()" style="color:#ef4444;">⛔ Block User</div>
                 <div class="btn-action" onclick="reportItem('Content')" style="color:#ef4444;">⚠️ Report</div>
@@ -146,8 +163,8 @@
             <input type="text" id="upTitle" placeholder="Title / Caption (Optional for Posts)">
             <input type="file" id="upFile" accept="video/*,image/*,audio/*,.zip,.rar" style="border:none; padding:0; margin-top:10px;">
             
-            <div id="uploadProgress" style="width:100%; background:#222; border-radius:4px; margin-top:10px; display:none; overflow:hidden;">
-                <div id="progressBar" style="width:0%; height:18px; background:#3b82f6; text-align:center; font-size:11px; line-height:18px;">0%</div>
+            <div class="lightning-bar-container" id="uploadProgress">
+                <div class="lightning-bar" id="progressBar">0%</div>
             </div>
 
             <label style="font-size:12px; color:#aaa; margin-top:10px; display:block;">Privacy:</label>
@@ -234,6 +251,13 @@
             }
         });
 
+        function showAnimeToast(msg) {
+            let t = document.getElementById('animeToast');
+            document.getElementById('toastMsg').innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => { t.classList.remove('show'); }, 3000);
+        }
+
         let contents = JSON.parse(localStorage.getItem('flash_contents')) || [];
         let users = JSON.parse(localStorage.getItem('flash_users')) || [];
         let deviceAccounts = JSON.parse(localStorage.getItem('flash_device_accs')) || [];
@@ -256,7 +280,7 @@
 
         function openModal(id) { 
             if(id === 'loginModal' && !currUser) {
-                if(deviceAccounts.length >= 2) { alert('Device limit reached: Maximum 2 accounts allowed!'); return; }
+                if(deviceAccounts.length >= 2) { showAnimeToast('Device limit reached: Max 2 accounts!'); return; }
             }
             document.getElementById(id).style.display = 'flex'; 
         }
@@ -266,39 +290,40 @@
         function handleAuth() {
             let u = document.getElementById('authU').value.trim();
             let p = document.getElementById('authP').value;
-            if(!u || !p) return alert('Enter details');
+            if(!u || !p) return showAnimeToast('Enter details');
             let f = u.startsWith('@') ? u : '@' + u;
             let usr = users.find(x => x.username === f);
             if(usr) {
-                if(usr.password !== p) return alert('Wrong password');
-                if(usr.status !== 'Approved') return alert('Pending admin approval');
+                if(usr.password !== p) return showAnimeToast('Wrong password');
+                if(usr.status !== 'Approved') return showAnimeToast('Pending admin approval');
                 currUser = usr;
             } else {
-                if(deviceAccounts.length >= 2) return alert('Device limit reached: Max 2 accounts!');
+                if(deviceAccounts.length >= 2) return showAnimeToast('Device limit reached!');
                 usr = { username: f, password: p, status: 'Pending' };
                 users.push(usr);
                 if(!deviceAccounts.includes(f)) deviceAccounts.push(f);
-                alert('Account created! Wait for admin approval.');
+                showAnimeToast('Account created! Wait for approval.');
             }
             if(!deviceAccounts.includes(currUser.username) && currUser.status === 'Approved') {
-                if(deviceAccounts.length >= 2) return alert('Device limit reached!');
+                if(deviceAccounts.length >= 2) return showAnimeToast('Device limit reached!');
                 deviceAccounts.push(currUser.username);
             }
             localStorage.setItem('flash_curr', JSON.stringify(currUser));
             localStorage.setItem('flash_users', JSON.stringify(users));
             localStorage.setItem('flash_device_accs', JSON.stringify(deviceAccounts));
             closeModal('loginModal');
+            showAnimeToast('Successfully Signed In!');
         }
 
         function signOut() {
             currUser = null;
             localStorage.removeItem('flash_curr');
             switchPage('homePage');
-            alert('Signed out successfully');
+            showAnimeToast('Signed out successfully');
         }
 
         function checkUpload() {
-            if(!currUser || currUser.status !== 'Approved') return alert('Get admin approval first');
+            if(!currUser || currUser.status !== 'Approved') return showAnimeToast('Get admin approval first');
             openModal('uploadModal');
         }
 
@@ -310,47 +335,67 @@
             let privacy = document.getElementById('upPrivacy').value;
             let allowDownload = document.getElementById('upDownload').value;
 
-            if(!title && !file) return alert('Enter title or select a file');
+            if(!title && !file) return showAnimeToast('Enter title or select a file');
 
             let progBox = document.getElementById('uploadProgress');
             let bar = document.getElementById('progressBar');
             progBox.style.display = 'block';
+            bar.style.width = '0%';
+            bar.innerText = '0% (⚡ Lightning Upload...)';
 
-            let percent = 0;
-            let interval = setInterval(() => {
-                percent += 25;
-                bar.style.width = percent + '%';
-                bar.innerText = percent + '%';
-                if(percent >= 100) {
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        progBox.style.display = 'none';
-                        bar.style.width = '0%';
+            let reader = new FileReader();
+            
+            reader.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    let percentLoaded = Math.round((e.loaded / e.total) * 100);
+                    bar.style.width = percentLoaded + '%';
+                    bar.innerText = percentLoaded + '% (⚡ Lightning Upload...)';
+                }
+            };
 
-                        let saveAndFinish = (fileUrl, fileType) => {
+            reader.onload = function(e) {
+                bar.style.width = '100%';
+                bar.innerText = '100% (⚡ SUCCESSFUL!)';
+                setTimeout(() => {
+                    contents.unshift({ 
+                        id: Date.now(), type, title: title || 'Untitled Post', url: e.target.result, fileType: file ? file.type : '',
+                        uploader: currUser.username, privacy, allowDownload, 
+                        likes: [], comments: [] 
+                    });
+                    localStorage.setItem('flash_contents', JSON.stringify(contents));
+                    progBox.style.display = 'none';
+                    switchPage('homePage');
+                    closeModal('uploadModal');
+                    showAnimeToast('⚡ Upload Successful! Datastream Active!');
+                }, 600);
+            };
+
+            if(file) {
+                reader.readAsDataURL(file);
+            } else {
+                let p = 0;
+                let tInt = setInterval(() => {
+                    p += 34;
+                    if(p >= 100) p = 100;
+                    bar.style.width = p + '%';
+                    bar.innerText = p + '% (⚡ SUCCESSFUL!)';
+                    if(p === 100) {
+                        clearInterval(tInt);
+                        setTimeout(() => {
                             contents.unshift({ 
-                                id: Date.now(), type, title: title || 'Untitled Post', url: fileUrl, fileType: fileType || '',
+                                id: Date.now(), type, title: title || 'Untitled Post', url: '', fileType: '',
                                 uploader: currUser.username, privacy, allowDownload, 
                                 likes: [], comments: [] 
                             });
                             localStorage.setItem('flash_contents', JSON.stringify(contents));
+                            progBox.style.display = 'none';
                             switchPage('homePage');
                             closeModal('uploadModal');
-                            alert('Uploaded successfully!');
-                        };
-
-                        if(file) {
-                            let reader = new FileReader();
-                            reader.onload = function(e) { 
-                                saveAndFinish(e.target.result, file.type); 
-                            };
-                            reader.readAsDataURL(file);
-                        } else {
-                            saveAndFinish('', '');
-                        }
-                    }, 300);
-                }
-            }, 150);
+                            showAnimeToast('⚡ Upload Successful! Datastream Active!');
+                        }, 600);
+                    }
+                }, 100);
+            }
         }
 
         function filterFeed(t) { filterType = t; renderFeed(); }
@@ -400,7 +445,7 @@
             });
         }
         function openDetail(id) {
-            if(!currUser || currUser.status !== 'Approved') return alert('Sign in and get approval first');
+            if(!currUser || currUser.status !== 'Approved') return showAnimeToast('Sign in and get approval first');
             currItem = contents.find(x => x.id === id);
             switchPage('detailPage');
             let mb = document.getElementById('detailMedia');
@@ -413,22 +458,59 @@
                 } else if(currItem.fileType && currItem.fileType.startsWith('audio')) {
                     mb.innerHTML = `<audio controls autoplay src="${currItem.url}"></audio>`;
                 } else {
-                    mb.innerHTML = `<video src="${currItem.url}" controls autoplay playsinline id="activeVideo"></video>`;
+                    mb.innerHTML = `<video src="${currItem.url}" controls autoplay playsinline id="activeVideo" onended="playNextVideo()"></video>`;
                 }
             } else {
-                mb.innerHTML = `<video src="${currItem.url}" controls autoplay playsinline id="activeVideo" onloadedmetadata="adjustVideoOrientation(this)"></video>`;
+                mb.innerHTML = `<video src="${currItem.url}" controls autoplay playsinline id="activeVideo" onloadedmetadata="adjustVideoOrientation(this)" onended="playNextVideo()"></video>`;
             }
 
             document.getElementById('detTitle').innerText = currItem.title;
-            document.getElementById('detStats').innerText = currItem.uploader;
+            document.getElementById('detStats').innerText = "Uploader: " + currItem.uploader;
             
+            let nextTitle = getNextVideoTitle();
+            document.getElementById('nextVideoBadge').innerText = "⏭ Next: " + nextTitle;
+
             let dlBtn = document.getElementById('downloadBtn');
             if(currItem.allowDownload === 'yes' && currItem.url) dlBtn.style.display = 'block'; else dlBtn.style.display = 'none';
 
             updateFollowBtn();
             updateLikeBtnUI();
+            currentBgPlayState = false;
             updateBgPlayBtnUI();
             renderComments();
+        }
+
+        function getActivePlaylist() {
+            return contents.filter(c => !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id) && checkPrivacy(c));
+        }
+
+        function getNextVideoTitle() {
+            let list = getActivePlaylist();
+            let idx = list.findIndex(x => x.id === currItem.id);
+            if(idx > -1 && idx + 1 < list.length) {
+                return list[idx + 1].title;
+            }
+            return "None (End)";
+        }
+
+        function playNextVideo() {
+            let list = getActivePlaylist();
+            let idx = list.findIndex(x => x.id === currItem.id);
+            if(idx > -1 && idx + 1 < list.length) {
+                openDetail(list[idx + 1].id);
+            } else {
+                showAnimeToast('✨ End of playlist reached!');
+            }
+        }
+
+        function playPrevVideo() {
+            let list = getActivePlaylist();
+            let idx = list.findIndex(x => x.id === currItem.id);
+            if(idx > 0) {
+                openDetail(list[idx - 1].id);
+            } else {
+                showAnimeToast('✨ This is the first video!');
+            }
         }
 
         function adjustVideoOrientation(v) {
@@ -449,6 +531,7 @@
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+            showAnimeToast('📥 Downloading file...');
         }
 
         let currentBgPlayState = false;
@@ -457,9 +540,9 @@
             let v = document.getElementById('activeVideo');
             if(v) {
                 if(currentBgPlayState) {
-                    v.controls = false;
+                    v.removeAttribute('controls');
                 } else {
-                    v.controls = true;
+                    v.setAttribute('controls', 'true');
                 }
             }
             updateBgPlayBtnUI();
@@ -477,13 +560,13 @@
         }
 
         function toggleFollow() {
-            if(currItem.uploader === currUser.username) return alert("You cannot follow yourself!");
+            if(currItem.uploader === currUser.username) return showAnimeToast("You cannot follow yourself!");
             if(following.includes(currItem.uploader)) {
                 following = following.filter(u => u !== currItem.uploader);
-                alert('Unfollowed ' + currItem.uploader);
+                showAnimeToast('Unfollowed ' + currItem.uploader);
             } else {
                 following.push(currItem.uploader);
-                alert('Followed ' + currItem.uploader);
+                showAnimeToast('Followed ' + currItem.uploader);
             }
             localStorage.setItem('flash_following', JSON.stringify(following));
             updateFollowBtn();
@@ -510,10 +593,10 @@
             let idx = currItem.likes.indexOf(currUser.username);
             if(idx > -1) {
                 currItem.likes.splice(idx, 1);
-                alert('Like removed');
+                showAnimeToast('Like removed');
             } else {
                 currItem.likes.push(currUser.username);
-                alert('Liked!');
+                showAnimeToast('Liked!');
             }
             localStorage.setItem('flash_contents', JSON.stringify(contents));
             updateLikeBtnUI();
@@ -534,7 +617,7 @@
         function notInterested() {
             notInterestedList.push(currItem.id);
             localStorage.setItem('flash_not_interested', JSON.stringify(notInterestedList));
-            alert('Marked as not interested');
+            showAnimeToast('Marked as not interested');
             switchPage('homePage');
         }
 
@@ -542,7 +625,7 @@
             if(!blockedUsers.includes(currItem.uploader)) {
                 blockedUsers.push(currItem.uploader);
                 localStorage.setItem('flash_blocked', JSON.stringify(blockedUsers));
-                alert('Blocked ' + currItem.uploader);
+                showAnimeToast('Blocked ' + currItem.uploader);
                 switchPage('homePage');
             }
         }
@@ -557,12 +640,14 @@
             document.getElementById('commText').value = '';
             document.getElementById('commImg').value = '';
             renderComments();
+            showAnimeToast('Comment posted!');
         }
 
         function deleteComment(commId) {
             currItem.comments = currItem.comments.filter(c => c.id !== commId);
             localStorage.setItem('flash_contents', JSON.stringify(contents));
             renderComments();
+            showAnimeToast('Comment deleted');
         }
 
         function renderComments() {
@@ -578,7 +663,7 @@
         function reportItem(t) {
             reports.push({ type: t, target: currItem ? currItem.title : 'Account', by: currUser.username });
             localStorage.setItem('flash_reports', JSON.stringify(reports));
-            alert('Reported successfully!');
+            showAnimeToast('Report submitted successfully!');
         }
 
         function openProfile() {
@@ -599,12 +684,12 @@
             appSettings.resume = document.getElementById('setResume').checked;
             appSettings.bgPlay = document.getElementById('setBgPlay').checked;
             localStorage.setItem('flash_settings', JSON.stringify(appSettings));
-            alert('Settings updated!');
+            showAnimeToast('Settings updated!');
         }
 
         function changePass() {
             let np = document.getElementById('newPassVal').value;
-            if(!np) return alert('Enter new password');
+            if(!np) return showAnimeToast('Enter new password');
             currUser.password = np;
             let u = users.find(x => x.username === currUser.username);
             if(u) u.password = np;
@@ -612,7 +697,7 @@
             localStorage.setItem('flash_curr', JSON.stringify(currUser));
             document.getElementById('currPassView').value = np;
             document.getElementById('newPassVal').value = '';
-            alert('Password changed!');
+            showAnimeToast('Password changed successfully!');
         }
 
         function switchTab(t) {
@@ -637,7 +722,7 @@
                 contents = contents.filter(c => c.id !== id);
                 localStorage.setItem('flash_contents', JSON.stringify(contents));
                 openProfile();
-                alert('Content deleted successfully.');
+                showAnimeToast('Content deleted successfully.');
             }
         }
 
@@ -646,7 +731,8 @@
                 document.getElementById('admLogin').style.display = 'none';
                 document.getElementById('admDash').style.display = 'block';
                 renderAdmin();
-            } else alert('Wrong password');
+                showAnimeToast('Admin Access Granted!');
+            } else showAnimeToast('Wrong password');
         }
 
         function switchAdminTab(tabName, btnElem) {
@@ -698,17 +784,17 @@
             });
         }
 
-        function approveAdminUser(i) { users[i].status = 'Approved'; localStorage.setItem('flash_users', JSON.stringify(users)); renderAdmin(); }
-        function deleteAdminUser(i) { users.splice(i, 1); localStorage.setItem('flash_users', JSON.stringify(users)); renderAdmin(); }
-        function adminDeleteContent(id) { contents = contents.filter(c => c.id !== id); localStorage.setItem('flash_contents', JSON.stringify(contents)); renderAdmin(); renderFeed(); }
-        function clearReport(i) { reports.splice(i, 1); localStorage.setItem('flash_reports', JSON.stringify(reports)); renderAdmin(); }
+        function approveAdminUser(i) { users[i].status = 'Approved'; localStorage.setItem('flash_users', JSON.stringify(users)); renderAdmin(); showAnimeToast('User Approved'); }
+        function deleteAdminUser(i) { users.splice(i, 1); localStorage.setItem('flash_users', JSON.stringify(users)); renderAdmin(); showAnimeToast('User Deleted'); }
+        function adminDeleteContent(id) { contents = contents.filter(c => c.id !== id); localStorage.setItem('flash_contents', JSON.stringify(contents)); renderAdmin(); renderFeed(); showAnimeToast('Content Deleted'); }
+        function clearReport(i) { reports.splice(i, 1); localStorage.setItem('flash_reports', JSON.stringify(reports)); renderAdmin(); showAnimeToast('Report Cleared'); }
         
         function sendBroadcast() {
             let title = document.getElementById('bcTitle').value;
             let msg = document.getElementById('bcMsg').value;
-            if(!title || !msg) return alert('Enter title and message');
+            if(!title || !msg) return showAnimeToast('Enter title and message');
             localStorage.setItem('flash_broadcast_alert', JSON.stringify({ title, msg }));
-            alert('အသိပေးစာ အောင်မြင်စွာ ပို့ပြီးပါပြီ!');
+            showAnimeToast('📢 Broadcast Alert Sent Successfully!');
             document.getElementById('bcTitle').value = '';
             document.getElementById('bcMsg').value = '';
         }
