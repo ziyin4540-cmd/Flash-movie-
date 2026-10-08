@@ -23,7 +23,8 @@
         .meta { padding: 8px; }
         .meta h4 { margin: 0 0 4px 0; font-size: 14px; }
         .meta p { margin: 0; font-size: 11px; color: #aaa; }
-        #detailPage, #settingsPage { display: none; padding: 10px; }
+        .page-section { display: none; padding: 10px; }
+        .page-section.active-page { display: block; }
         .player { width: 100%; background: #000; max-height: 250px; display: flex; justify-content: center; }
         .player video, .player img { width: 100%; max-height: 250px; object-fit: contain; }
         .actions { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; font-size: 13px; border-bottom: 1px solid #222; }
@@ -33,10 +34,13 @@
         nav div.active { color: #fff; }
         nav div span { display: block; font-size: 18px; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 2000; }
-        .modal-content { background: #212121; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #333; max-height: 85vh; overflow-y: auto; }
+        .modal-content { background: #1a1a1a; padding: 20px; border-radius: 12px; width: 92%; max-width: 500px; border: 1px solid #333; max-height: 90vh; overflow-y: auto; }
         .modal-content input, .modal-content textarea, .modal-content select { width: 100%; padding: 10px; margin: 8px 0; background: #121212; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box; }
         .btn { background: #ff0000; color: #fff; border: none; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-sec { background: #333; }
+        .admin-tabs { display: flex; gap: 10px; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
+        .admin-tab-btn { background: #272727; border: none; color: #aaa; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        .admin-tab-btn.active { background: #3b82f6; color: #fff; }
     </style>
 </head>
 <body>
@@ -45,14 +49,14 @@
         <div class="intro-title" id="introTitleContainer"></div>
     </div>
     <header>
-        <div class="logo" onclick="goHome()">▶ Flâsh Movie</div>
+        <div class="logo" onclick="switchPage('homePage')">▶ Flâsh Movie</div>
         <div class="search-bar"><input type="text" id="search" placeholder="Search..." onkeyup="renderFeed()"></div>
         <div style="display:flex; gap:15px; font-size:20px; cursor:pointer;">
-            <span onclick="openModal('adminModal')">🛡️</span>
+            <span onclick="openAdminModal()">🛡️</span>
             <span onclick="openProfile()">👤</span>
         </div>
     </header>
-    <div class="container" id="homePage">
+    <div class="container page-section active-page" id="homePage">
         <div style="display:flex; gap:10px; margin-bottom:15px;">
             <button class="btn" style="width:auto; margin:0; background:#272727;" onclick="filterFeed('all')">All</button>
             <button class="btn" style="width:auto; margin:0; background:#272727;" onclick="filterFeed('video')">Videos</button>
@@ -61,7 +65,11 @@
         </div>
         <div class="grid" id="feedGrid"></div>
     </div>
-    <div class="container" id="detailPage">
+    <div class="container page-section" id="shortsPage">
+        <h3>Shorts Feed</h3>
+        <div class="grid" id="shortsGrid"></div>
+    </div>
+    <div class="container page-section" id="detailPage">
         <div class="player" id="detailMedia"></div>
         <div style="padding:10px 0; border-bottom:1px solid #222;">
             <h3 id="detTitle" style="margin:0 0 5px 0;"></h3>
@@ -82,13 +90,17 @@
             <div id="commList" style="margin-top:10px; font-size:13px;"></div>
         </div>
     </div>
-    <div class="container" id="profilePage">
+    <div class="container page-section" id="profilePage">
         <div style="background:#1e293b; padding:12px; border-radius:8px; margin-bottom:15px; text-align:center;">
             <p style="font-size:12px; color:#38bdf8; margin:0;">📱 Device Account Limit: <b id="deviceCount">0</b> / 2 Accounts used</p>
         </div>
         <div style="text-align:center; border-bottom:1px solid #222; padding-bottom:15px;">
             <div style="width:60px; height:60px; background:#3b82f6; border-radius:50%; margin:auto; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:bold;" id="profAvatar">U</div>
             <h2 id="profName" style="margin:10px 0 5px 0;">@User</h2>
+            <div style="display:flex; justify-content:center; gap:20px; font-size:13px; color:#aaa; margin-bottom:10px;">
+                <span>Followers: <b id="followerCount" style="color:#fff;">0</b></span>
+                <span>Following: <b id="followingCount" style="color:#fff;">0</b></span>
+            </div>
             <div style="background:#1f1f1f; padding:10px; border-radius:8px; text-align:left; max-width:300px; margin:10px auto;">
                 <h4 style="margin:0 0 8px 0; color:#38bdf8; font-size:13px;">⚙️ App Settings</h4>
                 <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:8px;">
@@ -136,21 +148,34 @@
     <div class="modal" id="adminModal">
         <div class="modal-content">
             <h3>Admin Panel</h3>
-            <div id="admLogin"><input type="password" id="admPass" placeholder="Password (295802)"><button class="btn" onclick="verifyAdmin()">Login</button></div>
-            <div id="admDash" style="display:none;">
-                <p style="color:#10b981; font-weight:bold;">Admin Logged In</p>
-                <h4>Users & Passwords:</h4><div id="admUsers" style="background:#121212; padding:8px; max-height:100px; overflow-y:auto; font-size:12px;"></div>
-                <h4>Reports:</h4><div id="admReports" style="background:#121212; padding:8px; max-height:100px; overflow-y:auto; font-size:12px; color:#ef4444;"></div>
-                <h4>Content:</h4><div id="admContent" style="background:#121212; padding:8px; max-height:100px; overflow-y:auto; font-size:12px;"></div>
+            <div id="admLogin">
+                <input type="password" id="admPass" placeholder="Enter Password (295802)">
+                <button class="btn" onclick="verifyAdmin()">Login Admin</button>
                 <button class="btn btn-sec" onclick="closeModal('adminModal')">Close</button>
+            </div>
+            <div id="admDash" style="display:none;">
+                <div class="admin-tabs">
+                    <button class="admin-tab-btn active" onclick="switchAdminTab('users', this)">အသုံးပြုသူ စာရင်း</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('broadcast', this)">အသိပေးစာပို့ရန်</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('reports', this)">Reports</button>
+                </div>
+                <div id="adminTabUsers"><div id="admUsersList" style="max-height:300px; overflow-y:auto;"></div></div>
+                <div id="adminTabBroadcast" style="display:none;">
+                    <h4>User များထံ အသိပေးစာပို့ရန်</h4>
+                    <input type="text" id="bcTitle" placeholder="အသိပေးချက် ခေါင်းစဉ်">
+                    <textarea id="bcMsg" placeholder="အသိပေးလိုသောစာသား..." rows="3" style="width:100%; background:#121212; border:1px solid #333; color:#fff; padding:10px; border-radius:6px;"></textarea>
+                    <button class="btn" onclick="sendBroadcast()">📢 အသိပေးစာ ပို့မည်</button>
+                </div>
+                <div id="adminTabReports" style="display:none;"><div id="admReportsList" style="max-height:300px; overflow-y:auto; color:#ef4444; font-size:13px;"></div></div>
+                <button class="btn btn-sec" style="margin-top:15px;" onclick="closeModal('adminModal')">Close</button>
             </div>
         </div>
     </div>
     <nav>
-        <div class="active" onclick="goHome()"><span>🏠</span>Home</div>
-        <div onclick="alert('Shorts')"><span>🩳</span>Shorts</div>
-        <div onclick="checkUpload()"><span>➕</span>Upload</div>
-        <div onclick="openProfile()"><span>👤</span>Profile</div>
+        <div class="active" onclick="switchNav(0); switchPage('homePage')"><span>🏠</span>Home</div>
+        <div onclick="switchNav(1); openShortsPage()"><span>🩳</span>Shorts</div>
+        <div onclick="switchNav(2); checkUpload()"><span>➕</span>Upload</div>
+        <div onclick="switchNav(3); openProfile()"><span>👤</span>Profile</div>
     </nav>
 <script>
         window.addEventListener('DOMContentLoaded', () => {
@@ -181,18 +206,20 @@
         let currItem = null;
         let filterType = 'all';
 
-        function goHome() {
-            document.getElementById('homePage').style.display = 'block';
-            document.getElementById('detailPage').style.display = 'none';
-            document.getElementById('profilePage').style.display = 'none';
-            renderFeed();
+        function switchPage(pageId) {
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active-page'));
+            document.getElementById(pageId).classList.add('active-page');
+            if(pageId === 'homePage') renderFeed();
+            if(pageId === 'shortsPage') renderShorts();
         }
+
         function openModal(id) { 
             if(id === 'loginModal' && !currUser) {
                 if(deviceAccounts.length >= 2) { alert('Device limit reached: Maximum 2 accounts allowed!'); return; }
             }
             document.getElementById(id).style.display = 'flex'; 
         }
+        function openAdminModal() { document.getElementById('adminModal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
         function handleAuth() {
@@ -225,7 +252,7 @@
         function signOut() {
             currUser = null;
             localStorage.removeItem('flash_curr');
-            goHome();
+            switchPage('homePage');
             alert('Signed out successfully');
         }
 
@@ -243,7 +270,7 @@
             reader.onload = function(e) {
                 contents.unshift({ id: Date.now(), type, title, url: e.target.result, uploader: currUser.username, comments: [] });
                 localStorage.setItem('flash_contents', JSON.stringify(contents));
-                goHome();
+                switchPage('homePage');
                 closeModal('uploadModal');
                 alert('Uploaded successfully!');
             };
@@ -266,12 +293,22 @@
             });
         }
 
+        function openShortsPage() { switchPage('shortsPage'); }
+
+        function renderShorts() {
+            let grid = document.getElementById('shortsGrid');
+            grid.innerHTML = '';
+            let shorts = contents.filter(c => c.type === 'short' && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id));
+            if(shorts.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No shorts available.</p>'; return; }
+            shorts.forEach(c => {
+                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb"><video src="${c.url}"></video></div><div class="meta"><h4>${c.title}</h4><p>${c.uploader}</p></div></div>`;
+            });
+        }
+
         function openDetail(id) {
             if(!currUser || currUser.status !== 'Approved') return alert('Sign in and get approval first');
             currItem = contents.find(x => x.id === id);
-            document.getElementById('homePage').style.display = 'none';
-            document.getElementById('profilePage').style.display = 'none';
-            document.getElementById('detailPage').style.display = 'block';
+            switchPage('detailPage');
             let mb = document.getElementById('detailMedia');
             let playerHtml = currItem.type === 'post' ? `<img src="${currItem.url}">` : `<video src="${currItem.url}" controls ${appSettings.bgPlay ? 'disablepictureinpicture' : ''}></video>`;
             mb.innerHTML = playerHtml;
@@ -307,7 +344,7 @@
             notInterestedList.push(currItem.id);
             localStorage.setItem('flash_not_interested', JSON.stringify(notInterestedList));
             alert('Marked as not interested');
-            goHome();
+            switchPage('homePage');
         }
 
         function blockUser() {
@@ -315,7 +352,7 @@
                 blockedUsers.push(currItem.uploader);
                 localStorage.setItem('flash_blocked', JSON.stringify(blockedUsers));
                 alert('Blocked ' + currItem.uploader);
-                goHome();
+                switchPage('homePage');
             }
         }
 
@@ -348,13 +385,13 @@
 
         function openProfile() {
             if(!currUser || currUser.status !== 'Approved') return openModal('loginModal');
-            document.getElementById('homePage').style.display = 'none';
-            document.getElementById('detailPage').style.display = 'none';
-            document.getElementById('profilePage').style.display = 'block';
+            switchPage('profilePage');
             document.getElementById('profName').innerText = currUser.username;
             document.getElementById('profAvatar').innerText = currUser.username.charAt(1).toUpperCase();
             document.getElementById('currPassView').value = currUser.password;
             document.getElementById('deviceCount').innerText = deviceAccounts.length;
+            document.getElementById('followerCount').innerText = users.filter(u => following.includes(u.username)).length + (following.includes(currUser.username) ? 1 : 0);
+            document.getElementById('followingCount').innerText = following.length;
             document.getElementById('setResume').checked = appSettings.resume;
             document.getElementById('setBgPlay').checked = appSettings.bgPlay;
             switchTab('video');
@@ -399,23 +436,60 @@
             } else alert('Wrong password');
         }
 
+        function switchAdminTab(tabName, btnElem) {
+            document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+            btnElem.classList.add('active');
+            document.getElementById('adminTabUsers').style.display = tabName === 'users' ? 'block' : 'none';
+            document.getElementById('adminTabBroadcast').style.display = tabName === 'broadcast' ? 'block' : 'none';
+            document.getElementById('adminTabReports').style.display = tabName === 'reports' ? 'block' : 'none';
+        }
+
         function renderAdmin() {
-            let uList = document.getElementById('admUsers');
+            let uList = document.getElementById('admUsersList');
             uList.innerHTML = '';
             users.forEach((u, i) => {
-                uList.innerHTML += `<div>${u.username} (Pass: ${u.password}) - ${u.status} ${u.status !== 'Approved' ? `<button onclick="users[${i}].status='Approved';localStorage.setItem('flash_users',JSON.stringify(users));renderAdmin();">Accept</button>` : ''}</div>`;
+                uList.innerHTML += `
+                    <div style="background:#121212; padding:10px; border-radius:6px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <div><b>${u.username}</b><br><small style="color:#aaa;">Pass: ${u.password} | ${u.status}</small></div>
+                        <div style="display:flex; gap:5px;">
+                            ${u.status !== 'Approved' ? `<button onclick="approveAdminUser(${i})" style="background:green; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Accept</button>` : ''}
+                            <button onclick="deleteAdminUser(${i})" style="background:red; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Delete</button>
+                        </div>
+                    </div>
+                `;
             });
-            let rList = document.getElementById('admReports');
+            let rList = document.getElementById('admReportsList');
             rList.innerHTML = '';
-            reports.forEach(r => { rList.innerHTML += `<div>[${r.type}] ${r.target} by ${r.by}</div>`; });
-            let cList = document.getElementById('admContent');
-            cList.innerHTML = '';
-            contents.forEach((c, i) => {
-                cList.innerHTML += `<div>${c.title} <button onclick="contents.splice(${i},1);localStorage.setItem('flash_contents',JSON.stringify(contents));renderAdmin();">Delete</button></div>`;
+            if(reports.length === 0) rList.innerHTML = '<p style="color:#aaa;">No reports found.</p>';
+            reports.forEach((r, i) => {
+                rList.innerHTML += `
+                    <div style="background:#121212; padding:8px; border-radius:6px; margin-bottom:5px;">
+                        <p style="margin:0;"><b>[${r.type}]</b> Target: ${r.target} (By: ${r.by})</p>
+                        <button onclick="clearReport(${i})" style="background:gray; color:white; border:none; padding:2px 6px; margin-top:4px; border-radius:4px; cursor:pointer;">Clear</button>
+                    </div>
+                `;
             });
         }
 
-        goHome();
+        function approveAdminUser(i) { users[i].status = 'Approved'; localStorage.setItem('flash_users', JSON.stringify(users)); renderAdmin(); }
+        function deleteAdminUser(i) { users.splice(i, 1); localStorage.setItem('flash_users', JSON.stringify(users)); renderAdmin(); }
+        function clearReport(i) { reports.splice(i, 1); localStorage.setItem('flash_reports', JSON.stringify(reports)); renderAdmin(); }
+        function sendBroadcast() {
+            let title = document.getElementById('bcTitle').value;
+            let msg = document.getElementById('bcMsg').value;
+            if(!title || !msg) return alert('Enter title and message');
+            alert('Broadcast sent successfully!');
+            document.getElementById('bcTitle').value = '';
+            document.getElementById('bcMsg').value = '';
+        }
+
+        function switchNav(index) {
+            document.querySelectorAll('nav div').forEach((el, i) => {
+                if(i === index) el.classList.add('active'); else el.classList.remove('active');
+            });
+        }
+
+        switchPage('homePage');
     </script>
 </body>
 </html>
