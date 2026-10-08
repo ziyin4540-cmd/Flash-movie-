@@ -6,6 +6,11 @@
     <title>Flâsh Movie Pro</title>
     <style>
         body { font-family: sans-serif; background: #0f0f0f; color: #fff; margin: 0; padding-bottom: 70px; }
+        #introScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #050505; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.8s ease; }
+        .intro-city { font-size: 14px; color: #38bdf8; letter-spacing: 3px; margin-bottom: 15px; text-transform: uppercase; }
+        .intro-title { font-size: 32px; font-weight: bold; color: #fff; letter-spacing: 5px; display: flex; gap: 5px; }
+        .intro-title span { opacity: 0; transform: translateY(20px); animation: fadeInChar 0.4s forwards; }
+        @keyframes fadeInChar { to { opacity: 1; transform: translateY(0); } }
         header { background: #0f0f0f; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #222; }
         .logo { color: #ff0000; font-size: 20px; font-weight: bold; cursor: pointer; }
         .search-bar { display: flex; align-items: center; background: #121212; border: 1px solid #333; border-radius: 20px; padding: 5px 15px; width: 40%; }
@@ -18,12 +23,11 @@
         .meta { padding: 8px; }
         .meta h4 { margin: 0 0 4px 0; font-size: 14px; }
         .meta p { margin: 0; font-size: 11px; color: #aaa; }
-        #detailPage { display: none; padding: 10px; }
+        #detailPage, #settingsPage { display: none; padding: 10px; }
         .player { width: 100%; background: #000; max-height: 250px; display: flex; justify-content: center; }
         .player video, .player img { width: 100%; max-height: 250px; object-fit: contain; }
         .actions { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; font-size: 13px; border-bottom: 1px solid #222; }
         .btn-action { background: #272727; padding: 6px 12px; border-radius: 15px; cursor: pointer; white-space: nowrap; }
-        #profilePage { display: none; padding: 15px; text-align: center; }
         nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #212121; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; z-index: 1000; }
         nav div { text-align: center; font-size: 11px; color: #aaa; cursor: pointer; }
         nav div.active { color: #fff; }
@@ -36,17 +40,18 @@
     </style>
 </head>
 <body>
-
+    <div id="introScreen">
+        <div class="intro-city">⚡ Futuristic City Stream ⚡</div>
+        <div class="intro-title" id="introTitleContainer"></div>
+    </div>
     <header>
         <div class="logo" onclick="goHome()">▶ Flâsh Movie</div>
         <div class="search-bar"><input type="text" id="search" placeholder="Search..." onkeyup="renderFeed()"></div>
         <div style="display:flex; gap:15px; font-size:20px; cursor:pointer;">
             <span onclick="openModal('adminModal')">🛡️</span>
-            <span onclick="openModal('loginModal')">👤</span>
+            <span onclick="openProfile()">👤</span>
         </div>
     </header>
-
-    <!-- HOME -->
     <div class="container" id="homePage">
         <div style="display:flex; gap:10px; margin-bottom:15px;">
             <button class="btn" style="width:auto; margin:0; background:#272727;" onclick="filterFeed('all')">All</button>
@@ -56,16 +61,16 @@
         </div>
         <div class="grid" id="feedGrid"></div>
     </div>
-
-    <!-- DETAIL -->
     <div class="container" id="detailPage">
         <div class="player" id="detailMedia"></div>
         <div style="padding:10px 0; border-bottom:1px solid #222;">
             <h3 id="detTitle" style="margin:0 0 5px 0;"></h3>
             <p id="detStats" style="color:#aaa; font-size:12px; margin:0;"></p>
             <div class="actions">
+                <div class="btn-action" onclick="toggleFollow()" id="followBtn">👤 Follow</div>
                 <div class="btn-action" onclick="alert('Liked!')">👍 Like</div>
-                <div class="btn-action" onclick="alert('Saved!')">💾 Save</div>
+                <div class="btn-action" onclick="notInterested()" style="color:#f59e0b;">🚫 Not Interested</div>
+                <div class="btn-action" onclick="blockUser()" style="color:#ef4444;">⛔ Block User</div>
                 <div class="btn-action" onclick="reportItem('Content')" style="color:#ef4444;">⚠️ Report</div>
             </div>
         </div>
@@ -77,18 +82,28 @@
             <div id="commList" style="margin-top:10px; font-size:13px;"></div>
         </div>
     </div>
-
-    <!-- PROFILE -->
     <div class="container" id="profilePage">
+        <div style="background:#1e293b; padding:12px; border-radius:8px; margin-bottom:15px; text-align:center;">
+            <p style="font-size:12px; color:#38bdf8; margin:0;">📱 Device Account Limit: <b id="deviceCount">0</b> / 2 Accounts used</p>
+        </div>
         <div style="text-align:center; border-bottom:1px solid #222; padding-bottom:15px;">
             <div style="width:60px; height:60px; background:#3b82f6; border-radius:50%; margin:auto; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:bold;" id="profAvatar">U</div>
             <h2 id="profName" style="margin:10px 0 5px 0;">@User</h2>
             <div style="background:#1f1f1f; padding:10px; border-radius:8px; text-align:left; max-width:300px; margin:10px auto;">
+                <h4 style="margin:0 0 8px 0; color:#38bdf8; font-size:13px;">⚙️ App Settings</h4>
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:8px;">
+                    <span>Auto Resume:</span> <input type="checkbox" id="setResume" onchange="saveSettings()">
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:8px;">
+                    <span>Background Play:</span> <input type="checkbox" id="setBgPlay" onchange="saveSettings()">
+                </div>
+                <hr style="border-color:#333; margin:8px 0;">
                 <label style="font-size:11px; color:#aaa;">Current Password:</label>
                 <input type="text" id="currPassView" readonly style="background:#121212; border:1px solid #333; color:#fff; padding:5px; width:100%; margin-bottom:5px;">
                 <label style="font-size:11px; color:#aaa;">New Password:</label>
                 <input type="password" id="newPassVal" placeholder="New Password" style="background:#121212; border:1px solid #333; color:#fff; padding:5px; width:100%; margin-bottom:5px;">
                 <button class="btn" style="padding:5px; font-size:12px;" onclick="changePass()">Change Password</button>
+                <button class="btn" style="padding:5px; font-size:12px; background:#ef4444; margin-top:5px;" onclick="signOut()">Sign Out</button>
             </div>
         </div>
         <div style="display:flex; justify-content:space-around; margin:15px 0; border-bottom:1px solid #333; padding-bottom:5px; font-size:14px; font-weight:bold; color:#aaa; cursor:pointer;">
@@ -98,8 +113,6 @@
         </div>
         <div class="grid" id="profGrid"></div>
     </div>
-
-    <!-- UPLOAD MODAL -->
     <div class="modal" id="uploadModal">
         <div class="modal-content">
             <h3>Upload Content</h3>
@@ -110,19 +123,16 @@
             <button class="btn btn-sec" onclick="closeModal('uploadModal')">Cancel</button>
         </div>
     </div>
-
-    <!-- LOGIN MODAL -->
     <div class="modal" id="loginModal">
         <div class="modal-content" style="text-align:center;">
             <h3>Login / Register</h3>
+            <p style="font-size:11px; color:#38bdf8;">Max 2 accounts allowed per device.</p>
             <input type="text" id="authU" placeholder="Username">
             <input type="password" id="authP" placeholder="Password">
             <button class="btn" onclick="handleAuth()">Sign In / Register</button>
             <button class="btn btn-sec" onclick="closeModal('loginModal')">Close</button>
         </div>
     </div>
-
-    <!-- ADMIN MODAL -->
     <div class="modal" id="adminModal">
         <div class="modal-content">
             <h3>Admin Panel</h3>
@@ -136,19 +146,38 @@
             </div>
         </div>
     </div>
-
     <nav>
         <div class="active" onclick="goHome()"><span>🏠</span>Home</div>
         <div onclick="alert('Shorts')"><span>🩳</span>Shorts</div>
         <div onclick="checkUpload()"><span>➕</span>Upload</div>
         <div onclick="openProfile()"><span>👤</span>Profile</div>
     </nav>
+<script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const text = "Flâsh Movie";
+            const container = document.getElementById('introTitleContainer');
+            text.split('').forEach((char, i) => {
+                const span = document.createElement('span');
+                span.innerText = char === ' ' ? '\u00A0' : char;
+                span.style.animationDelay = (i * 0.1) + 's';
+                container.appendChild(span);
+            });
+            setTimeout(() => {
+                const intro = document.getElementById('introScreen');
+                intro.style.opacity = '0';
+                setTimeout(() => intro.style.display = 'none', 800);
+            }, 2200);
+        });
 
-    <script>
         let contents = JSON.parse(localStorage.getItem('flash_contents')) || [];
         let users = JSON.parse(localStorage.getItem('flash_users')) || [];
+        let deviceAccounts = JSON.parse(localStorage.getItem('flash_device_accs')) || [];
         let reports = JSON.parse(localStorage.getItem('flash_reports')) || [];
+        let blockedUsers = JSON.parse(localStorage.getItem('flash_blocked')) || [];
+        let following = JSON.parse(localStorage.getItem('flash_following')) || [];
+        let notInterestedList = JSON.parse(localStorage.getItem('flash_not_interested')) || [];
         let currUser = JSON.parse(localStorage.getItem('flash_curr')) || null;
+        let appSettings = JSON.parse(localStorage.getItem('flash_settings')) || { resume: true, bgPlay: false };
         let currItem = null;
         let filterType = 'all';
 
@@ -158,7 +187,12 @@
             document.getElementById('profilePage').style.display = 'none';
             renderFeed();
         }
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function openModal(id) { 
+            if(id === 'loginModal' && !currUser) {
+                if(deviceAccounts.length >= 2) { alert('Device limit reached: Maximum 2 accounts allowed!'); return; }
+            }
+            document.getElementById(id).style.display = 'flex'; 
+        }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
         function handleAuth() {
@@ -172,13 +206,27 @@
                 if(usr.status !== 'Approved') return alert('Pending admin approval');
                 currUser = usr;
             } else {
+                if(deviceAccounts.length >= 2) return alert('Device limit reached: Max 2 accounts!');
                 usr = { username: f, password: p, status: 'Pending' };
                 users.push(usr);
+                if(!deviceAccounts.includes(f)) deviceAccounts.push(f);
                 alert('Account created! Wait for admin approval.');
+            }
+            if(!deviceAccounts.includes(currUser.username) && currUser.status === 'Approved') {
+                if(deviceAccounts.length >= 2) return alert('Device limit reached!');
+                deviceAccounts.push(currUser.username);
             }
             localStorage.setItem('flash_curr', JSON.stringify(currUser));
             localStorage.setItem('flash_users', JSON.stringify(users));
+            localStorage.setItem('flash_device_accs', JSON.stringify(deviceAccounts));
             closeModal('loginModal');
+        }
+
+        function signOut() {
+            currUser = null;
+            localStorage.removeItem('flash_curr');
+            goHome();
+            alert('Signed out successfully');
         }
 
         function checkUpload() {
@@ -209,6 +257,7 @@
             grid.innerHTML = '';
             let s = document.getElementById('search').value.toLowerCase();
             let data = contents.filter(c => c.title.toLowerCase().includes(s));
+            data = data.filter(c => !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id));
             if(filterType !== 'all') data = data.filter(c => c.type === filterType);
             if(data.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No data found.</p>'; return; }
             data.forEach(c => {
@@ -224,10 +273,50 @@
             document.getElementById('profilePage').style.display = 'none';
             document.getElementById('detailPage').style.display = 'block';
             let mb = document.getElementById('detailMedia');
-            mb.innerHTML = currItem.type === 'post' ? `<img src="${currItem.url}">` : `<video src="${currItem.url}" controls></video>`;
+            let playerHtml = currItem.type === 'post' ? `<img src="${currItem.url}">` : `<video src="${currItem.url}" controls ${appSettings.bgPlay ? 'disablepictureinpicture' : ''}></video>`;
+            mb.innerHTML = playerHtml;
             document.getElementById('detTitle').innerText = currItem.title;
             document.getElementById('detStats').innerText = currItem.uploader;
-            renderComments();
+            updateFollowBtn();
+        }
+
+        function toggleFollow() {
+            if(following.includes(currItem.uploader)) {
+                following = following.filter(u => u !== currItem.uploader);
+                alert('Unfollowed ' + currItem.uploader);
+            } else {
+                following.push(currItem.uploader);
+                alert('Followed ' + currItem.uploader);
+            }
+            localStorage.setItem('flash_following', JSON.stringify(following));
+            updateFollowBtn();
+        }
+
+        function updateFollowBtn() {
+            let btn = document.getElementById('followBtn');
+            if(following.includes(currItem.uploader)) {
+                btn.innerText = '👤 Following';
+                btn.style.color = '#38bdf8';
+            } else {
+                btn.innerText = '👤 Follow';
+                btn.style.color = '#fff';
+            }
+        }
+
+        function notInterested() {
+            notInterestedList.push(currItem.id);
+            localStorage.setItem('flash_not_interested', JSON.stringify(notInterestedList));
+            alert('Marked as not interested');
+            goHome();
+        }
+
+        function blockUser() {
+            if(!blockedUsers.includes(currItem.uploader)) {
+                blockedUsers.push(currItem.uploader);
+                localStorage.setItem('flash_blocked', JSON.stringify(blockedUsers));
+                alert('Blocked ' + currItem.uploader);
+                goHome();
+            }
         }
 
         function addComment() {
@@ -258,14 +347,24 @@
         }
 
         function openProfile() {
-            if(!currUser || currUser.status !== 'Approved') return alert('Sign in first');
+            if(!currUser || currUser.status !== 'Approved') return openModal('loginModal');
             document.getElementById('homePage').style.display = 'none';
             document.getElementById('detailPage').style.display = 'none';
             document.getElementById('profilePage').style.display = 'block';
             document.getElementById('profName').innerText = currUser.username;
             document.getElementById('profAvatar').innerText = currUser.username.charAt(1).toUpperCase();
             document.getElementById('currPassView').value = currUser.password;
+            document.getElementById('deviceCount').innerText = deviceAccounts.length;
+            document.getElementById('setResume').checked = appSettings.resume;
+            document.getElementById('setBgPlay').checked = appSettings.bgPlay;
             switchTab('video');
+        }
+
+        function saveSettings() {
+            appSettings.resume = document.getElementById('setResume').checked;
+            appSettings.bgPlay = document.getElementById('setBgPlay').checked;
+            localStorage.setItem('flash_settings', JSON.stringify(appSettings));
+            alert('Settings updated!');
         }
 
         function changePass() {
@@ -316,7 +415,7 @@
             });
         }
 
-        renderFeed();
+        goHome();
     </script>
 </body>
 </html>
