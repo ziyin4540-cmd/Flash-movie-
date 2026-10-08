@@ -168,8 +168,8 @@
         </div>
         <div style="background:#1f1f1f; padding:15px; border-radius:8px; max-width:650px; margin:auto;">
             <div id="admLoginBox">
-                <input type="password" id="admPass" placeholder="Enter Admin Password" style="width:100%; padding:10px; background:#121212; border:1px solid #333; color:#fff; border-radius:6px; margin-bottom:10px;">
-                <button class="btn" onclick="verifyAdmin()">Login Admin</button>
+                <p id="adminAccessNote" style="color:#fbbf24;">Supabase Auth ဖြင့်ဝင်ထားသော admin account သာ ဤနေရာကိုသုံးနိုင်ပါသည်။</p>
+                <button class="btn" onclick="verifyAdmin()">Check Admin Access</button>
             </div>
             <div id="admDashBox" style="display:none;">
                 <div class="admin-tabs">
@@ -295,14 +295,19 @@
             <h3>Login / Register</h3>
             <p style="font-size:12px; color:#38bdf8;">ဒီစက်ရှိ account: <b id="loginAccountCount">0</b> / <b id="modalLimitText">2</b></p>
             <p id="loginLimitNotice" style="font-size:12px; color:#fbbf24; display:none;">Account limit ပြည့်နေပါပြီ။ ရှိပြီးသား account ဖြင့် login ဝင်နိုင်ပြီး account အသစ်ဖွင့်ရန် limit တောင်းနိုင်ပါတယ်။</p>
-            <input type="text" id="authU" placeholder="Username">
-            <input type="password" id="authP" placeholder="Password">
-            <button class="btn" onclick="handleAuth()">Sign In / Register</button>
+            <p id="authBackendNotice" role="status" style="display:none; color:#fbbf24; font-size:12px;"></p>
+            <label for="authUsername" style="display:block; text-align:left; font-size:12px; color:#aaa;">Username</label>
+            <input type="text" id="authUsername" autocomplete="username" placeholder="username" maxlength="30">
+            <label for="authP" style="display:block; text-align:left; font-size:12px; color:#aaa;">Password</label>
+            <input type="password" id="authP" autocomplete="current-password" placeholder="At least 8 characters">
+            <button class="btn" id="authSignInButton" onclick="signInWithSupabase()">Sign In</button>
+            <button class="btn btn-sec" id="authRegisterButton" onclick="registerWithSupabase()">Create Account</button>
+            <p style="font-size:11px;color:#aaa;">စကားဝှက်မေ့သွားပါက <a href="https://t.me/ckstore22" target="_blank" rel="noopener noreferrer" style="color:#38bdf8;">@ckstore22</a> ကိုဆက်သွယ်ပါ။</p>
             <div style="border-top:1px solid #333; margin-top:16px; padding-top:12px; text-align:left;">
                 <b style="font-size:13px;">Account limit တိုးတောင်းရန်</b>
                 <label for="loginRequestedLimit" style="display:block; margin-top:8px; font-size:12px; color:#aaa;">လိုချင်သော account အများဆုံးအရေအတွက်</label>
                 <input type="number" id="loginRequestedLimit" min="1" step="1" value="3" inputmode="numeric" aria-label="Requested account limit">
-                <button class="btn" style="background:#f59e0b;" onclick="requestAccountLimit()">📥 Admin ထံ တောင်းမည်</button>
+                <button class="btn" id="authLimitButton" style="background:#f59e0b;" onclick="requestAccountLimit()">📥 Admin ထံ တောင်းမည်</button>
                 <p style="font-size:11px; color:#aaa; line-height:1.5;">တုံ့ပြန်မှုကြာနေပါက <a href="https://t.me/ckstore22" target="_blank" rel="noopener noreferrer" style="color:#38bdf8;">@ckstore22 Telegram</a> သို့ ဆက်သွယ်ပါ။</p>
             </div>
             <button class="btn btn-sec" onclick="closeModal('loginModal')">Close</button>
@@ -326,5 +331,6 @@
     </nav>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
+    <script src="auth.js"></script>
 </body>
 </html>
