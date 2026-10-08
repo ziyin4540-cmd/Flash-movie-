@@ -3,89 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flâsh Movie - Pro Platform</title>
+    <title>Flâsh Movie - Pro</title>
     <style>
         body { font-family: sans-serif; background: #0f0f0f; color: #fff; margin: 0; padding-bottom: 70px; }
         header { background: #0f0f0f; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #222; }
-        .logo { color: #ff0000; font-size: 20px; font-weight: bold; }
+        .logo { color: #ff0000; font-size: 20px; font-weight: bold; cursor: pointer; }
         .search-bar { display: flex; align-items: center; background: #121212; border: 1px solid #333; border-radius: 20px; padding: 5px 15px; width: 40%; }
         .search-bar input { background: transparent; border: none; color: #fff; width: 100%; outline: none; }
         .header-icons { display: flex; gap: 15px; font-size: 20px; cursor: pointer; align-items: center; }
-        
-        .container { padding: 15px; max-width: 900px; margin: auto; }
-        .video-card { background: #1f1f1f; margin-bottom: 15px; border-radius: 12px; overflow: hidden; position: relative; }
-        .video-thumb { width: 100%; height: 220px; background: #000; display: flex; align-items: center; justify-content: center; }
-        .video-thumb video { width: 100%; height: 100%; object-fit: cover; }
-        .video-info { padding: 12px; display: flex; justify-content: space-between; align-items: flex-start; }
-        .details h4 { margin: 0 0 5px 0; font-size: 16px; }
-        .details p { margin: 0; font-size: 12px; color: #aaa; }
-        .delete-btn { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
-
-        /* Bottom Nav */
+        .container { padding: 10px; max-width: 800px; margin: auto; }
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+        .video-card { background: #1f1f1f; border-radius: 8px; overflow: hidden; cursor: pointer; }
+        .video-thumb-small { width: 100%; height: 130px; background: #000; display: flex; align-items: center; justify-content: center; }
+        .video-thumb-small video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+        .video-meta { padding: 8px; }
+        .video-meta h4 { margin: 0 0 4px 0; font-size: 14px; }
+        .video-meta p { margin: 0; font-size: 11px; color: #aaa; }
+        #watchPage { display: none; padding: 10px; }
+        .player-container { width: 100%; background: #000; max-height: 250px; display: flex; justify-content: center; }
+        .player-container video { width: 100%; max-height: 250px; object-fit: contain; }
+        .watch-details { padding: 10px 0; border-bottom: 1px solid #222; }
+        .watch-title { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+        .watch-stats { font-size: 12px; color: #aaa; margin-bottom: 10px; }
+        .action-buttons { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 5px; font-size: 13px; }
+        .action-btn { background: #272727; padding: 6px 12px; border-radius: 15px; display: flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap; }
+        .comments-section { margin-top: 15px; background: #1f1f1f; padding: 10px; border-radius: 8px; }
+        .comment-input-box { display: flex; gap: 10px; margin-top: 10px; }
+        .comment-input-box input { flex: 1; background: #121212; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 4px; }
+        #profilePage { display: none; padding: 15px; text-align: center; }
+        .profile-header { display: flex; flex-direction: column; align-items: center; gap: 10px; border-bottom: 1px solid #222; padding-bottom: 15px; }
+        .profile-avatar { width: 70px; height: 70px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; }
+        .profile-tabs { display: flex; justify-content: space-around; margin: 15px 0; border-bottom: 1px solid #333; padding-bottom: 5px; font-size: 14px; font-weight: bold; color: #aaa; cursor: pointer; }
+        .profile-tabs span.activeTab { color: #fff; border-bottom: 2px solid #ff0000; padding-bottom: 3px; }
         nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #212121; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; z-index: 1000; }
         nav div { text-align: center; font-size: 11px; color: #aaa; cursor: pointer; }
         nav div.active { color: #fff; }
         nav div span { display: block; font-size: 18px; }
-
-        /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 2000; }
-        .modal-content { background: #212121; padding: 20px; border-radius: 12px; width: 90%; max-width: 450px; border: 1px solid #333; max-height: 85vh; overflow-y: auto; }
+        .modal-content { background: #212121; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #333; max-height: 85vh; overflow-y: auto; }
         .modal-content input, .modal-content textarea { width: 100%; padding: 10px; margin: 8px 0; background: #121212; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box; }
         .btn { background: #ff0000; color: #fff; border: none; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-secondary { background: #333; }
-        
-        .progress-bar-bg { width: 100%; background: #333; border-radius: 4px; overflow: hidden; height: 10px; margin-top: 10px; display: none; }
+        .progress-bar-bg { width: 100%; background: #333; border-radius: 4px; overflow: hidden; height: 8px; margin-top: 10px; display: none; }
         .progress-bar-fill { width: 0%; height: 100%; background: #ff0000; }
     </style>
 </head>
 <body>
-
     <header>
-        <div class="logo">▶ Flâsh Movie</div>
-        <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="Search videos..." onkeyup="searchVideos()">
-        </div>
+        <div class="logo" onclick="goHome()">▶ Flâsh Movie</div>
+        <div class="search-bar"><input type="text" id="searchInput" placeholder="Search..." onkeyup="searchVideos()"></div>
         <div class="header-icons">
-            <span onclick="openAdminModal()" title="Admin Panel">🛡️</span>
-            <span id="userProfileIcon" onclick="openLoginModal()" title="Login">👤</span>
+            <span onclick="openAdminModal()" title="Admin">🛡️</span>
+            <span onclick="openLoginModal()" title="Login">👤</span>
         </div>
     </header>
-
-    <div class="container" id="videoContainer">
-        <!-- ဗီဒီယိုများ ဤနေရာတွင် ပေါ်လာမည် -->
+    <div class="container" id="homePage"><div class="video-grid" id="videoGrid"></div></div>
+    <div class="container" id="watchPage">
+        <div class="player-container"><video id="activeVideoPlayer" controls></video></div>
+        <div class="watch-details">
+            <div class="watch-title" id="watchTitle">Title</div>
+            <div class="watch-stats" id="watchStats">1.2K views</div>
+            <div class="action-buttons">
+                <div class="action-btn" onclick="alert('Liked!')">👍 Like</div>
+                <div class="action-btn" onclick="alert('Dislike')">👎</div>
+                <div class="action-btn" onclick="alert('Shared!')">↗️ Share</div>
+                <div class="action-btn" onclick="alert('Saved!')">💾 Save</div>
+            </div>
+        </div>
+        <div class="comments-section">
+            <h4>Comments <span id="commentCount">(0)</span></h4>
+            <div class="comment-input-box">
+                <input type="text" id="commentInput" placeholder="Add a comment...">
+                <button class="btn" style="width:auto; margin-top:0;" onclick="addComment()">Post</button>
+            </div>
+            <div id="commentsList" style="margin-top: 10px; font-size: 13px;"></div>
+        </div>
     </div>
-
-    <!-- Upload Modal -->
+    <div class="container" id="profilePage">
+        <div class="profile-header">
+            <div class="profile-avatar" id="profileAvatarText">U</div>
+            <h2 id="profileUsernameName">@Username</h2>
+            <p id="profileStatusText" style="color: #10b981; font-size: 13px;">Status: Active</p>
+        </div>
+        <div class="profile-tabs">
+            <span class="activeTab" onclick="switchProfileTab('videos')">Videos</span>
+            <span onclick="switchProfileTab('shorts')">Shorts</span>
+            <span onclick="switchProfileTab('posts')">Posts</span>
+        </div>
+        <div id="profileTabContent" class="video-grid" style="margin-top: 15px;"></div>
+    </div>
     <div class="modal" id="uploadModal">
         <div class="modal-content">
             <h3>Upload Video</h3>
             <input type="text" id="upTitle" placeholder="Video Title">
             <textarea id="upDesc" placeholder="Description" rows="2"></textarea>
             <input type="file" id="upFile" accept="video/*" style="border:none; padding:0; margin-top:10px;">
-            
             <p id="progressText" style="font-size: 12px; margin: 5px 0; text-align: right; display:none;">Uploading: 0%</p>
-            <div class="progress-bar-bg" id="progressBarBg">
-                <div class="progress-bar-fill" id="progressBar"></div>
-            </div>
-
-            <button class="btn" onclick="uploadVideo()">Upload Video</button>
+            <div class="progress-bar-bg" id="progressBarBg"><div class="progress-bar-fill" id="progressBar"></div></div>
+            <button class="btn" onclick="uploadVideo()">Upload Now</button>
             <button class="btn btn-secondary" onclick="closeModal('uploadModal')">Cancel</button>
         </div>
     </div>
-
-    <!-- Custom Fast Login Modal -->
     <div class="modal" id="loginModal">
         <div class="modal-content" style="text-align: center;">
-            <h3>Sign in to Flâsh Movie</h3>
-            <p style="font-size: 13px; color: #aaa; margin-bottom: 15px;">Enter your username or channel name to continue</p>
-            
-            <input type="text" id="customUsername" placeholder="e.g. @ZiYin" style="text-align: center; font-size: 16px;">
-            <button class="btn" onclick="loginCustomUser()">Sign In / Create Account</button>
+            <h3>Login / Register</h3>
+            <input type="text" id="authUsername" placeholder="Username">
+            <input type="password" id="authPassword" placeholder="Password">
+            <button class="btn" onclick="handleAuth()">Sign In / Register</button>
             <button class="btn btn-secondary" style="margin-top: 10px;" onclick="closeModal('loginModal')">Close</button>
         </div>
     </div>
-
-    <!-- Admin Panel Modal -->
     <div class="modal" id="adminModal">
         <div class="modal-content">
             <h3>Admin Panel</h3>
@@ -94,68 +121,78 @@
                 <button class="btn" onclick="verifyAdmin()">Login Admin</button>
             </div>
             <div id="adminDashboard" style="display:none;">
-                <p style="color: #10b981; font-weight: bold;">Status: Logged In as Admin</p>
-                <h4>Video Management & Moderation:</h4>
-                <div id="adminVideoList" style="background: #121212; padding: 10px; border-radius: 6px; margin: 10px 0; max-height: 250px; overflow-y: auto; font-size: 13px;">
-                    <!-- Videos to delete -->
-                </div>
+                <p style="color: #10b981; font-weight: bold;">Status: Logged In</p>
+                <h4>Account Approvals:</h4>
+                <div id="adminUserList" style="background: #121212; padding: 10px; border-radius: 6px; margin: 10px 0; max-height: 120px; overflow-y: auto; font-size: 13px;"></div>
+                <h4>Video Management:</h4>
+                <div id="adminVideoList" style="background: #121212; padding: 10px; border-radius: 6px; margin: 10px 0; max-height: 120px; overflow-y: auto; font-size: 13px;"></div>
                 <button class="btn btn-secondary" onclick="closeModal('adminModal')">Close</button>
             </div>
         </div>
     </div>
-
-    <!-- Bottom Navigation Bar -->
     <nav>
-        <div class="active" onclick="switchNav(0)"><span>🏠</span>Home</div>
-        <div onclick="switchNav(1)"><span>🩳</span>Shorts</div>
+        <div class="active" onclick="switchNav(0); goHome();"><span>🏠</span>Home</div>
+        <div onclick="switchNav(1); alert('Shorts');"><span>🩳</span>Shorts</div>
         <div onclick="checkLoginAndUpload()"><span>➕</span>Upload</div>
-        <div onclick="openLoginModal()"><span id="navUserIcon">👤</span><span id="navUserName">You</span></div>
+        <div onclick="switchNav(3); openProfilePage();"><span id="navUserIcon">👤</span><span id="navUserName">Profile</span></div>
     </nav>
-
-    <script>
+<script>
         let videos = JSON.parse(localStorage.getItem('flash_videos')) || [];
-        let currentUser = localStorage.getItem('flash_current_user') || null;
+        let users = JSON.parse(localStorage.getItem('flash_users')) || [];
+        let currentUser = JSON.parse(localStorage.getItem('flash_current_user')) || null;
+        let currentWatchingVideo = null;
+
+        function goHome() {
+            document.getElementById('homePage').style.display = 'block';
+            document.getElementById('watchPage').style.display = 'none';
+            document.getElementById('profilePage').style.display = 'none';
+            renderVideos();
+        }
 
         function checkLoginAndUpload() {
-            if(!currentUser) {
-                alert('Please sign in first!');
+            if(!currentUser || currentUser.status !== 'Approved') {
+                alert('Account pending admin approval or not signed in!');
                 openLoginModal();
             } else {
-                openUploadModal();
+                document.getElementById('uploadModal').style.display = 'flex';
             }
         }
 
-        function openUploadModal() { if(currentUser) document.getElementById('uploadModal').style.display = 'flex'; }
         function openLoginModal() { document.getElementById('loginModal').style.display = 'flex'; }
         function openAdminModal() { document.getElementById('adminModal').style.display = 'flex'; }
-        function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-        function loginCustomUser() {
-            const uname = document.getElementById('customUsername').value.trim();
-            if(!uname) {
-                alert('Please enter a valid username!');
-                return;
+        function handleAuth() {
+            const uname = document.getElementById('authUsername').value.trim();
+            const pass = document.getElementById('authPassword').value;
+            if(!uname || !pass) { alert('Enter username & password!'); return; }
+            const fName = uname.startsWith('@') ? uname : '@' + uname;
+            let user = users.find(u => u.username === fName);
+
+            if(user) {
+                if(user.password !== pass) { alert('Incorrect password!'); return; }
+                if(user.status !== 'Approved') { alert('Pending admin approval!'); return; }
+                currentUser = user;
+                localStorage.setItem('flash_current_user', JSON.stringify(currentUser));
+                alert('Signed in!');
+            } else {
+                user = { username: fName, password: pass, status: 'Pending' };
+                users.push(user);
+                localStorage.setItem('flash_users', JSON.stringify(users));
+                alert('Account created! Waiting for Admin approval.');
             }
-            currentUser = uname.startsWith('@') ? uname : '@' + uname;
-            localStorage.setItem('flash_current_user', currentUser);
-            document.getElementById('navUserName').innerText = currentUser;
-            alert('Signed in successfully as ' + currentUser);
             closeModal('loginModal');
+            document.getElementById('navUserName').innerText = fName;
         }
 
         function uploadVideo() {
             const title = document.getElementById('upTitle').value;
             const desc = document.getElementById('upDesc').value;
             const fileInput = document.getElementById('upFile');
-            
-            if(!title || fileInput.files.length === 0) {
-                alert('Please enter title and select a video file!');
-                return;
-            }
+            if(!title || fileInput.files.length === 0) { alert('Enter title & select file!'); return; }
 
             const file = fileInput.files[0];
             const reader = new FileReader();
-
             document.getElementById('progressText').style.display = 'block';
             document.getElementById('progressBarBg').style.display = 'block';
 
@@ -164,22 +201,13 @@
                 progress += 5;
                 document.getElementById('progressBar').style.width = progress + '%';
                 document.getElementById('progressText').innerText = 'Uploading: ' + progress + '%';
-                
                 if(progress >= 100) {
                     clearInterval(interval);
                     reader.onload = function(e) {
-                        const videoObj = {
-                            id: Date.now(),
-                            title: title,
-                            desc: desc,
-                            url: e.target.result,
-                            uploader: currentUser,
-                            time: 'Just now'
-                        };
-                        videos.unshift(videoObj);
+                        videos.unshift({ id: Date.now(), title, desc, url: e.target.result, uploader: currentUser.username, time: 'Just now', comments: [] });
                         localStorage.setItem('flash_videos', JSON.stringify(videos));
-                        renderVideos();
-                        alert('Video Uploaded Successfully!');
+                        goHome();
+                        alert('Uploaded successfully!');
                         closeModal('uploadModal');
                         document.getElementById('progressBarBg').style.display = 'none';
                         document.getElementById('progressText').style.display = 'none';
@@ -193,85 +221,140 @@
         }
 
         function renderVideos(filter = '') {
-            const container = document.getElementById('videoContainer');
-            container.innerHTML = '';
-            
+            const grid = document.getElementById('videoGrid');
+            grid.innerHTML = '';
             const filtered = videos.filter(v => v.title.toLowerCase().includes(filter.toLowerCase()));
-            
-            if(filtered.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#aaa; margin-top:40px;">No videos found.</p>';
-                return;
-            }
-
+            if(filtered.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No videos.</p>'; return; }
             filtered.forEach(v => {
-                container.innerHTML += `
-                    <div class="video-card">
-                        <div class="video-thumb">
-                            <video src="${v.url}" controls></video>
-                        </div>
-                        <div class="video-info">
-                            <div>
-                                <h4>${v.title}</h4>
-                                <p>By ${v.uploader} • ${v.time}</p>
-                            </div>
-                        </div>
+                grid.innerHTML += `
+                    <div class="video-card" onclick="openWatchPage(${v.id})">
+                        <div class="video-thumb-small"><video src="${v.url}"></video></div>
+                        <div class="video-meta"><h4>${v.title}</h4><p>${v.uploader} • ${v.time}</p></div>
                     </div>
                 `;
             });
         }
 
-        function searchVideos() {
-            const query = document.getElementById('searchInput').value;
-            renderVideos(query);
+        function openWatchPage(id) {
+            if(!currentUser || currentUser.status !== 'Approved') {
+                alert('Please sign in and get admin approval first!');
+                openLoginModal();
+                return;
+            }
+            currentWatchingVideo = videos.find(v => v.id === id);
+            if(!currentWatchingVideo) return;
+
+            document.getElementById('homePage').style.display = 'none';
+            document.getElementById('profilePage').style.display = 'none';
+            document.getElementById('watchPage').style.display = 'block';
+
+            document.getElementById('activeVideoPlayer').src = currentWatchingVideo.url;
+            document.getElementById('watchTitle').innerText = currentWatchingVideo.title;
+            document.getElementById('watchStats').innerText = `${currentWatchingVideo.uploader} • ${currentWatchingVideo.time}`;
+            renderComments();
         }
 
+        function addComment() {
+            const txt = document.getElementById('commentInput').value.trim();
+            if(!txt) return;
+            if(!currentWatchingVideo.comments) currentWatchingVideo.comments = [];
+            currentWatchingVideo.comments.push({user: currentUser.username, text: txt});
+            localStorage.setItem('flash_videos', JSON.stringify(videos));
+            document.getElementById('commentInput').value = '';
+            renderComments();
+        }
+
+        function renderComments() {
+            const list = document.getElementById('commentsList');
+            list.innerHTML = '';
+            const comments = currentWatchingVideo.comments || [];
+            document.getElementById('commentCount').innerText = `(${comments.length})`;
+            comments.forEach(c => { list.innerHTML += `<p><b>${c.user}:</b> ${c.text}</p>`; });
+        }
+
+        function openProfilePage() {
+            if(!currentUser || currentUser.status !== 'Approved') {
+                alert('Please sign in first!');
+                openLoginModal();
+                return;
+            }
+            document.getElementById('homePage').style.display = 'none';
+            document.getElementById('watchPage').style.display = 'none';
+            document.getElementById('profilePage').style.display = 'block';
+
+            document.getElementById('profileUsernameName').innerText = currentUser.username;
+            document.getElementById('profileAvatarText').innerText = currentUser.username.charAt(1).toUpperCase();
+            switchProfileTab('videos');
+        }
+
+        function switchProfileTab(tab) {
+            document.querySelectorAll('.profile-tabs span').forEach(el => el.classList.remove('activeTab'));
+            event.target.classList.add('activeTab');
+            const content = document.getElementById('profileTabContent');
+            content.innerHTML = '';
+            if(tab === 'videos') {
+                const myVids = videos.filter(v => v.uploader === currentUser.username);
+                if(myVids.length === 0) { content.innerHTML = '<p style="color:#aaa; grid-column:1/-1;">No uploaded videos.</p>'; return; }
+                myVids.forEach(v => {
+                    content.innerHTML += `
+                        <div class="video-card" onclick="openWatchPage(${v.id})">
+                            <div class="video-thumb-small"><video src="${v.url}"></video></div>
+                            <div class="video-meta"><h4>${v.title}</h4><p>${v.time}</p></div>
+                        </div>
+                    `;
+                });
+            } else { content.innerHTML = `<p style="color:#aaa; grid-column:1/-1;">No ${tab}.</p>`; }
+        }
+
+        function searchVideos() { renderVideos(document.getElementById('searchInput').value); }
         function verifyAdmin() {
-            const pass = document.getElementById('adminPass').value;
-            if(pass === '295802') {
+            if(document.getElementById('adminPass').value === '295802') {
                 document.getElementById('adminLoginSection').style.display = 'none';
                 document.getElementById('adminDashboard').style.display = 'block';
-                renderAdminData();
-            } else {
-                alert('Incorrect Password!');
-            }
+                renderAdminPanel();
+            } else { alert('Incorrect password!'); }
         }
 
-        function renderAdminData() {
-            const vidDiv = document.getElementById('adminVideoList');
-            vidDiv.innerHTML = '';
-            if(videos.length === 0) {
-                vidDiv.innerHTML = '<p>No videos uploaded yet.</p>';
-                return;
-            }
+        function renderAdminPanel() {
+            const uList = document.getElementById('adminUserList');
+            uList.innerHTML = '';
+            if(users.length === 0) uList.innerHTML = '<p>No users.</p>';
+            users.forEach((u, i) => {
+                uList.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <span>${u.username} (${u.status})</span>
+                        <div>
+                            ${u.status !== 'Approved' ? `<button onclick="approveUser(${i})" style="background:green; color:white; border:none; padding:2px 5px;">Accept</button>` : ''}
+                            <button onclick="rejectUser(${i})" style="background:red; color:white; border:none; padding:2px 5px;">Reject</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const vList = document.getElementById('adminVideoList');
+            vList.innerHTML = '';
+            if(videos.length === 0) vList.innerHTML = '<p>No videos.</p>';
             videos.forEach(v => {
-                vidDiv.innerHTML += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #222; padding-bottom:5px;">
-                        <span><b>${v.title}</b><br><small style="color:#aaa;">Uploader: ${v.uploader}</small></span>
-                        <button class="delete-btn" onclick="adminDeleteVideo(${v.id})">Delete</button>
+                vList.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <span>${v.title} (${v.uploader})</span>
+                        <button onclick="adminDeleteVideo(${v.id})" style="background:red; color:white; border:none; padding:2px 5px;">Delete</button>
                     </div>
                 `;
             });
         }
 
-        function adminDeleteVideo(id) {
-            videos = videos.filter(v => v.id !== id);
-            localStorage.setItem('flash_videos', JSON.stringify(videos));
-            renderVideos();
-            renderAdminData();
-            alert('Video deleted by Admin!');
-        }
+        function approveUser(i) { users[i].status = 'Approved'; localStorage.setItem('flash_users', JSON.stringify(users)); renderAdminPanel(); }
+        function rejectUser(i) { users.splice(i, 1); localStorage.setItem('flash_users', JSON.stringify(users)); renderAdminPanel(); }
+        function adminDeleteVideo(id) { videos = videos.filter(v => v.id !== id); localStorage.setItem('flash_videos', JSON.stringify(videos)); renderAdminPanel(); goHome(); }
 
         function switchNav(index) {
-            const navs = document.querySelectorAll('nav div');
-            navs.forEach((el, i) => {
-                if(i === index) el.classList.add('active');
-                else el.classList.remove('active');
+            document.querySelectorAll('nav div').forEach((el, i) => {
+                if(i === index) el.classList.add('active'); else el.classList.remove('active');
             });
         }
 
-        if(currentUser) {
-            document.getElementById('navUserName').innerText = currentUser;
-        }
+        if(currentUser) { document.getElementById('navUserName').innerText = currentUser.username; }
         renderVideos();
     </script>
 </body>
