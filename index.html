@@ -179,7 +179,15 @@
                     <button class="admin-tab-btn" onclick="switchAdminTab('broadcast', this)">အသိပေးစာ</button>
                 </div>
                 <div id="adminTabUsers"><div id="admUsersList" style="max-height:300px; overflow-y:auto;"></div></div>
-                <div id="adminTabLimits" style="display:none;"><div id="admLimitsList" style="max-height:300px; overflow-y:auto;"></div></div>
+                <div id="adminTabLimits" style="display:none;">
+                    <div style="background:#121212; padding:12px; border:1px solid #333; border-radius:8px; margin-bottom:12px;">
+                        <h4 style="margin:0 0 8px;">Device limit ကို ကိုယ်တိုင်သတ်မှတ်ရန်</h4>
+                        <input id="adminLimitDeviceId" type="text" placeholder="Device ID (ဥပမာ DEV_...)" autocomplete="off">
+                        <input id="adminLimitValue" type="number" min="1" step="1" value="2" placeholder="Maximum accounts">
+                        <button class="btn" onclick="saveDeviceLimitManually()">Save device limit</button>
+                    </div>
+                    <div id="admLimitsList" style="max-height:300px; overflow-y:auto;"></div>
+                </div>
                 <div id="adminTabContent" style="display:none;"><div id="admContentList" style="max-height:300px; overflow-y:auto;"></div></div>
                 <div id="adminTabBroadcast" style="display:none;">
                     <h4>User များထံ အသိပေးစာပို့ရန်</h4>
@@ -285,10 +293,18 @@
     <div class="modal" id="loginModal">
         <div class="modal-content" style="text-align:center;">
             <h3>Login / Register</h3>
-            <p style="font-size:11px; color:#38bdf8;">Max <span id="modalLimitText">2</span> accounts allowed per device.</p>
+            <p style="font-size:12px; color:#38bdf8;">ဒီစက်ရှိ account: <b id="loginAccountCount">0</b> / <b id="modalLimitText">2</b></p>
+            <p id="loginLimitNotice" style="font-size:12px; color:#fbbf24; display:none;">Account limit ပြည့်နေပါပြီ။ ရှိပြီးသား account ဖြင့် login ဝင်နိုင်ပြီး account အသစ်ဖွင့်ရန် limit တောင်းနိုင်ပါတယ်။</p>
             <input type="text" id="authU" placeholder="Username">
             <input type="password" id="authP" placeholder="Password">
             <button class="btn" onclick="handleAuth()">Sign In / Register</button>
+            <div style="border-top:1px solid #333; margin-top:16px; padding-top:12px; text-align:left;">
+                <b style="font-size:13px;">Account limit တိုးတောင်းရန်</b>
+                <label for="loginRequestedLimit" style="display:block; margin-top:8px; font-size:12px; color:#aaa;">လိုချင်သော account အများဆုံးအရေအတွက်</label>
+                <input type="number" id="loginRequestedLimit" min="1" step="1" value="3" inputmode="numeric" aria-label="Requested account limit">
+                <button class="btn" style="background:#f59e0b;" onclick="requestAccountLimit()">📥 Admin ထံ တောင်းမည်</button>
+                <p style="font-size:11px; color:#aaa; line-height:1.5;">တုံ့ပြန်မှုကြာနေပါက <a href="https://t.me/ckstore22" target="_blank" rel="noopener noreferrer" style="color:#38bdf8;">@ckstore22 Telegram</a> သို့ ဆက်သွယ်ပါ။</p>
+            </div>
             <button class="btn btn-sec" onclick="closeModal('loginModal')">Close</button>
         </div>
     </div>

@@ -219,11 +219,29 @@ function togglePlaylistInput() {
 }
 
 function requestAccountLimit() {
-    let devId = getDeviceID();
-    let req = { id: Date.now(), deviceId: devId, user: currUser.username, status: 'Pending' };
-    limitRequests.push(req);
+    const devId = getDeviceID();
+    const rawUser = currUser?.username || document.getElementById('authU')?.value.trim() || '';
+    if (!rawUser) {
+        document.getElementById('authU')?.focus();
+        return showAnimeToast('တောင်းဆိုမှုအတွက် Username ကို အရင်ထည့်ပါ');
+    }
+    const username = rawUser.startsWith('@') ? rawUser : '@' + rawUser;
+    const currentLimit = getDeviceLimits();
+    const desiredInput = document.getElementById('loginRequestedLimit');
+    const modalOpen = document.getElementById('loginModal')?.style.display === 'flex';
+    const requestedLimit = modalOpen ? Number.parseInt(desiredInput?.value, 10) : currentLimit + 1;
+    if (!Number.isInteger(requestedLimit) || requestedLimit <= currentLimit) {
+        return showAnimeToast(`လက်ရှိ limit ${currentLimit} ထက်ကြီးသော အရေအတွက်ကို ထည့်ပါ`);
+    }
+    const existing = limitRequests.find(req => req.deviceId === devId && req.user === username && req.status !== 'Resolved');
+    if (existing) {
+        existing.requestedLimit = requestedLimit;
+        existing.updatedAt = Date.now();
+    } else {
+        limitRequests.push({ id: Date.now(), deviceId: devId, user: username, requestedLimit, status: 'Pending', createdAt: Date.now() });
+    }
     localStorage.setItem('flash_limit_requests', JSON.stringify(limitRequests));
-    showAnimeToast('📥 Limit increase request sent to Admin!');
+    showAnimeToast('📥 Limit တိုးရန်တောင်းဆိုမှုကို သိမ်းပြီးပါပြီ');
 }
 
 async function uploadContent() {
@@ -885,7 +903,8 @@ function renderAdmin() {
     let lList = document.getElementById('admLimitsList');
     lList.innerHTML = limitRequests.length === 0 ? '<p style="color:#aaa;">No limit requests.</p>' : '';
     limitRequests.forEach((req, idx) => {
-        lList.innerHTML += `<div style="background:#121212; padding:10px; border-radius:6px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;"><div><b>User:</b> ${req.user}<br><small style="color:#38bdf8;">Device ID: ${req.deviceId}</small></div><button onclick="approveLimitRequest(${idx})" style="background:green; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Increase Limit to 5</button></div>`;
+        const suggested = Number.isInteger(Number(req.requestedLimit)) ? Number(req.requestedLimit) : Math.max(getDeviceLimits() + 1, 3);
+        lList.innerHTML += `<div style="background:#121212; padding:10px; border-radius:6px; margin-bottom:8px;"><div><b>User:</b> ${esc(req.user || 'Unknown')}<br><small style="color:#38bdf8;">Device ID: ${esc(req.deviceId || 'Unknown')}</small><br><small style="color:#aaa;">Requested: ${suggested} accounts</small></div><div style="display:flex; gap:8px; align-items:center; margin-top:8px;"><label for="limitInput-${idx}" style="font-size:12px; color:#aaa;">Set maximum:</label><input id="limitInput-${idx}" type="number" min="1" step="1" value="${suggested}" style="width:100px; padding:6px; background:#121212; color:#fff; border:1px solid #444; border-radius:4px;"><button onclick="approveLimitRequest(${idx})" style="background:green; color:white; border:none; padding:7px 10px; border-radius:4px; cursor:pointer;">Save limit</button></div></div>`;
     });
 
     let cList = document.getElementById('admContentList');
@@ -899,14 +918,29 @@ function approveAdminUser(i) { users[i].status = 'Approved'; localStorage.setIte
 function deleteAdminUser(i) { users.splice(i, 1); localStorage.setItem('flash_users', JSON.stringify(users)); renderAdmin(); showAnimeToast('Deleted'); }
 
 function approveLimitRequest(idx) {
-    let req = limitRequests[idx];
-    let limits = JSON.parse(localStorage.getItem('flash_device_limits')) || {};
-    limits[req.deviceId] = 5;
+    const req = limitRequests[idx];
+    if (!req?.deviceId) return showAnimeToast('Request သို့မဟုတ် Device ID မတွေ့ပါ');
+    const input = document.getElementById(`limitInput-${idx}`);
+    const newLimit = Number.parseInt(input?.value, 10);
+    if (!Number.isInteger(newLimit) || newLimit < 1) return showAnimeToast('Limit ကို 1 နှင့်အထက် ကိန်းပြည့်ထည့်ပါ');
+    const limits = JSON.parse(localStorage.getItem('flash_device_limits') || '{}');
+    limits[req.deviceId] = newLimit;
     localStorage.setItem('flash_device_limits', JSON.stringify(limits));
     limitRequests.splice(idx, 1);
     localStorage.setItem('flash_limit_requests', JSON.stringify(limitRequests));
     renderAdmin();
-    showAnimeToast('Limit increased to 5 for Device: ' + req.deviceId);
+    showAnimeToast(`Limit ကို ${newLimit} သို့ ပြောင်းပြီးပါပြီ`);
+}
+
+function saveDeviceLimitManually() {
+    const deviceId = document.getElementById('adminLimitDeviceId')?.value.trim();
+    const limit = Number.parseInt(document.getElementById('adminLimitValue')?.value, 10);
+    if (!deviceId) return showAnimeToast('Device ID ထည့်ပါ');
+    if (!Number.isInteger(limit) || limit < 1) return showAnimeToast('Limit ကို 1 နှင့်အထက် ကိန်းပြည့်ထည့်ပါ');
+    const limits = JSON.parse(localStorage.getItem('flash_device_limits') || '{}');
+    limits[deviceId] = limit;
+    localStorage.setItem('flash_device_limits', JSON.stringify(limits));
+    showAnimeToast(`Device limit ကို ${limit} သို့ သိမ်းပြီးပါပြီ`);
 }
 
 async function adminDeleteContent(id) { await dbDeleteContent(id); contents = await dbGetAllContents(); renderAdmin(); renderFeed(); showAnimeToast('Deleted'); }
@@ -1495,8 +1529,18 @@ function handleAuth() {
 function openModal(id) {
     if (id === 'loginModal' && !currUser) {
         const limit = getDeviceLimits(), count = getDeviceAccountsFor().length;
-        document.getElementById('modalLimitText').innerText = limit;
-        if (count >= limit) return showAnimeToast(`Device limit reached: ${limit} accounts`);
+        const limitText = document.getElementById('modalLimitText');
+        const countText = document.getElementById('loginAccountCount');
+        const notice = document.getElementById('loginLimitNotice');
+        const requested = document.getElementById('loginRequestedLimit');
+        if (limitText) limitText.textContent = limit;
+        if (countText) countText.textContent = count;
+        if (notice) notice.style.display = count >= limit ? 'block' : 'none';
+        if (requested) {
+            requested.min = String(limit + 1);
+            const currentValue = Number.parseInt(requested.value, 10);
+            if (!Number.isInteger(currentValue) || currentValue <= limit) requested.value = String(limit + 1);
+        }
     }
     document.getElementById(id).style.display = 'flex';
 }
