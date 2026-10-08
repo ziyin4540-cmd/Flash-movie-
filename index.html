@@ -38,8 +38,6 @@
         
         .progress-bar-bg { width: 100%; background: #333; border-radius: 4px; overflow: hidden; height: 10px; margin-top: 10px; display: none; }
         .progress-bar-fill { width: 0%; height: 100%; background: #ff0000; }
-        
-        .user-chip { font-size: 13px; color: #3b82f6; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -83,7 +81,6 @@
             <h3>Sign in to Flâsh Movie</h3>
             <p style="font-size: 13px; color: #aaa; margin-bottom: 20px;">Choose your Google account to continue</p>
             
-            <!-- Google One Tap / Sign-in Button Container -->
             <div id="g_id_onload"
                  data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
                  data-callback="handleCredentialResponse"
@@ -102,12 +99,12 @@
         </div>
     </div>
 
-    <!-- Admin Panel Modal (Gmail များကို လုံးဝမပြဘဲ ဗီဒီယိုနှင့် Uploader အမည်သာ စစ်ဆေးနိုင်သည်) -->
+    <!-- Admin Panel Modal (Password ဖြုတ်ထားပြီး ရှင်းလင်းစွာ ပြင်ဆင်ထားသည်) -->
     <div class="modal" id="adminModal">
         <div class="modal-content">
             <h3>Admin Panel</h3>
             <div id="adminLoginSection">
-                <input type="password" id="adminPass" placeholder="Enter Password (295802)">
+                <input type="password" id="adminPass" placeholder="Enter Password">
                 <button class="btn" onclick="verifyAdmin()">Login Admin</button>
             </div>
             <div id="adminDashboard" style="display:none;">
@@ -147,7 +144,6 @@
         function openAdminModal() { document.getElementById('adminModal').style.display = 'flex'; }
         function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
 
-        // Real Google Login Response Handler
         function handleCredentialResponse(response) {
             try {
                 const responsePayload = parseJwt(response.credential);
@@ -265,7 +261,6 @@
         }
 
         function renderAdminData() {
-            // Admin က User တွေရဲ့ Gmail များကို လုံးဝမမြင်ရဘဲ Video တင်ထားသူများနှင့် Video များကိုသာ စစ်ဆေး/ဖျက်နိုင်မည်
             const vidDiv = document.getElementById('adminVideoList');
             vidDiv.innerHTML = '';
             if(videos.length === 0) {
@@ -298,7 +293,6 @@
             });
         }
 
-        // Initial check user
         if(currentUser) {
             document.getElementById('navUserName').innerText = currentUser;
         }
