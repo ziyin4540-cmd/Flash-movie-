@@ -18,12 +18,11 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Build APK with Preinstalled Android SDK
+    - name: Generate Wrapper and Build APK
       run: |
-        export ANDROID_HOME=$ANDROID_SDK_ROOT
         gradle wrapper --gradle-version 8.5
         chmod +x gradlew
-        ./gradlew assembleDebug
+        ./gradlew assembleDebug --no-daemon
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
