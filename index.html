@@ -3,49 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flâsh Movie - YouTube Style Platform</title>
+    <title>Flâsh Movie</title>
     <style>
-        body { font-family: sans-serif; background: #0f0f0f; color: #fff; margin: 0; padding: 0; }
-        header { background: #212121; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #383838; position: sticky; top: 0; z-index: 100; }
-        .logo { color: #ff0000; font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-        .upload-btn { background: #ff0000; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: bold; }
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .video-card { background: #212121; border-radius: 12px; overflow: hidden; cursor: pointer; border: 1px solid #383838; }
-        .video-thumb { width: 100%; height: 160px; background: #3f3f3f; display: flex; align-items: center; justify-content: center; color: #aaa; }
-        .video-details { padding: 12px; }
-        .video-title { font-size: 15px; font-weight: bold; margin-bottom: 6px; }
-        .video-stats { font-size: 12px; color: #aaa; }
-        /* Modal */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 200; }
-        .modal-content { background: #212121; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; border: 1px solid #383838; }
-        .modal-content input, .modal-content textarea { width: 100%; padding: 10px; margin: 10px 0; background: #121212; border: 1px solid #383838; color: white; border-radius: 6px; box-sizing: border-box; }
-        .action-bar { display: flex; gap: 15px; margin-top: 10px; font-size: 14px; color: #aaa; }
-        .action-bar span { cursor: pointer; }
-        .action-bar span:hover { color: #ff0000; }
+        body { font-family: sans-serif; background: #0f0f0f; color: #fff; margin: 0; padding-bottom: 70px; }
+        header { background: #0f0f0f; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #222; }
+        .logo { color: #ff0000; font-size: 20px; font-weight: bold; }
+        .header-icons { display: flex; gap: 15px; font-size: 20px; cursor: pointer; }
+        
+        .container { padding: 10px; max-width: 800px; margin: auto; }
+        .video-card { background: #1f1f1f; margin-bottom: 15px; border-radius: 12px; overflow: hidden; }
+        .video-thumb { width: 100%; height: 200px; background: #333; display: flex; align-items: center; justify-content: center; color: #aaa; position: relative; }
+        .video-info { padding: 12px; display: flex; gap: 10px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .details h4 { margin: 0 0 5px 0; font-size: 15px; }
+        .details p { margin: 0; font-size: 12px; color: #aaa; }
+
+        /* Bottom Nav */
+        nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #212121; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; z-index: 1000; }
+        nav div { text-align: center; font-size: 11px; color: #aaa; cursor: pointer; }
+        nav div.active { color: #fff; }
+        nav div span { display: block; font-size: 18px; }
+
+        /* Modal / Panels */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 2000; }
+        .modal-content { background: #212121; padding: 20px; border-radius: 12px; width: 90%; max-width: 450px; border: 1px solid #333; }
+        .modal-content input, .modal-content textarea { width: 100%; padding: 10px; margin: 8px 0; background: #121212; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box; }
+        .btn { background: #ff0000; color: #fff; border: none; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-secondary { background: #333; }
+        
+        /* Progress Bar */
+        #progressContainer { display: none; margin-top: 10px; }
+        .progress-bar-bg { width: 100%; background: #333; border-radius: 4px; overflow: hidden; height: 10px; }
+        .progress-bar-fill { width: 0%; height: 100%; background: #ff0000; transition: width 0.2s; }
     </style>
 </head>
 <body>
 
     <header>
         <div class="logo">▶ Flâsh Movie</div>
-        <button class="upload-btn" onclick="openUploadModal()">+ Upload Video</button>
+        <div class="header-icons">
+            <span onclick="openAdminModal()">🛡️</span>
+            <span onclick="openLoginModal()">👤</span>
+        </div>
     </header>
 
-    <div class="container">
-        <h3>Trending Videos</h3>
-        <div class="video-grid" id="videoGrid">
-            <!-- Sample Video Card -->
-            <div class="video-card">
-                <div class="video-thumb">Flâsh Movie Player</div>
-                <div class="video-details">
-                    <div class="video-title">Flâsh Movie Pro - Official Teaser</div>
-                    <div class="video-stats">1.2K views • 2 hours ago</div>
-                    <div class="action-bar">
-                        <span onclick="alert('Liked!')">👍 Like</span>
-                        <span onclick="alert('Saved to Library!')">💾 Save</span>
-                        <span onclick="alert('Reported!')">⚠️ Report</span>
-                    </div>
+    <div class="container" id="mainContent">
+        <!-- ဗီဒီယိုစာရင်းများ -->
+        <div class="video-card">
+            <div class="video-thumb">Flâsh Movie Player</div>
+            <div class="video-info">
+                <div class="avatar">Z</div>
+                <div class="details">
+                    <h4>Flâsh Movie Pro - Official Teaser</h4>
+                    <p>Zi Yin • 1.2K views • 2 hours ago</p>
                 </div>
             </div>
         </div>
@@ -54,21 +64,107 @@
     <!-- Upload Modal -->
     <div class="modal" id="uploadModal">
         <div class="modal-content">
-            <h3>Upload Video to Flâsh Movie</h3>
-            <input type="text" id="videoTitle" placeholder="Video Title">
-            <textarea id="videoDesc" placeholder="Description" rows="3"></textarea>
-            <input type="file" id="videoFile" accept="video/*" style="border:none; padding:0;">
-            <button class="upload-btn" style="width: 100%; margin-top: 15px;" onclick="alert('Video Uploaded Successfully!')">Publish</button>
-            <button class="upload-btn" style="width: 100%; margin-top: 5px; background: #383838;" onclick="closeUploadModal()">Cancel</button>
+            <h3>Upload Video</h3>
+            <input type="text" id="upTitle" placeholder="Video Title">
+            <textarea id="upDesc" placeholder="Description" rows="2"></textarea>
+            <input type="file" id="upFile" accept="video/*" style="border:none; padding:0;">
+            
+            <div id="progressContainer">
+                <p id="progressText" style="font-size: 12px; margin: 5px 0;">Uploading: 0%</p>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressBar"></div>
+                </div>
+            </div>
+
+            <button class="btn" onclick="startUpload()">Upload Now</button>
+            <button class="btn btn-secondary" onclick="closeModal('uploadModal')">Cancel</button>
         </div>
     </div>
 
+    <!-- Admin Panel Modal -->
+    <div class="modal" id="adminModal">
+        <div class="modal-content">
+            <h3>Admin Panel</h3>
+            <div id="adminLoginSection">
+                <input type="password" id="adminPass" placeholder="Enter Password (295802)">
+                <button class="btn" onclick="verifyAdmin()">Login Admin</button>
+            </div>
+            <div id="adminDashboard" style="display:none;">
+                <p style="color: #10b981; font-weight: bold;">Status: Logged In as Admin</p>
+                <div style="background: #121212; padding: 10px; border-radius: 6px; margin: 10px 0; max-height: 200px; overflow-y: auto;">
+                    <p style="font-size: 13px; margin: 5px 0;">👤 User: John (Active) - <button onclick="alert('User Banned!')" style="background:red; color:white; border:none; padding:2px 5px;">Ban</button></p>
+                    <p style="font-size: 13px; margin: 5px 0;">👤 User: Smith (Muted) - <button onclick="alert('User Unmuted!')" style="background:green; color:white; border:none; padding:2px 5px;">Unmute</button></p>
+                    <p style="font-size: 13px; margin: 5px 0; color: #ffcc00;">⚠️ Report: Inappropriate Content on Video #1</p>
+                </div>
+                <button class="btn btn-secondary" onclick="closeModal('adminModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gmail Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content" style="text-align: center;">
+            <h3>Sign in with Google</h3>
+            <p style="font-size: 13px; color: #aaa;">Your Flâsh Movie account will be linked to Gmail.</p>
+            <button class="btn" style="background: #4285F4;" onclick="alert('Google Gmail Login Successful!')">Continue with Gmail</button>
+            <button class="btn btn-secondary" onclick="closeModal('loginModal')">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav>
+        <div class="active" onclick="switchNav(0)"><span>🏠</span>Home</div>
+        <div onclick="switchNav(1)"><span>🩳</span>Shorts</div>
+        <div onclick="openUploadModal()"><span>➕</span>Upload</div>
+        <div onclick="switchNav(3)"><span>🔔</span>Notifications</div>
+        <div onclick="openLoginModal()"><span>👤</span>You</div>
+    </nav>
+
     <script>
-        function openUploadModal() {
-            document.getElementById('uploadModal').style.display = 'flex';
+        function openUploadModal() { document.getElementById('uploadModal').style.display = 'flex'; }
+        function openLoginModal() { document.getElementById('loginModal').style.display = 'flex'; }
+        function openAdminModal() { document.getElementById('adminModal').style.display = 'flex'; }
+        function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
+
+        function verifyAdmin() {
+            const pass = document.getElementById('adminPass').value;
+            if(pass === '295802') {
+                document.getElementById('adminLoginSection').style.display = 'none';
+                document.getElementById('adminDashboard').style.display = 'block';
+            } else {
+                alert('Incorrect Password!');
+            }
         }
-        function closeUploadModal() {
-            document.getElementById('uploadModal').style.display = 'none';
+
+        function startUpload() {
+            const file = document.getElementById('upFile').files[0];
+            if(!file) { alert('Please select a video file first!'); return; }
+            
+            document.getElementById('progressContainer').style.display = 'block';
+            let progress = 0;
+            const bar = document.getElementById('progressBar');
+            const text = document.getElementById('progressText');
+            
+            let interval = setInterval(() => {
+                progress += 10;
+                bar.style.width = progress + '%';
+                text.innerText = 'Uploading: ' + progress + '%';
+                if(progress >= 100) {
+                    clearInterval(interval);
+                    alert('Video Uploaded Successfully!');
+                    closeModal('uploadModal');
+                    document.getElementById('progressContainer').style.display = 'none';
+                    bar.style.width = '0%';
+                }
+            }, 200);
+        }
+
+        function switchNav(index) {
+            const navs = document.querySelectorAll('nav div');
+            navs.forEach((el, i) => {
+                if(i === index) el.classList.add('active');
+                else el.classList.remove('active');
+            });
         }
     </script>
 </body>
