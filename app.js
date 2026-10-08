@@ -1261,3 +1261,93 @@ function openSettingsPage() {
     const visitors = profileVisitors[currUser.username] || [];
     list.innerHTML = visitors.length ? visitors.map(v => `<div>👤 <b>${esc(getUploaderInfo(v.username).name)}</b> (${esc(v.username)}) - ${v.count} visits</div>`).join('') : 'No visitors yet.';
 }
+
+
+/* ---------- Large-file upload fix: keep videos as IndexedDB Blobs ---------- */
+const flashMediaUrls = new Map();
+const flashOriginalGetAllContents = dbGetAllContents;
+async function hydrateMediaSources(items) {
+    return (items || []).map(item => {
+        if (!item.url && item.blob instanceof Blob) {
+            if (!flashMediaUrls.has(item.id)) flashMediaUrls.set(item.id, URL.createObjectURL(item.blob));
+            item.url = flashMediaUrls.get(item.id);
+        }
+        return item;
+    });
+}
+dbGetAllContents = async function() { return hydrateMediaSources(await flashOriginalGetAllContents()); };
+
+async function uploadContent() {
+    const type = document.getElementById('upType').value;
+    const playlist = document.getElementById('playlistToggle').checked ? (document.getElementById('upPlaylist').value.trim() || 'General') : '';
+    const title = document.getElementById('upTitle').value.trim();
+    const file = document.getElementById('upFile').files[0];
+    const privacy = document.getElementById('upPrivacy').value;
+    const allowDownload = document.getElementById('upDownload').value;
+    if (!title && !file) return showAnimeToast('Enter title or select a file');
+    if (file && file.size > 1024 * 1024 * 1024) return showAnimeToast('File is over 1 GB. Please compress it or split it into parts.');
+    if (file && navigator.storage?.estimate) {
+        const estimate = await navigator.storage.estimate();
+        const available = (estimate.quota || Infinity) - (estimate.usage || 0);
+        if (available < file.size * 1.15) return showAnimeToast('Not enough browser storage for this file. Clear storage or use a smaller file.');
+    }
+    const progressBox = document.getElementById('uploadProgress'), bar = document.getElementById('progressBar');
+    progressBox.style.display = 'block'; bar.style.width = '15%'; bar.textContent = 'Preparing file…';
+    const item = { id: Date.now(), type, playlist, title: title || 'Untitled', url: '', blob: file || null, fileType: file?.type || '', fileName: file?.name || '', fileSize: file?.size || 0, uploader: currUser.username, privacy, allowDownload, createdAt: Date.now(), likes: [], comments: [] };
+    try {
+        bar.style.width = '55%'; bar.textContent = 'Saving without converting…';
+        await dbSaveContent(item);
+        contents = await dbGetAllContents();
+        bar.style.width = '100%'; bar.textContent = '100% (SUCCESSFUL!)';
+        setTimeout(() => {
+            progressBox.style.display = 'none';
+            ['upTitle','upPlaylist','upFile'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+            document.getElementById('playlistToggle').checked = false; document.getElementById('playlistInputBox').style.display = 'none';
+            switchPage('homePage'); showAnimeToast('Upload successful — large file saved efficiently');
+        }, 500);
+    } catch (error) {
+        progressBox.style.display = 'none';
+        showAnimeToast('Upload failed: browser storage limit reached');
+        console.error('Flash Movie upload failed', error);
+    }
+}
+
+
+/* ---------- Supabase Storage integration ---------- */
+const FLASH_SUPABASE_URL = 'https://xlityagwhcpkloiyvlpo.supabase.co';
+const FLASH_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_KBAx_UDxgLrEgj2jS3uF2g_8QUZTL3P';
+const flashSupabase = window.supabase?.createClient(FLASH_SUPABASE_URL, FLASH_SUPABASE_PUBLISHABLE_KEY);
+const FLASH_MEDIA_BUCKET = 'flash-media';
+function safeStorageName(name) { return String(name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_'); }
+async function uploadToSupabaseStorage(file) {
+    if (!flashSupabase || !file) return null;
+    const path = `${safeStorageName(currUser.username)}/${Date.now()}-${safeStorageName(file.name)}`;
+    const { error } = await flashSupabase.storage.from(FLASH_MEDIA_BUCKET).upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false, cacheControl: '3600' });
+    if (error) throw error;
+    const { data } = flashSupabase.storage.from(FLASH_MEDIA_BUCKET).getPublicUrl(path);
+    return { path, url: data.publicUrl };
+}
+const flashLocalBlobUpload = uploadContent;
+uploadContent = async function() {
+    const file = document.getElementById('upFile').files[0];
+    if (!file || !flashSupabase) return flashLocalBlobUpload();
+    const type = document.getElementById('upType').value;
+    const playlist = document.getElementById('playlistToggle').checked ? (document.getElementById('upPlaylist').value.trim() || 'General') : '';
+    const title = document.getElementById('upTitle').value.trim();
+    const privacy = document.getElementById('upPrivacy').value;
+    const allowDownload = document.getElementById('upDownload').value;
+    if (!title) return showAnimeToast('Enter a title');
+    const box = document.getElementById('uploadProgress'), bar = document.getElementById('progressBar');
+    box.style.display = 'block'; bar.style.width = '10%'; bar.textContent = 'Uploading to cloud…';
+    try {
+        const remote = await uploadToSupabaseStorage(file);
+        bar.style.width = '85%'; bar.textContent = 'Saving metadata…';
+        const item = { id: Date.now(), type, playlist, title, url: remote.url, storagePath: remote.path, blob: null, fileType: file.type, fileName: file.name, fileSize: file.size, uploader: currUser.username, privacy, allowDownload, createdAt: Date.now(), likes: [], comments: [] };
+        await dbSaveContent(item);
+        if (flashSupabase) await flashSupabase.from('contents').insert({ id: item.id, type: item.type, playlist: item.playlist, title: item.title, storage_path: item.storagePath, public_url: item.url, file_type: item.fileType, file_name: item.fileName, file_size: item.fileSize, uploader: item.uploader, privacy: item.privacy, allow_download: item.allowDownload, created_at_ms: item.createdAt }).then(() => {}).catch(() => {});
+        contents = await dbGetAllContents(); bar.style.width = '100%'; bar.textContent = '100% (CLOUD UPLOAD COMPLETE)';
+        setTimeout(() => { box.style.display = 'none'; document.getElementById('upTitle').value = ''; document.getElementById('upPlaylist').value = ''; document.getElementById('playlistToggle').checked = false; document.getElementById('playlistInputBox').style.display = 'none'; document.getElementById('upFile').value = ''; switchPage('homePage'); showAnimeToast('Large video uploaded to Supabase'); }, 600);
+    } catch (error) {
+        console.error('Supabase upload failed', error); box.style.display = 'none'; showAnimeToast('Cloud upload failed; using local browser storage'); flashLocalBlobUpload();
+    }
+};
