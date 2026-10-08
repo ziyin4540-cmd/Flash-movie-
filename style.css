@@ -89,3 +89,15 @@ nav div span { display: block; font-size: 18px; }
 .next-up-panel .meta p { font-size:10px; }
 .next-up-panel .muted { color:#aaa; font-size:12px; }
 .text-post-preview + * { max-width:100%; }
+
+
+.comment-open-btn { background:#334155; }
+.subpage-header { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.subpage-header h2 { margin:0; }
+.back-btn { width:auto; margin:0; background:#333; padding:7px 10px; }
+.comment-compose { background:#1f1f1f; padding:12px; border-radius:10px; margin-bottom:12px; }
+.comment-compose input[type=text], .comment-compose input[type=file] { width:100%; box-sizing:border-box; background:#121212; color:#fff; border:1px solid #333; border-radius:6px; padding:9px; margin:4px 0; }
+.comments-list { font-size:13px; }
+.comments-list .comment-item { margin-top:8px; }
+.comment-edit-input { width:100%; box-sizing:border-box; margin-top:7px; background:#121212; color:#fff; border:1px solid #444; padding:6px; border-radius:5px; }
+.thumb video { background:#050505; }

@@ -236,6 +236,7 @@
             </div>
             <div class="actions">
                 <div class="btn-action" onclick="toggleLike()" id="likeBtn">👍 Like (0)</div>
+                <div class="btn-action comment-open-btn" onclick="openCommentsPage()" id="commentBtn">💬 Comments</div>
                 <div class="btn-action" onclick="toggleBgPlay()" id="bgPlayBtn" style="background:#3b82f6;">🎵 Background Play: OFF</div>
                 <div class="btn-action" onclick="downloadContent()" id="downloadBtn" style="background:#10b981; display:none;">📥 Download</div>
                 <div class="btn-action" onclick="blockUser()" style="color:#ef4444;">⛔ Block</div>
@@ -243,13 +244,19 @@
             </div>
         </div>
         <div id="nextUpPanel" class="next-up-panel"></div>
-        <div style="margin-top:15px; background:#1f1f1f; padding:10px; border-radius:8px;">
-            <h4>Comments</h4>
-            <input type="text" id="commText" placeholder="Write a comment..." style="width:100%; background:#121212; border:1px solid #333; color:#fff; padding:8px; border-radius:4px; margin-bottom:5px;">
-            <input type="file" id="commFile" accept="image/*,video/*,audio/*,.pdf,.zip,.rar" style="width:100%; border:none; padding:4px 0; margin-bottom:5px;">
-            <button class="btn" style="margin-top:0;" onclick="addComment()">Post Comment</button>
-            <div id="commList" style="margin-top:10px; font-size:13px;"></div>
+    </div>
+
+    <div class="container page-section" id="commentsPage">
+        <div class="subpage-header">
+            <button class="btn back-btn" onclick="appBack('detailPage')">⬅ Back to Video</button>
+            <h2>💬 Comments</h2>
         </div>
+        <div class="comment-compose">
+            <input type="text" id="commText" placeholder="Write a comment...">
+            <input type="file" id="commFile" accept="image/*,video/*,audio/*,.pdf,.zip,.rar">
+            <button class="btn" onclick="addComment()">Post Comment</button>
+        </div>
+        <div id="commList" class="comments-list"></div>
     </div>
 
     <div class="container page-section" id="profilePage">

@@ -1348,3 +1348,82 @@ uploadContent = async function() {
         console.error('Supabase upload failed', error); box.style.display = 'none'; showAnimeToast('Cloud upload failed; using local browser storage'); flashLocalBlobUpload();
     }
 };
+
+
+/* ---------- Comments page and action controls ---------- */
+function openCommentsPage() {
+    if (!currItem) return;
+    switchPage('commentsPage');
+    renderComments();
+}
+function editComment(commentId) {
+    const c = (currItem.comments || []).find(x => x.id === commentId); if (!c || c.user !== currUser.username) return;
+    const input = document.querySelector(`input[data-edit-comment="${commentId}"]`);
+    if (input) { c.text = input.value.trim() || c.text; c.edited = true; dbSaveContent(currItem); renderComments(); }
+}
+function toggleCommentLike(commentId) {
+    const c = (currItem.comments || []).find(x => x.id === commentId); if (!c) return;
+    c.likes = c.likes || []; const index = c.likes.indexOf(currUser.username);
+    if (index >= 0) c.likes.splice(index, 1); else c.likes.push(currUser.username);
+    dbSaveContent(currItem); renderComments();
+}
+function reportComment(commentId) {
+    reports.push({ type: 'Comment', commentId, target: currItem?.title || '', by: currUser.username, createdAt: Date.now() });
+    localStorage.setItem('flash_reports', JSON.stringify(reports)); showAnimeToast('Comment reported');
+}
+renderComments = function() {
+    const list = document.getElementById('commList'); if (!list || !currItem) return;
+    list.innerHTML = (currItem.comments || []).map(c => {
+        const info = getUploaderInfo(c.user), likes = c.likes || [], liked = likes.includes(currUser.username);
+        const attachment = c.attachment ? `<div class="comment-attachment">${c.attachment.type.startsWith('image') ? `<img src="${c.attachment.url}" alt="">` : `<a href="${c.attachment.url}" download="${esc(c.attachment.name)}">📎 ${esc(c.attachment.name)}</a>`}</div>` : '';
+        const replies = (c.replies || []).map(r => `<div class="comment-reply"><b>${esc(getUploaderInfo(r.user).name)}</b> ${esc(r.text)} <small>${formatTimeAgo(r.id)}</small></div>`).join('');
+        const edit = c.user === currUser.username ? `<input class="comment-edit-input" data-edit-comment="${c.id}" value="${esc(c.text)}"><button class="text-btn" onclick="editComment(${c.id})">Save</button>` : '';
+        return `<article class="comment-item"><div><b>${esc(info.name)}</b><span> ${esc(c.text)}</span>${c.edited ? ' <small>(edited)</small>' : ''}${attachment}</div><small>${formatTimeAgo(c.id)}</small><div class="comment-actions"><button class="text-btn" onclick="toggleCommentLike(${c.id})">${liked ? '♥' : '♡'} ${likes.length}</button><input class="inline-reply-input" data-reply-for="${c.id}" placeholder="Reply…"><button class="text-btn" onclick="addCommentReply(${c.id})">↩ Reply</button><button class="text-btn" onclick="reportComment(${c.id})">⚠ Report</button>${c.user === currUser.username || currItem.uploader === currUser.username ? `<button class="text-btn danger" onclick="deleteComment(${c.id})">Delete</button>` : ''}</div>${edit}${replies}</article>`;
+    }).join('') || '<p class="muted">No comments yet.</p>';
+};
+
+/* ---------- Upload progress via XMLHttpRequest (no Base64, real percentage) ---------- */
+function uploadStorageWithProgress(file, path, onProgress) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const url = `${FLASH_SUPABASE_URL}/storage/v1/object/${FLASH_MEDIA_BUCKET}/${path.split('/').map(encodeURIComponent).join('/')}`;
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('apikey', FLASH_SUPABASE_PUBLISHABLE_KEY);
+        xhr.setRequestHeader('Authorization', `Bearer ${FLASH_SUPABASE_PUBLISHABLE_KEY}`);
+        xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+        xhr.setRequestHeader('x-upsert', 'false');
+        xhr.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100)); };
+        xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve(true) : reject(new Error(xhr.responseText || `Upload failed (${xhr.status})`));
+        xhr.onerror = () => reject(new Error('Network error while uploading')); xhr.onabort = () => reject(new Error('Upload cancelled'));
+        xhr.send(file);
+    });
+}
+async function uploadToSupabaseStorageWithProgress(file, onProgress) {
+    const path = `${safeStorageName(currUser.username)}/${Date.now()}-${safeStorageName(file.name)}`;
+    await uploadStorageWithProgress(file, path, onProgress);
+    const { data } = flashSupabase.storage.from(FLASH_MEDIA_BUCKET).getPublicUrl(path);
+    return { path, url: data.publicUrl };
+}
+const flashCloudUpload = uploadContent;
+uploadContent = async function() {
+    const file = document.getElementById('upFile').files[0];
+    if (!file || !flashSupabase) return flashCloudUpload();
+    const type = document.getElementById('upType').value, title = document.getElementById('upTitle').value.trim();
+    if (!title) return showAnimeToast('Enter a title');
+    const playlist = document.getElementById('playlistToggle').checked ? (document.getElementById('upPlaylist').value.trim() || 'General') : '';
+    const box = document.getElementById('uploadProgress'), bar = document.getElementById('progressBar'); box.style.display = 'block'; bar.style.width = '0%'; bar.textContent = '0% Uploading…';
+    try {
+        const remote = await uploadToSupabaseStorageWithProgress(file, percent => { bar.style.width = percent + '%'; bar.textContent = percent + '% Uploading…'; });
+        const item = { id: Date.now(), type, playlist, title, url: remote.url, storagePath: remote.path, blob: null, fileType: file.type, fileName: file.name, fileSize: file.size, uploader: currUser.username, privacy: document.getElementById('upPrivacy').value, allowDownload: document.getElementById('upDownload').value, createdAt: Date.now(), likes: [], comments: [] };
+        bar.style.width = '98%'; bar.textContent = '98% Saving metadata…'; await dbSaveContent(item); contents = await dbGetAllContents();
+        if (flashSupabase) await flashSupabase.from('contents').insert({ id:item.id, type:item.type, playlist:item.playlist, title:item.title, storage_path:item.storagePath, public_url:item.url, file_type:item.fileType, file_name:item.fileName, file_size:item.fileSize, uploader:item.uploader, privacy:item.privacy, allow_download:item.allowDownload, created_at_ms:item.createdAt });
+        bar.style.width = '100%'; bar.textContent = '100% Upload complete'; setTimeout(() => { box.style.display='none'; document.getElementById('upFile').value=''; document.getElementById('upTitle').value=''; switchPage('homePage'); showAnimeToast('Upload complete'); }, 600);
+    } catch (error) { console.error(error); box.style.display='none'; showAnimeToast('Upload failed: ' + error.message); }
+};
+
+/* Video cards show a frame instead of an empty black poster when metadata is ready. */
+const flashOriginalCardMarkup = cardMarkup;
+cardMarkup = function(c) {
+    const html = flashOriginalCardMarkup(c);
+    return html.replace(/<video src="([^"]+)" preload="metadata" muted>/g, '<video src="$1" preload="auto" muted playsinline onloadeddata="this.currentTime=0.1">');
+};
