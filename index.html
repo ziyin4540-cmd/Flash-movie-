@@ -38,8 +38,8 @@
         .modal-content input, .modal-content textarea, .modal-content select { width: 100%; padding: 10px; margin: 8px 0; background: #121212; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box; }
         .btn { background: #ff0000; color: #fff; border: none; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-sec { background: #333; }
-        .admin-tabs { display: flex; gap: 10px; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
-        .admin-tab-btn { background: #272727; border: none; color: #aaa; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        .admin-tabs { display: flex; gap: 5px; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .admin-tab-btn { background: #272727; border: none; color: #aaa; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; }
         .admin-tab-btn.active { background: #3b82f6; color: #fff; }
     </style>
 </head>
@@ -120,7 +120,7 @@
             </div>
         </div>
         <div style="display:flex; justify-content:space-around; margin:15px 0; border-bottom:1px solid #333; padding-bottom:5px; font-size:14px; font-weight:bold; color:#aaa; cursor:pointer;">
-            <span onclick="switchTab('video')" style="color:#fff;" id="tabVid">Videos</span>
+            <span onclick="switchTab('video')" style="color:#fff;">Videos</span>
             <span onclick="switchTab('short')">Shorts</span>
             <span onclick="switchTab('post')">Posts</span>
         </div>
@@ -150,7 +150,7 @@
         <div class="modal-content">
             <h3>Admin Panel</h3>
             <div id="admLogin">
-                <input type="password" id="admPass" placeholder="Enter Password (295802)">
+                <input type="password" id="admPass" placeholder="Enter Admin Password">
                 <button class="btn" onclick="verifyAdmin()">Login Admin</button>
                 <button class="btn btn-sec" onclick="closeModal('adminModal')">Close</button>
             </div>
@@ -159,10 +159,17 @@
                     <button class="admin-tab-btn active" onclick="switchAdminTab('users', this)">အသုံးပြုသူ စာရင်း</button>
                     <button class="admin-tab-btn" onclick="switchAdminTab('content', this)">ဗီဒီယို/ပို့စ်များ</button>
                     <button class="admin-tab-btn" onclick="switchAdminTab('reports', this)">Reports</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('broadcast', this)">အသိပေးစာပို့ရန်</button>
                 </div>
-                <div id="adminTabUsers"><div id="admUsersList" style="max-height:300px; overflow-y:auto;"></div></div>
-                <div id="adminTabContent" style="display:none;"><div id="admContentList" style="max-height:300px; overflow-y:auto;"></div></div>
-                <div id="adminTabReports" style="display:none;"><div id="admReportsList" style="max-height:300px; overflow-y:auto; color:#ef4444; font-size:13px;"></div></div>
+                <div id="adminTabUsers"><div id="admUsersList" style="max-height:250px; overflow-y:auto;"></div></div>
+                <div id="adminTabContent" style="display:none;"><div id="admContentList" style="max-height:250px; overflow-y:auto;"></div></div>
+                <div id="adminTabReports" style="display:none;"><div id="admReportsList" style="max-height:250px; overflow-y:auto; color:#ef4444; font-size:13px;"></div></div>
+                <div id="adminTabBroadcast" style="display:none;">
+                    <h4>User များထံ အသိပေးစာပို့ရန်</h4>
+                    <input type="text" id="bcTitle" placeholder="ခေါင်းစဉ်">
+                    <textarea id="bcMsg" placeholder="အသိပေးလိုသောစာသား..." rows="3" style="width:100%; background:#121212; border:1px solid #333; color:#fff; padding:8px; border-radius:6px;"></textarea>
+                    <button class="btn" onclick="sendBroadcast()">📢 ပို့မည်</button>
+                </div>
                 <button class="btn btn-sec" style="margin-top:15px;" onclick="closeModal('adminModal')">Close</button>
             </div>
         </div>
@@ -188,6 +195,12 @@
                 intro.style.opacity = '0';
                 setTimeout(() => intro.style.display = 'none', 800);
             }, 2200);
+
+            let bMsg = localStorage.getItem('flash_broadcast_alert');
+            if(bMsg) {
+                let bData = JSON.parse(bMsg);
+                alert("📢 Admin Announcement: " + bData.title + "\n\n" + bData.msg);
+            }
         });
 
         let contents = JSON.parse(localStorage.getItem('flash_contents')) || [];
@@ -251,7 +264,6 @@
             switchPage('homePage');
             alert('Signed out successfully');
         }
-
         function checkUpload() {
             if(!currUser || currUser.status !== 'Approved') return alert('Get admin approval first');
             openModal('uploadModal');
@@ -284,7 +296,7 @@
             if(filterType !== 'all') data = data.filter(c => c.type === filterType);
             if(data.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No data found.</p>'; return; }
             data.forEach(c => {
-                let m = c.type === 'post' ? `<img src="${c.url}">` : `<video src="${c.url}#t=0.5" preload="metadata"></video>`;
+                let m = c.type === 'post' ? `<img src="${c.url}">` : `<video src="${c.url}" preload="metadata"></video>`;
                 grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>[${c.type.toUpperCase()}] ${c.title}</h4><p>${c.uploader}</p></div></div>`;
             });
         }
@@ -297,7 +309,7 @@
             let shorts = contents.filter(c => c.type === 'short' && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id));
             if(shorts.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No shorts available.</p>'; return; }
             shorts.forEach(c => {
-                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb"><video src="${c.url}#t=0.5" preload="metadata"></video></div><div class="meta"><h4>${c.title}</h4><p>${c.uploader}</p></div></div>`;
+                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb"><video src="${c.url}" preload="metadata"></video></div><div class="meta"><h4>${c.title}</h4><p>${c.uploader}</p></div></div>`;
             });
         }
 
@@ -306,7 +318,7 @@
             currItem = contents.find(x => x.id === id);
             switchPage('detailPage');
             let mb = document.getElementById('detailMedia');
-            let playerHtml = currItem.type === 'post' ? `<img src="${currItem.url}">` : `<video src="${currItem.url}" controls autoplay id="activeVideo"></video>`;
+            let playerHtml = currItem.type === 'post' ? `<img src="${currItem.url}">` : `<video src="${currItem.url}" controls autoplay playsinline id="activeVideo"></video>`;
             mb.innerHTML = playerHtml;
             document.getElementById('detTitle').innerText = currItem.title;
             document.getElementById('detStats').innerText = currItem.uploader;
@@ -410,7 +422,7 @@
             switchPage('profilePage');
             document.getElementById('profName').innerText = currUser.username;
             document.getElementById('profAvatar').innerText = currUser.username.charAt(1).toUpperCase();
-            document.getElementById('currPassView').value = '********';
+            document.getElementById('currPassView').value = currUser.password;
             document.getElementById('deviceCount').innerText = deviceAccounts.length;
             document.getElementById('followerCount').innerText = users.filter(u => following.includes(u.username)).length + (following.includes(currUser.username) ? 1 : 0);
             document.getElementById('followingCount').innerText = following.length;
@@ -434,7 +446,7 @@
             if(u) u.password = np;
             localStorage.setItem('flash_users', JSON.stringify(users));
             localStorage.setItem('flash_curr', JSON.stringify(currUser));
-            document.getElementById('currPassView').value = '********';
+            document.getElementById('currPassView').value = np;
             document.getElementById('newPassVal').value = '';
             alert('Password changed!');
         }
@@ -445,7 +457,7 @@
             let items = contents.filter(c => c.uploader === currUser.username && c.type === t);
             if(items.length === 0) { grid.innerHTML = '<p style="color:#aaa; grid-column:1/-1;">No items uploaded.</p>'; return; }
             items.forEach(c => {
-                let m = c.type === 'post' ? `<img src="${c.url}">` : `<video src="${c.url}#t=0.5"></video>`;
+                let m = c.type === 'post' ? `<img src="${c.url}">` : `<video src="${c.url}"></video>`;
                 grid.innerHTML += `
                     <div class="card">
                         <div class="thumb" onclick="openDetail(${c.id})">${m}</div>
@@ -479,6 +491,7 @@
             document.getElementById('adminTabUsers').style.display = tabName === 'users' ? 'block' : 'none';
             document.getElementById('adminTabContent').style.display = tabName === 'content' ? 'block' : 'none';
             document.getElementById('adminTabReports').style.display = tabName === 'reports' ? 'block' : 'none';
+            document.getElementById('adminTabBroadcast').style.display = tabName === 'broadcast' ? 'block' : 'none';
         }
 
         function renderAdmin() {
@@ -525,6 +538,16 @@
         function deleteAdminUser(i) { users.splice(i, 1); localStorage.setItem('flash_users', JSON.stringify(users)); renderAdmin(); }
         function adminDeleteContent(id) { contents = contents.filter(c => c.id !== id); localStorage.setItem('flash_contents', JSON.stringify(contents)); renderAdmin(); renderFeed(); }
         function clearReport(i) { reports.splice(i, 1); localStorage.setItem('flash_reports', JSON.stringify(reports)); renderAdmin(); }
+        
+        function sendBroadcast() {
+            let title = document.getElementById('bcTitle').value;
+            let msg = document.getElementById('bcMsg').value;
+            if(!title || !msg) return alert('Enter title and message');
+            localStorage.setItem('flash_broadcast_alert', JSON.stringify({ title, msg }));
+            alert('အသိပေးစာ အောင်မြင်စွာ ပို့ပြီးပါပြီ!');
+            document.getElementById('bcTitle').value = '';
+            document.getElementById('bcMsg').value = '';
+        }
 
         function switchNav(index) {
             document.querySelectorAll('nav div').forEach((el, i) => {
