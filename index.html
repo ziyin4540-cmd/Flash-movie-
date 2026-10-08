@@ -12,14 +12,13 @@
         .intro-title span { opacity: 0; transform: translateY(20px); animation: fadeInChar 0.4s forwards; }
         @keyframes fadeInChar { to { opacity: 1; transform: translateY(0); } }
         
-        /* Marquee Broadcast Banner */
         #broadcastBanner { background: #1e1e1e; color: #38bdf8; padding: 8px 0; overflow: hidden; white-space: nowrap; border-bottom: 1px solid #333; font-size: 13px; font-weight: bold; display: none; }
         #broadcastBanner span { display: inline-block; padding-left: 100%; animation: marquee 15s linear infinite; }
         @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
 
         header { background: #0f0f0f; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #222; }
         .logo { color: #ff0000; font-size: 20px; font-weight: bold; cursor: pointer; }
-        .search-bar { display: flex; align-items: center; background: #121212; border: 1px solid #333; border-radius: 20px; padding: 5px 15px; width: 40%; }
+        .search-bar { display: flex; align-items: center; background: #121212; border: 1px solid #333; border-radius: 20px; padding: 5px 15px; width: 50%; }
         .search-bar input { background: transparent; border: none; color: #fff; width: 100%; outline: none; }
         .container { padding: 10px; max-width: 800px; margin: auto; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
@@ -31,8 +30,8 @@
         .meta p { margin: 0; font-size: 11px; color: #aaa; }
         .page-section { display: none; padding: 10px; }
         .page-section.active-page { display: block; }
-        .player { width: 100%; background: #000; max-height: 300px; display: flex; justify-content: center; position: relative; }
-        .player video, .player img { width: 100%; max-height: 300px; object-fit: contain; }
+        .player { width: 100%; background: #000; max-height: 350px; display: flex; justify-content: center; position: relative; align-items: center; }
+        .player video, .player img, .player audio { width: 100%; max-height: 350px; object-fit: contain; }
         .actions { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; font-size: 13px; border-bottom: 1px solid #222; }
         .btn-action { background: #272727; padding: 6px 12px; border-radius: 15px; cursor: pointer; white-space: nowrap; }
         nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #212121; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; z-index: 1000; }
@@ -60,10 +59,7 @@
     <header>
         <div class="logo" onclick="switchPage('homePage')">▶ Flâsh Movie</div>
         <div class="search-bar"><input type="text" id="search" placeholder="Search..." onkeyup="renderFeed()"></div>
-        <div style="display:flex; gap:15px; font-size:20px; cursor:pointer;">
-            <span onclick="openAdminModal()">🛡️</span>
-            <span onclick="openProfile()">👤</span>
-        </div>
+        <div style="font-size:20px; cursor:pointer;" onclick="openAdminModal()">🛡️</div>
     </header>
     <div class="container page-section active-page" id="homePage">
         <div style="display:flex; gap:10px; margin-bottom:15px;">
@@ -146,10 +142,14 @@
     <div class="modal" id="uploadModal">
         <div class="modal-content">
             <h3>Upload Content</h3>
-            <select id="upType"><option value="video">Video</option><option value="short">Short Video</option><option value="post">Post</option></select>
-            <input type="text" id="upTitle" placeholder="Title / Caption">
-            <input type="file" id="upFile" accept="video/*,image/*" style="border:none; padding:0; margin-top:10px;">
+            <select id="upType"><option value="video">Video</option><option value="short">Short Video</option><option value="post">Post (Text/Media/Audio)</option></select>
+            <input type="text" id="upTitle" placeholder="Title / Caption (Optional for Posts)">
+            <input type="file" id="upFile" accept="video/*,image/*,audio/*,.zip,.rar" style="border:none; padding:0; margin-top:10px;">
             
+            <div id="uploadProgress" style="width:100%; background:#222; border-radius:4px; margin-top:10px; display:none; overflow:hidden;">
+                <div id="progressBar" style="width:0%; height:18px; background:#3b82f6; text-align:center; font-size:11px; line-height:18px;">0%</div>
+            </div>
+
             <label style="font-size:12px; color:#aaa; margin-top:10px; display:block;">Privacy:</label>
             <select id="upPrivacy"><option value="public">Public</option><option value="followers">Followers Only</option><option value="private">Only Me</option></select>
             
@@ -205,8 +205,8 @@
         <div class="active" onclick="switchNav(0); switchPage('homePage')"><span>🏠</span>Home</div>
         <div onclick="switchNav(1); openShortsPage()"><span>🩳</span>Shorts</div>
         <div onclick="switchNav(2); openPostsPage()"><span>📝</span>Posts</div>
-        <div onclick="switchNav(2); checkUpload()"><span>➕</span>Upload</div>
-        <div onclick="switchNav(3); openProfile()"><span>👤</span>Profile</div>
+        <div onclick="switchNav(3); checkUpload()"><span>➕</span>Upload</div>
+        <div onclick="switchNav(4); openProfile()"><span>👤</span>Profile</div>
     </nav>
 <script>
         window.addEventListener('DOMContentLoaded', () => {
@@ -308,20 +308,46 @@
             let file = document.getElementById('upFile').files[0];
             let privacy = document.getElementById('upPrivacy').value;
             let allowDownload = document.getElementById('upDownload').value;
-            if(!title || !file) return alert('Enter title and file');
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                contents.unshift({ 
-                    id: Date.now(), type, title, url: e.target.result, 
-                    uploader: currUser.username, privacy, allowDownload, 
-                    likes: [], comments: [] 
-                });
-                localStorage.setItem('flash_contents', JSON.stringify(contents));
-                switchPage('homePage');
-                closeModal('uploadModal');
-                alert('Uploaded successfully!');
-            };
-            reader.readAsDataURL(file);
+
+            if(!title && !file) return alert('Enter title or select a file');
+
+            let progBox = document.getElementById('uploadProgress');
+            let bar = document.getElementById('progressBar');
+            progBox.style.display = 'block';
+
+            let percent = 0;
+            let interval = setInterval(() => {
+                percent += 20;
+                bar.style.width = percent + '%';
+                bar.innerText = percent + '%';
+                if(percent >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        progBox.style.display = 'none';
+                        bar.style.width = '0%';
+
+                        let saveAndFinish = (fileUrl) => {
+                            contents.unshift({ 
+                                id: Date.now(), type, title: title || 'Untitled Post', url: fileUrl, 
+                                uploader: currUser.username, privacy, allowDownload, 
+                                likes: [], comments: [] 
+                            });
+                            localStorage.setItem('flash_contents', JSON.stringify(contents));
+                            switchPage('homePage');
+                            closeModal('uploadModal');
+                            alert('Uploaded successfully!');
+                        };
+
+                        if(file) {
+                            let reader = new FileReader();
+                            reader.onload = function(e) { saveAndFinish(e.target.result); };
+                            reader.readAsDataURL(file);
+                        } else {
+                            saveAndFinish('');
+                        }
+                    }, 300);
+                }
+            }, 150);
         }
 
         function filterFeed(t) { filterType = t; renderFeed(); }
@@ -342,7 +368,7 @@
             if(filterType !== 'all') data = data.filter(c => c.type === filterType);
             if(data.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No data found.</p>'; return; }
             data.forEach(c => {
-                let m = `<video src="${c.url}#t=0.5" preload="metadata"></video>`;
+                let m = `<video src="${c.url}#t=0.5" preload="metadata" muted></video>`;
                 grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>[${c.type.toUpperCase()}] ${c.title}</h4><p>${c.uploader}</p></div></div>`;
             });
         }
@@ -356,7 +382,7 @@
             let shorts = contents.filter(c => c.type === 'short' && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id) && checkPrivacy(c));
             if(shorts.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No shorts available.</p>'; return; }
             shorts.forEach(c => {
-                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb"><video src="${c.url}#t=0.5" preload="metadata"></video></div><div class="meta"><h4>${c.title}</h4><p>${c.uploader}</p></div></div>`;
+                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb"><video src="${c.url}#t=0.5" preload="metadata" muted></video></div><div class="meta"><h4>${c.title}</h4><p>${c.uploader}</p></div></div>`;
             });
         }
 
@@ -366,7 +392,7 @@
             let posts = contents.filter(c => c.type === 'post' && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id) && checkPrivacy(c));
             if(posts.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No posts available.</p>'; return; }
             posts.forEach(c => {
-                let m = c.url ? `<img src="${c.url}">` : '';
+                let m = c.url ? (c.url.startsWith('data:image') ? `<img src="${c.url}">` : (c.url.startsWith('data:audio') ? `<audio controls src="${c.url}"></audio>` : `<video src="${c.url}"></video>`)) : `<div style="padding:20px; text-align:center;">📝</div>`;
                 grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>${c.title}</h4><p>${c.uploader}</p></div></div>`;
             });
         }
@@ -377,7 +403,15 @@
             let mb = document.getElementById('detailMedia');
             
             if(currItem.type === 'post') {
-                mb.innerHTML = currItem.url ? `<img src="${currItem.url}">` : `<div style="padding:40px; text-align:center;"><h3>${currItem.title}</h3></div>`;
+                if(!currItem.url) {
+                    mb.innerHTML = `<div style="padding:40px; text-align:center;"><h3>${currItem.title}</h3></div>`;
+                } else if(currItem.url.startsWith('data:image')) {
+                    mb.innerHTML = `<img src="${currItem.url}">`;
+                } else if(currItem.url.startsWith('data:audio')) {
+                    mb.innerHTML = `<audio controls autoplay src="${currItem.url}"></audio>`;
+                } else {
+                    mb.innerHTML = `<video src="${currItem.url}" controls autoplay playsinline id="activeVideo"></video>`;
+                }
             } else {
                 mb.innerHTML = `<video src="${currItem.url}" controls autoplay playsinline id="activeVideo" onloadedmetadata="adjustVideoOrientation(this)"></video>`;
             }
@@ -386,7 +420,7 @@
             document.getElementById('detStats').innerText = currItem.uploader;
             
             let dlBtn = document.getElementById('downloadBtn');
-            if(currItem.allowDownload === 'yes') dlBtn.style.display = 'block'; else dlBtn.style.display = 'none';
+            if(currItem.allowDownload === 'yes' && currItem.url) dlBtn.style.display = 'block'; else dlBtn.style.display = 'none';
 
             updateFollowBtn();
             updateLikeBtnUI();
@@ -400,7 +434,7 @@
                 v.style.objectFit = 'contain';
             } else {
                 v.style.maxHeight = '220px';
-                v.style.objectFit = 'cover';
+                v.style.objectFit = 'contain';
             }
         }
 
@@ -419,8 +453,11 @@
             currentBgPlayState = !currentBgPlayState;
             let v = document.getElementById('activeVideo');
             if(v) {
-                if(currentBgPlayState) v.removeAttribute('controls');
-                else v.setAttribute('controls', 'true');
+                if(currentBgPlayState) {
+                    v.controls = false;
+                } else {
+                    v.controls = true;
+                }
             }
             updateBgPlayBtnUI();
         }
@@ -581,7 +618,7 @@
             let items = contents.filter(c => c.uploader === currUser.username && c.type === t);
             if(items.length === 0) { grid.innerHTML = '<p style="color:#aaa; grid-column:1/-1;">No items uploaded.</p>'; return; }
             items.forEach(c => {
-                let m = c.type === 'post' ? (c.url ? `<img src="${c.url}">` : `<div style="padding:20px; text-align:center;">${c.title}</div>`) : `<video src="${c.url}"></video>`;
+                let m = c.type === 'post' ? (c.url ? (c.url.startsWith('data:image') ? `<img src="${c.url}">` : `<video src="${c.url}"></video>`) : `<div style="padding:20px; text-align:center;">📝</div>`) : `<video src="${c.url}"></video>`;
                 grid.innerHTML += `
                     <div class="card">
                         <div class="thumb" onclick="openDetail(${c.id})">${m}</div>
