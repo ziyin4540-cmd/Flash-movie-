@@ -68,7 +68,7 @@
     <header>
         <div class="logo" onclick="switchPage('homePage')">▶ Flâsh Movie</div>
         <div class="search-bar"><input type="text" id="search" placeholder="Search..." onkeyup="renderFeed()"></div>
-        <div style="font-size:20px; cursor:pointer;" onclick="openAdminModal()">🛡️</div>
+        <div style="font-size:20px; cursor:pointer;" onclick="openAdminPage()">🛡️</div>
     </header>
     <div class="container page-section active-page" id="homePage">
         <div style="display:flex; gap:10px; margin-bottom:15px;">
@@ -89,14 +89,22 @@
         <div class="grid" id="postsGrid"></div>
     </div>
 
+    <!-- Upload Page with Playlist ON/OFF toggle -->
     <div class="container page-section" id="uploadPage">
         <h2>⚡ Upload New Content</h2>
         <div style="background:#1a1a1a; padding:20px; border-radius:12px; border:1px solid #333;">
             <label style="font-size:12px; color:#aaa;">Content Type:</label>
             <select id="upType"><option value="video">Video</option><option value="short">Short Video</option><option value="post">Post (Text/Media/Audio)</option></select>
             
-            <label style="font-size:12px; color:#aaa; margin-top:10px; display:block;">Playlist / Movie Series Name (Optional):</label>
-            <input type="text" id="upPlaylist" placeholder="e.g. Action Movie Part 1, Season 1">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                <label style="font-size:12px; color:#aaa;">Playlist Mode:</label>
+                <input type="checkbox" id="playlistToggle" onchange="togglePlaylistInput()" style="width:20px; height:20px;">
+            </div>
+
+            <div id="playlistInputBox" style="display:none; margin-top:8px;">
+                <label style="font-size:12px; color:#38bdf8;">Playlist / Movie Series Name:</label>
+                <input type="text" id="upPlaylist" placeholder="e.g. Action Movie Part 1, Season 1">
+            </div>
 
             <label style="font-size:12px; color:#aaa; margin-top:10px; display:block;">Title / Caption:</label>
             <input type="text" id="upTitle" placeholder="Title / Episode name">
@@ -142,10 +150,42 @@
         </div>
     </div>
 
+    <!-- Dedicated Admin Page -->
+    <div class="container page-section" id="adminPage">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+            <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="switchPage('homePage')">⬅ Back to Home</button>
+            <h2>🛡️ Admin Panel</h2>
+        </div>
+        <div style="background:#1f1f1f; padding:15px; border-radius:8px; max-width:600px; margin:auto;">
+            <div id="admLoginBox">
+                <input type="password" id="admPass" placeholder="Enter Admin Password (295802)" style="width:100%; padding:10px; background:#121212; border:1px solid #333; color:#fff; border-radius:6px; margin-bottom:10px;">
+                <button class="btn" onclick="verifyAdmin()">Login Admin</button>
+            </div>
+            <div id="admDashBox" style="display:none;">
+                <div class="admin-tabs">
+                    <button class="admin-tab-btn active" onclick="switchAdminTab('users', this)">အသုံးပြုသူ စာရင်း</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('content', this)">ဗီဒီယို/ပို့စ်များ</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('reports', this)">Reports</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('broadcast', this)">အသိပေးစာပို့ရန်</button>
+                </div>
+                <div id="adminTabUsers"><div id="admUsersList" style="max-height:300px; overflow-y:auto;"></div></div>
+                <div id="adminTabContent" style="display:none;"><div id="admContentList" style="max-height:300px; overflow-y:auto;"></div></div>
+                <div id="adminTabReports" style="display:none;"><div id="admReportsList" style="max-height:300px; overflow-y:auto; color:#ef4444; font-size:13px;"></div></div>
+                <div id="adminTabBroadcast" style="display:none;">
+                    <h4>User များထံ အသိပေးစာပို့ရန်</h4>
+                    <input type="text" id="bcTitle" placeholder="ခေါင်းစဉ်" style="width:100%; background:#121212; border:1px solid #333; color:#fff; padding:8px; border-radius:6px; margin-bottom:8px;">
+                    <textarea id="bcMsg" placeholder="အသိပေးလိုသောစာသား..." rows="3" style="width:100%; background:#121212; border:1px solid #333; color:#fff; padding:8px; border-radius:6px; box-sizing:border-box;"></textarea>
+                    <button class="btn" onclick="sendBroadcast()">📢 ပို့မည်</button>
+                    <button class="btn" style="background:#ef4444; margin-top:8px;" onclick="clearBroadcast()">🗑️ အသိပေးစာ ဖျက်မည်</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container page-section" id="detailPage">
         <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
             <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="switchPage('homePage')">⬅ Back to Home</button>
-            <div id="playlistBadge" style="font-size:12px; color:#f59e0b; background:#1e293b; padding:4px 10px; border-radius:15px; border:1px solid #334155;">🎬 Playlist: General</div>
+            <div id="playlistBadge" style="font-size:12px; color:#f59e0b; background:#1e293b; padding:4px 10px; border-radius:15px; border:1px solid #334155; display:none;">🎬 Playlist</div>
             <div id="nextVideoBadge" style="font-size:12px; color:#38bdf8; background:#1e293b; padding:4px 10px; border-radius:15px; border:1px solid #334155;">⏭ Next: None</div>
         </div>
         <div class="player" id="detailMedia"></div>
@@ -201,36 +241,6 @@
             <input type="password" id="authP" placeholder="Password">
             <button class="btn" onclick="handleAuth()">Sign In / Register</button>
             <button class="btn btn-sec" onclick="closeModal('loginModal')">Close</button>
-        </div>
-    </div>
-
-    <div class="modal" id="adminModal">
-        <div class="modal-content">
-            <h3>Admin Panel</h3>
-            <div id="admLogin">
-                <input type="password" id="admPass" placeholder="Enter Admin Password">
-                <button class="btn" onclick="verifyAdmin()">Login Admin</button>
-                <button class="btn btn-sec" onclick="closeModal('adminModal')">Close</button>
-            </div>
-            <div id="admDash" style="display:none;">
-                <div class="admin-tabs">
-                    <button class="admin-tab-btn active" onclick="switchAdminTab('users', this)">အသုံးပြုသူ စာရင်း</button>
-                    <button class="admin-tab-btn" onclick="switchAdminTab('content', this)">ဗီဒီယို/ပို့စ်များ</button>
-                    <button class="admin-tab-btn" onclick="switchAdminTab('reports', this)">Reports</button>
-                    <button class="admin-tab-btn" onclick="switchAdminTab('broadcast', this)">အသိပေးစာပို့ရန်</button>
-                </div>
-                <div id="adminTabUsers"><div id="admUsersList" style="max-height:250px; overflow-y:auto;"></div></div>
-                <div id="adminTabContent" style="display:none;"><div id="admContentList" style="max-height:250px; overflow-y:auto;"></div></div>
-                <div id="adminTabReports" style="display:none;"><div id="admReportsList" style="max-height:250px; overflow-y:auto; color:#ef4444; font-size:13px;"></div></div>
-                <div id="adminTabBroadcast" style="display:none;">
-                    <h4>User များထံ အသိပေးစာပို့ရန်</h4>
-                    <input type="text" id="bcTitle" placeholder="ခေါင်းစဉ်">
-                    <textarea id="bcMsg" placeholder="အသိပေးလိုသောစာသား..." rows="3" style="width:100%; background:#121212; border:1px solid #333; color:#fff; padding:8px; border-radius:6px;"></textarea>
-                    <button class="btn" onclick="sendBroadcast()">📢 ပို့မည်</button>
-                    <button class="btn" style="background:#ef4444; margin-top:8px;" onclick="clearBroadcast()">🗑️ အသိပေးစာ ဖျက်မည်</button>
-                </div>
-                <button class="btn btn-sec" style="margin-top:15px;" onclick="closeModal('adminModal')">Close</button>
-            </div>
         </div>
     </div>
 
@@ -363,7 +373,6 @@
             }
             document.getElementById(id).style.display = 'flex'; 
         }
-        function openAdminModal() { document.getElementById('adminModal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
         function handleAuth() {
@@ -406,9 +415,15 @@
             switchPage('uploadPage');
         }
 
+        function togglePlaylistInput() {
+            let isChecked = document.getElementById('playlistToggle').checked;
+            document.getElementById('playlistInputBox').style.display = isChecked ? 'block' : 'none';
+        }
+
         async function uploadContent() {
             let type = document.getElementById('upType').value;
-            let playlist = document.getElementById('upPlaylist').value.trim() || 'General';
+            let isPlaylistOn = document.getElementById('playlistToggle').checked;
+            let playlist = isPlaylistOn ? (document.getElementById('upPlaylist').value.trim() || 'General') : '';
             let title = document.getElementById('upTitle').value;
             let fileInput = document.getElementById('upFile');
             let file = fileInput.files[0];
@@ -447,6 +462,8 @@
                     progBox.style.display = 'none';
                     document.getElementById('upTitle').value = '';
                     document.getElementById('upPlaylist').value = '';
+                    document.getElementById('playlistToggle').checked = false;
+                    document.getElementById('playlistInputBox').style.display = 'none';
                     document.getElementById('upFile').value = '';
                     switchPage('homePage');
                     showAnimeToast('⚡ Upload Successful!');
@@ -475,6 +492,8 @@
                             progBox.style.display = 'none';
                             document.getElementById('upTitle').value = '';
                             document.getElementById('upPlaylist').value = '';
+                            document.getElementById('playlistToggle').checked = false;
+                            document.getElementById('playlistInputBox').style.display = 'none';
                             switchPage('homePage');
                             showAnimeToast('⚡ Upload Successful!');
                         }, 800);
@@ -502,7 +521,8 @@
             if(data.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No data found.</p>'; return; }
             data.forEach(c => {
                 let m = `<video src="${c.url}" preload="metadata" muted></video>`;
-                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>[${c.playlist}] ${c.title}</h4><p>${c.uploader}</p></div></div>`;
+                let playlistTag = c.playlist ? ` [${c.playlist}]` : '';
+                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>${playlistTag} ${c.title}</h4><p>${c.uploader}</p></div></div>`;
             });
         }
 
@@ -515,7 +535,8 @@
             let shorts = contents.filter(c => c.type === 'short' && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id) && checkPrivacy(c));
             if(shorts.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No shorts available.</p>'; return; }
             shorts.forEach(c => {
-                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb"><video src="${c.url}" preload="metadata" muted></video></div><div class="meta"><h4>[${c.playlist}] ${c.title}</h4><p>${c.uploader}</p></div></div>`;
+                let playlistTag = c.playlist ? ` [${c.playlist}]` : '';
+                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb"><video src="${c.url}" preload="metadata" muted></video></div><div class="meta"><h4>${playlistTag} ${c.title}</h4><p>${c.uploader}</p></div></div>`;
             });
         }
 
@@ -526,7 +547,8 @@
             if(posts.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No posts available.</p>'; return; }
             posts.forEach(c => {
                 let m = c.url ? (c.fileType && c.fileType.startsWith('image') ? `<img src="${c.url}">` : (c.fileType && c.fileType.startsWith('audio') ? `<audio controls src="${c.url}"></audio>` : `<video src="${c.url}"></video>`)) : `<div style="padding:20px; text-align:center;">📝</div>`;
-                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>[${c.playlist}] ${c.title}</h4><p>${c.uploader}</p></div></div>`;
+                let playlistTag = c.playlist ? ` [${c.playlist}]` : '';
+                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>${playlistTag} ${c.title}</h4><p>${c.uploader}</p></div></div>`;
             });
         }
         function openDetail(id) {
@@ -552,7 +574,13 @@
             document.getElementById('detTitle').innerText = currItem.title;
             document.getElementById('detStats').innerText = "Uploader: " + currItem.uploader;
             
-            document.getElementById('playlistBadge').innerText = "🎬 Playlist: " + (currItem.playlist || 'General');
+            let playlistBadge = document.getElementById('playlistBadge');
+            if(currItem.playlist) {
+                playlistBadge.innerText = "🎬 Playlist: " + currItem.playlist;
+                playlistBadge.style.display = 'block';
+            } else {
+                playlistBadge.style.display = 'none';
+            }
 
             let nextTitle = getNextVideoTitle();
             document.getElementById('nextVideoBadge').innerText = "⏭ Next: " + nextTitle;
@@ -568,7 +596,10 @@
         }
 
         function getActivePlaylist() {
-            return contents.filter(c => c.playlist === currItem.playlist && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id) && checkPrivacy(c));
+            if(currItem.playlist) {
+                return contents.filter(c => c.playlist === currItem.playlist && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id) && checkPrivacy(c));
+            }
+            return contents.filter(c => !c.playlist && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id) && checkPrivacy(c));
         }
 
         function getNextVideoTitle() {
@@ -586,7 +617,7 @@
             if(idx > -1 && idx + 1 < list.length) {
                 openDetail(list[idx + 1].id);
             } else {
-                showAnimeToast('✨ End of playlist reached!');
+                showAnimeToast('✨ End of list reached!');
             }
         }
 
@@ -596,7 +627,7 @@
             if(idx > 0) {
                 openDetail(list[idx - 1].id);
             } else {
-                showAnimeToast('✨ This is the first video in playlist!');
+                showAnimeToast('✨ This is the first video!');
             }
         }
 
@@ -769,6 +800,13 @@
             document.getElementById('setBgPlay').checked = appSettings.bgPlay;
         }
 
+        function openAdminPage() {
+            switchPage('adminPage');
+            document.getElementById('admLoginBox').style.display = 'block';
+            document.getElementById('admDashBox').style.display = 'none';
+            document.getElementById('admPass').value = '';
+        }
+
         function saveSettings() {
             appSettings.resume = document.getElementById('setResume').checked;
             appSettings.bgPlay = document.getElementById('setBgPlay').checked;
@@ -797,10 +835,11 @@
             if(items.length === 0) { grid.innerHTML = '<p style="color:#aaa; grid-column:1/-1;">No items uploaded.</p>'; return; }
             items.forEach(c => {
                 let m = c.type === 'post' ? (c.url ? (c.fileType && c.fileType.startsWith('image') ? `<img src="${c.url}">` : `<video src="${c.url}"></video>`) : `<div style="padding:20px; text-align:center;">📝</div>`) : `<video src="${c.url}"></video>`;
+                let playlistTag = c.playlist ? ` [${c.playlist}]` : '';
                 grid.innerHTML += `
                     <div class="card">
                         <div class="thumb" onclick="openDetail(${c.id})">${m}</div>
-                        <div class="meta" onclick="openDetail(${c.id})"><h4>[${c.playlist}] ${c.title}</h4></div>
+                        <div class="meta" onclick="openDetail(${c.id})"><h4>${playlistTag} ${c.title}</h4></div>
                         <div style="padding:0 8px 8px 8px;"><button onclick="deleteMyContent(${c.id})" style="background:red; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; width:100%; cursor:pointer;">Delete Content</button></div>
                     </div>
                 `;
@@ -818,8 +857,8 @@
 
         function verifyAdmin() {
             if(document.getElementById('admPass').value === '295802') {
-                document.getElementById('admLogin').style.display = 'none';
-                document.getElementById('admDash').style.display = 'block';
+                document.getElementById('admLoginBox').style.display = 'none';
+                document.getElementById('admDashBox').style.display = 'block';
                 renderAdmin();
                 showAnimeToast('Admin Access Granted!');
             } else showAnimeToast('Wrong password');
@@ -853,9 +892,10 @@
             cList.innerHTML = '';
             if(contents.length === 0) cList.innerHTML = '<p style="color:#aaa;">No content uploaded.</p>';
             contents.forEach(c => {
+                let playlistTag = c.playlist ? ` [${c.playlist}]` : '';
                 cList.innerHTML += `
                     <div style="background:#121212; padding:8px; border-radius:6px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                        <span><b>[${c.playlist}]</b> ${c.title} (${c.uploader})</span>
+                        <span><b>${playlistTag}</b> ${c.title} (${c.uploader})</span>
                         <button onclick="adminDeleteContent(${c.id})" style="background:red; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Delete</button>
                     </div>
                 `;
