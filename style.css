@@ -45,3 +45,31 @@ nav div span { display: block; font-size: 18px; }
 .admin-tabs { display: flex; gap: 5px; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; }
 .admin-tab-btn { background: #272727; border: none; color: #aaa; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; }
 .admin-tab-btn.active { background: #3b82f6; color: #fff; }
+
+
+/* Web-only messaging and attachment UI */
+.conversation-row { background:#1a1a1a; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; align-items:center; gap:12px; cursor:pointer; border:1px solid #333; }
+.conversation-row.is-pinned { border-color:#f59e0b; background:#211d12; }
+.conversation-avatar { width:45px; height:45px; background:#3b82f6; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; font-weight:bold; flex-shrink:0; }
+.conversation-main { flex:1; min-width:0; }
+.conversation-main b { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.conversation-main small { color:#aaa; font-weight:normal; }
+.conversation-main span { display:block; color:#aaa; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:4px; }
+.conversation-actions { display:flex; gap:4px; }
+.icon-btn { background:#272727; color:#fff; border:1px solid #444; border-radius:5px; padding:5px 7px; cursor:pointer; }
+.icon-btn.danger, .text-btn.danger { color:#f87171; }
+.message-bubble { padding:8px 12px; border-radius:8px; max-width:78%; word-break:break-word; font-size:13px; position:relative; }
+.message-bubble.mine { margin-left:auto; background:#3b82f6; }
+.message-bubble.theirs { margin-right:auto; background:#272727; }
+.message-bubble.pinned-message { outline:1px solid #f59e0b; }
+.pinned-label { color:#fbbf24; font-size:10px; margin-bottom:4px; }
+.reply-quote { border-left:2px solid #38bdf8; background:rgba(0,0,0,.2); padding:4px 6px; margin-bottom:6px; color:#cbd5e1; font-size:11px; }
+.message-time { font-size:9px; color:#cbd5e1; margin-top:5px; }
+.message-controls { display:flex; gap:4px; flex-wrap:wrap; margin-top:6px; opacity:.75; }
+.message-controls button, .text-btn { background:transparent; color:#dbeafe; border:0; padding:0; font-size:10px; cursor:pointer; }
+.comment-item { background:#121212; padding:9px; margin-top:6px; border-radius:6px; }
+.comment-item > small, .comment-reply small { color:#38bdf8; font-size:10px; }
+.comment-actions { display:flex; gap:12px; margin-top:5px; }
+.comment-reply { margin:6px 0 0 18px; padding:6px 8px; border-left:2px solid #38bdf8; background:#1b1b1b; font-size:12px; }
+.comment-attachment img { max-width:180px; max-height:140px; object-fit:contain; display:block; margin-top:6px; border-radius:6px; }
+.comment-attachment a { display:inline-block; color:#38bdf8; margin-top:6px; }

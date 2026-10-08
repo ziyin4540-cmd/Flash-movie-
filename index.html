@@ -13,7 +13,7 @@
         <div class="intro-city">⚡ Futuristic City Stream ⚡</div>
         <div class="intro-title" id="introTitleContainer"></div>
     </div>
-    
+
     <div id="broadcastBanner"><span id="broadcastText"></span></div>
 
     <header>
@@ -48,7 +48,7 @@
         <div style="background:#1a1a1a; padding:20px; border-radius:12px; border:1px solid #333;">
             <label style="font-size:12px; color:#aaa;">Content Type:</label>
             <select id="upType"><option value="video">Video</option><option value="short">Short Video</option><option value="post">Post (Text/Media/Audio)</option></select>
-            
+
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
                 <label style="font-size:12px; color:#aaa;">Playlist Mode:</label>
                 <input type="checkbox" id="playlistToggle" onchange="togglePlaylistInput()" style="width:20px; height:20px;">
@@ -61,17 +61,17 @@
 
             <label style="font-size:12px; color:#aaa; margin-top:10px; display:block;">Title / Caption:</label>
             <input type="text" id="upTitle" placeholder="Title / Episode name">
-            
+
             <label style="font-size:12px; color:#aaa; margin-top:10px; display:block;">Select File:</label>
             <input type="file" id="upFile" accept="video/*,image/*,audio/*,.zip,.rar" style="border:none; padding:0; margin-top:5px;">
-            
+
             <div class="lightning-bar-container" id="uploadProgress">
                 <div class="lightning-bar" id="progressBar">0%</div>
             </div>
 
             <label style="font-size:12px; color:#aaa; margin-top:10px; display:block;">Privacy:</label>
             <select id="upPrivacy"><option value="public">Public</option><option value="followers">Followers Only</option><option value="private">Only Me</option></select>
-            
+
             <label style="font-size:12px; color:#aaa; margin-top:10px; display:block;">Allow Download:</label>
             <select id="upDownload"><option value="yes">Yes (Allowed)</option><option value="no">No (Restricted)</option></select>
 
@@ -95,9 +95,9 @@
                 </div>
             </div>
         </div>
-        
+
         <div id="chatMessages" style="height:320px; overflow-y:auto; background:#121212; padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:8px;"></div>
-        
+
         <div id="stickerBox" style="display:none; background:#1a1a1a; padding:10px; border-radius:8px; margin-top:5px; border:1px solid #333; display:flex; gap:10px; flex-wrap:wrap;">
             <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('🔥')">🔥</span>
             <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('❤️')">❤️</span>
@@ -108,6 +108,7 @@
             <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('🚀')">🚀</span>
         </div>
 
+        <div id="chatReplyBar" style="display:none; background:#1e293b; border-left:3px solid #38bdf8; padding:7px 10px; margin-top:8px; font-size:12px; justify-content:space-between; align-items:center;"><span id="chatReplyText"></span><button class="icon-btn" onclick="cancelChatReply()">✕</button></div>
         <div style="display:flex; gap:5px; margin-top:10px; align-items:center;">
             <button class="btn" style="width:auto; padding:8px 12px; background:#272727; margin:0;" onclick="toggleStickerBox()" title="Stickers">🎨</button>
             <input type="file" id="chatMediaFile" accept="image/*,video/*,audio/*,.zip,.rar" style="display:none;" onchange="sendMediaFile(this)">
@@ -135,11 +136,11 @@
 
             <label style="font-size:12px; color:#38bdf8;">Account Name (Display Name):</label>
             <input type="text" id="setAccountName" placeholder="Your Display Name" style="background:#121212; border:1px solid #333; color:#fff; padding:8px; width:100%; margin-bottom:10px; box-sizing:border-box;">
-            
-            <label style="font-size:12px; color:#38bdf8;">Profile Photo URL / File:</label>
+
+            <label style="font-size:12px; color:#38bdf8;">Profile Photo from Device:</label>
             <input type="file" id="setAvatarFile" accept="image/*" style="border:none; padding:0; margin-bottom:10px; width:100%;">
-            <input type="text" id="setAvatarUrl" placeholder="Or Image URL" style="background:#121212; border:1px solid #333; color:#fff; padding:8px; width:100%; margin-bottom:10px; box-sizing:border-box;">
-            
+
+
             <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; margin:12px 0;">
                 <span>Follow View On/Off:</span> <input type="checkbox" id="setFollowView" onchange="saveAppSettings()" style="width:20px; height:20px;">
             </div>
@@ -244,7 +245,7 @@
         <div style="margin-top:15px; background:#1f1f1f; padding:10px; border-radius:8px;">
             <h4>Comments</h4>
             <input type="text" id="commText" placeholder="Write a comment..." style="width:100%; background:#121212; border:1px solid #333; color:#fff; padding:8px; border-radius:4px; margin-bottom:5px;">
-            <input type="text" id="commImg" placeholder="Image URL (Optional)" style="width:100%; background:#121212; border:1px solid #333; color:#fff; padding:8px; border-radius:4px; margin-bottom:5px;">
+            <input type="file" id="commFile" accept="image/*,video/*,audio/*,.pdf,.zip,.rar" style="width:100%; border:none; padding:4px 0; margin-bottom:5px;">
             <button class="btn" style="margin-top:0;" onclick="addComment()">Post Comment</button>
             <div id="commList" style="margin-top:10px; font-size:13px;"></div>
         </div>
