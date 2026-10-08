@@ -5,8 +5,8 @@ Website login form ကို မူလအတိုင်း **username + passwor
 ## တစ်ကြိမ်သာလုပ်ရမည့် setup
 
 1. Supabase project ကို backup လုပ်ပြီး [SQL Editor](https://supabase.com/dashboard/project/xlityagwhcpkloiyvlpo/sql/new) ကိုဖွင့်ပါ။
-2. `supabase-auth-migration.sql` ဖိုင်တစ်ခုလုံးကို SQL Editor ထဲ paste လုပ်ပြီး run လုပ်ပါ။ Account/limit tables, RLS policies, Auth signup trigger နဲ့ RPC functions များကို ဖန်တီးပေးပါမည်။
-3. **Authentication → Providers → Email** မှ Email provider နှင့် sign-up ကို enable လုပ်ပါ။ **Confirm email ကို OFF** လုပ်ပါ—အတွင်းသုံး username identity များတွင် inbox မရှိပါ။
+2. `supabase-auth-migration.sql` ဖိုင်၏ နောက်ဆုံး version အားလုံးကို SQL Editor ထဲ paste လုပ်ပြီး run လုပ်ပါ။ အရင် version ကို run လုပ်ပြီးသားဖြစ်လည်း နောက်ဆုံး file ကို ထပ် run လုပ်ပါ။ Table/function ပြင်ဆင်ချက်များ ထည့်သွင်းပြီး schema cache ကို refresh လုပ်ပေးပါမည်။
+3. **Authentication → Providers → Email** မှ Email provider နှင့် sign-up ကို enable လုပ်ပါ။ **Confirm email ကို OFF** လုပ်ပါ—username identity များတွင် inbox မရှိပါ။
 4. Website ဖိုင်အသစ်များကို hosting ပေါ်တင်ပါ။ Login modal မှ migration သတိပေးချက် ပျောက်သွားရပါမည်။
 5. ပထမဆုံး admin ကို website မှ username/password ဖြင့် register လုပ်ပါ။ ထို့နောက် SQL Editor ထဲက `YOUR_ADMIN_USERNAME` နေရာတွင် အဲဒီ admin username ကိုရေးပြီး အောက်ပါ query ကို run လုပ်ပါ။
 

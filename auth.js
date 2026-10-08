@@ -244,7 +244,7 @@
         if (!Number.isInteger(requested) || requested <= deviceUsage.max_accounts) return toast(`လက်ရှိ limit ${deviceUsage.max_accounts} ထက်ကြီးသော အရေအတွက်ထည့်ပါ`);
         const { error } = await client.rpc('request_device_limit', {
             p_device_id: getDeviceID(),
-            p_requester_email: null,
+            p_requester_email: authEmailForUsername(username),
             p_requested_limit: requested,
             p_username: username
         });

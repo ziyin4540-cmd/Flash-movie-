@@ -44,6 +44,7 @@ create table if not exists public.account_limit_requests (
     handled_by uuid references auth.users(id) on delete set null,
     handled_at timestamptz
 );
+alter table public.account_limit_requests alter column requester_email drop not null;
 create unique index if not exists one_pending_limit_request_per_device
     on public.account_limit_requests(device_id) where status = 'Pending';
 
@@ -285,5 +286,7 @@ grant execute on function public.admin_set_device_limit(text, integer, uuid) to 
 revoke all on function public.admin_set_account_status(uuid, text) from public, anon;
 grant execute on function public.admin_set_account_status(uuid, text) to authenticated;
 revoke all on function public.handle_new_flash_auth_user() from public, anon, authenticated;
+
+notify pgrst, 'reload schema';
 
 commit;
