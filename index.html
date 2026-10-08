@@ -3,88 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flâsh Movie Pro - Network Hub</title>
+    <title>Flâsh Movie - YouTube Style Platform</title>
     <style>
-        body { font-family: sans-serif; background: #0b0f19; color: #fff; margin: 0; padding: 0; }
-        header { background: #111827; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2937; }
-        h1 { color: #ec4899; margin: 0; font-size: 20px; }
-        .container { max-width: 1100px; margin: 20px auto; padding: 0 15px; }
-        .categories { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 25px; }
-        .cat-chip { background: #1f2937; color: #d1d5db; padding: 10px 18px; border-radius: 8px; white-space: nowrap; cursor: pointer; font-size: 14px; font-weight: bold; border: 1px solid #374151; }
-        .cat-chip.active, .cat-chip:hover { background: #ec4899; color: white; border-color: #ec4899; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: #111827; border-radius: 10px; overflow: hidden; border: 1px solid #1f2937; padding: 15px; }
-        .card-title { font-size: 16px; font-weight: bold; margin-bottom: 8px; color: #f3f4f6; }
-        .card-desc { font-size: 13px; color: #9ca3af; margin-bottom: 12px; }
-        .badge { display: inline-block; background: #374151; color: #ec4899; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-bottom: 10px; font-weight: bold; }
+        body { font-family: sans-serif; background: #0f0f0f; color: #fff; margin: 0; padding: 0; }
+        header { background: #212121; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #383838; position: sticky; top: 0; z-index: 100; }
+        .logo { color: #ff0000; font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
+        .upload-btn { background: #ff0000; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .video-card { background: #212121; border-radius: 12px; overflow: hidden; cursor: pointer; border: 1px solid #383838; }
+        .video-thumb { width: 100%; height: 160px; background: #3f3f3f; display: flex; align-items: center; justify-content: center; color: #aaa; }
+        .video-details { padding: 12px; }
+        .video-title { font-size: 15px; font-weight: bold; margin-bottom: 6px; }
+        .video-stats { font-size: 12px; color: #aaa; }
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 200; }
+        .modal-content { background: #212121; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; border: 1px solid #383838; }
+        .modal-content input, .modal-content textarea { width: 100%; padding: 10px; margin: 10px 0; background: #121212; border: 1px solid #383838; color: white; border-radius: 6px; box-sizing: border-box; }
+        .action-bar { display: flex; gap: 15px; margin-top: 10px; font-size: 14px; color: #aaa; }
+        .action-bar span { cursor: pointer; }
+        .action-bar span:hover { color: #ff0000; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Flâsh Movie Pro - Dashboard</h1>
+        <div class="logo">▶ Flâsh Movie</div>
+        <button class="upload-btn" onclick="openUploadModal()">+ Upload Video</button>
     </header>
 
     <div class="container">
-        <!-- Categories -->
-        <div class="categories">
-            <div class="cat-chip active" onclick="filterCategory('all')">All / အားလုံး</div>
-            <div class="cat-chip" onclick="filterCategory('dtac')">Dtac</div>
-            <div class="cat-chip" onclick="filterCategory('ais')">AIS</div>
-            <div class="cat-chip" onclick="filterCategory('true')">True</div>
-            <div class="cat-chip" onclick="filterCategory('wifi')">All Sim & Wifi</div>
-            <div class="cat-chip" onclick="filterCategory('starlink-old')">Starlink Old</div>
-            <div class="cat-chip" onclick="filterCategory('starlink-new')">Starlink New</div>
-        </div>
-
-        <!-- Content Grid -->
-        <div class="grid" id="contentGrid">
-            <div class="card" data-cat="dtac">
-                <span class="badge">Dtac</span>
-                <div class="card-title">Dtac High-Speed Connection</div>
-                <div class="card-desc">Dtac ကွန်ရက်အတွက် သီးသန့်ချိတ်ဆက်မှုများနှင့် ဗီဒီယိုကြည့်ရှုရန် စနစ်များ။</div>
-            </div>
-            <div class="card" data-cat="ais">
-                <span class="badge">AIS</span>
-                <div class="card-title">AIS Stream Line</div>
-                <div class="card-desc">AIS ကွန်ရက်အသုံးပြုသူများအတွက် အထူးစီစဉ်ထားသော ဖိုင်များနှင့် လင့်ခ်များ။</div>
-            </div>
-            <div class="card" data-cat="true">
-                <span class="badge">True</span>
-                <div class="card-title">True Move H Setup</div>
-                <div class="card-desc">True ကွန်ရက်အတွက် အချက်အလက်များနှင့် ဗီဒီယိုကြည့်ရှုမှု အပိုင်းများ။</div>
-            </div>
-            <div class="card" data-cat="wifi">
-                <span class="badge">Sim & Wifi</span>
-                <div class="card-title">All Sim & Home Wifi Hub</div>
-                <div class="card-desc">ဆင်းကတ်အမျိုးမျိုးနှင့် ဝိုင်ဖိုင်လိုင်းများအားလုံးအတွက် အသင့်သုံးစနစ်။</div>
-            </div>
-            <div class="card" data-cat="starlink-old">
-                <span class="badge">Starlink Old</span>
-                <div class="card-title">Starlink Legacy Setup</div>
-                <div class="card-desc">စတားလင့်ခ် ဗားရှင်းဟောင်းအတွက် ချိတ်ဆက်မှုနှင့် ဒေတာပြသချက်များ။</div>
-            </div>
-            <div class="card" data-cat="starlink-new">
-                <span class="badge">Starlink New</span>
-                <div class="card-title">Starlink Modern Setup</div>
-                <div class="card-desc">စတားလင့်ခ် ဗားရှင်းအသစ်အတွက် နောက်ဆုံးပေါ် အပြင်အဆင်နှင့် ချိတ်ဆက်မှုများ။</div>
+        <h3>Trending Videos</h3>
+        <div class="video-grid" id="videoGrid">
+            <!-- Sample Video Card -->
+            <div class="video-card">
+                <div class="video-thumb">Flâsh Movie Player</div>
+                <div class="video-details">
+                    <div class="video-title">Flâsh Movie Pro - Official Teaser</div>
+                    <div class="video-stats">1.2K views • 2 hours ago</div>
+                    <div class="action-bar">
+                        <span onclick="alert('Liked!')">👍 Like</span>
+                        <span onclick="alert('Saved to Library!')">💾 Save</span>
+                        <span onclick="alert('Reported!')">⚠️ Report</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <script>
-        function filterCategory(category) {
-            document.querySelectorAll('.cat-chip').forEach(chip => chip.classList.remove('active'));
-            event.target.classList.add('active');
+    <!-- Upload Modal -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <h3>Upload Video to Flâsh Movie</h3>
+            <input type="text" id="videoTitle" placeholder="Video Title">
+            <textarea id="videoDesc" placeholder="Description" rows="3"></textarea>
+            <input type="file" id="videoFile" accept="video/*" style="border:none; padding:0;">
+            <button class="upload-btn" style="width: 100%; margin-top: 15px;" onclick="alert('Video Uploaded Successfully!')">Publish</button>
+            <button class="upload-btn" style="width: 100%; margin-top: 5px; background: #383838;" onclick="closeUploadModal()">Cancel</button>
+        </div>
+    </div>
 
-            const cards = document.querySelectorAll('.card');
-            cards.forEach(card => {
-                if (category === 'all' || card.getAttribute('data-cat') === category) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+    <script>
+        function openUploadModal() {
+            document.getElementById('uploadModal').style.display = 'flex';
+        }
+        function closeUploadModal() {
+            document.getElementById('uploadModal').style.display = 'none';
         }
     </script>
 </body>
