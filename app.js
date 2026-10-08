@@ -108,34 +108,31 @@ let currItem = null;
 let filterType = 'all';
 let currentChatUser = null;
 
-window.addEventListener('DOMContentLoaded', async () => {
-    await initIndexedDB();
-    contents = await dbGetAllContents();
-
+window.addEventListener('DOMContentLoaded', () => {
+    // Never block the intro screen on IndexedDB or a previously saved large video.
     const text = "Flâsh Movie";
     const container = document.getElementById('introTitleContainer');
-    text.split('').forEach((char, i) => {
+    if (container) text.split('').forEach((char, i) => {
         const span = document.createElement('span');
         span.innerText = char === ' ' ? '\u00A0' : char;
         span.style.animationDelay = (i * 0.1) + 's';
         container.appendChild(span);
     });
     setTimeout(() => {
-        let intro = document.getElementById('introScreen');
-        if(intro) { intro.style.opacity = '0'; setTimeout(() => intro.style.display = 'none', 800); }
+        const intro = document.getElementById('introScreen');
+        if (intro) { intro.style.opacity = '0'; setTimeout(() => intro.style.display = 'none', 800); }
     }, 2200);
-
     checkBroadcastBanner();
     switchPage('homePage');
-
+    initIndexedDB().then(() => dbGetAllContents()).then(items => {
+        contents = items;
+        renderFeed();
+    }).catch(error => console.error('Background content load failed', error));
     setInterval(() => {
         if(currUser) localStorage.setItem('flash_last_active_' + currUser.username, Date.now());
-        let durElem = document.getElementById('accDurationLive');
-        if(durElem && currUser && currUser.createdAt) {
-            durElem.innerText = formatDurationDetailed(currUser.createdAt);
-        }
+        const durElem = document.getElementById('accDurationLive');
+        if(durElem && currUser && currUser.createdAt) durElem.innerText = formatDurationDetailed(currUser.createdAt);
     }, 1000);
-
     setInterval(() => { if(currentChatUser) renderChatMessages(); }, 2000);
 });
 function checkBroadcastBanner() {
