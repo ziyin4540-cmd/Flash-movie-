@@ -155,6 +155,7 @@
                 <div id="visitorHistoryList" style="max-height:120px; overflow-y:auto; font-size:12px; color:#aaa;">No visitors yet.</div>
             </div>
 
+            <button class="btn btn-sec" onclick="requestNotificationPermission()" style="margin-bottom:10px;">🔔 Enable Message Notifications</button>
             <button class="btn" style="background:#f59e0b; margin-bottom:10px;" onclick="requestAccountLimit()">📥 Request Admin for Account Limit Increase</button>
             <button class="btn" style="background:#ef4444;" onclick="signOut()">Sign Out</button>
         </div>
@@ -167,7 +168,7 @@
         </div>
         <div style="background:#1f1f1f; padding:15px; border-radius:8px; max-width:650px; margin:auto;">
             <div id="admLoginBox">
-                <input type="password" id="admPass" placeholder="Enter Admin Password (295802)" style="width:100%; padding:10px; background:#121212; border:1px solid #333; color:#fff; border-radius:6px; margin-bottom:10px;">
+                <input type="password" id="admPass" placeholder="Enter Admin Password" style="width:100%; padding:10px; background:#121212; border:1px solid #333; color:#fff; border-radius:6px; margin-bottom:10px;">
                 <button class="btn" onclick="verifyAdmin()">Login Admin</button>
             </div>
             <div id="admDashBox" style="display:none;">
@@ -237,11 +238,11 @@
                 <div class="btn-action" onclick="toggleLike()" id="likeBtn">👍 Like (0)</div>
                 <div class="btn-action" onclick="toggleBgPlay()" id="bgPlayBtn" style="background:#3b82f6;">🎵 Background Play: OFF</div>
                 <div class="btn-action" onclick="downloadContent()" id="downloadBtn" style="background:#10b981; display:none;">📥 Download</div>
-                <div class="btn-action" onclick="notInterested()" style="color:#f59e0b;">🚫 Not Interested</div>
                 <div class="btn-action" onclick="blockUser()" style="color:#ef4444;">⛔ Block</div>
                 <div class="btn-action" onclick="reportItem('Content')" style="color:#ef4444;">⚠️ Report</div>
             </div>
         </div>
+        <div id="nextUpPanel" class="next-up-panel"></div>
         <div style="margin-top:15px; background:#1f1f1f; padding:10px; border-radius:8px;">
             <h4>Comments</h4>
             <input type="text" id="commText" placeholder="Write a comment..." style="width:100%; background:#121212; border:1px solid #333; color:#fff; padding:8px; border-radius:4px; margin-bottom:5px;">

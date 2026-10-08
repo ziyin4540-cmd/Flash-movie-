@@ -73,3 +73,19 @@ nav div span { display: block; font-size: 18px; }
 .comment-reply { margin:6px 0 0 18px; padding:6px 8px; border-left:2px solid #38bdf8; background:#1b1b1b; font-size:12px; }
 .comment-attachment img { max-width:180px; max-height:140px; object-fit:contain; display:block; margin-top:6px; border-radius:6px; }
 .comment-attachment a { display:inline-block; color:#38bdf8; margin-top:6px; }
+
+
+/* Video detail / text post layout */
+.text-post-preview { width:100%; min-height:140px; box-sizing:border-box; padding:22px; background:linear-gradient(135deg,#182033,#111827); color:#fff; display:flex; flex-direction:column; justify-content:center; }
+.text-post-preview p { margin:10px 0 0; font-size:16px; line-height:1.5; white-space:pre-wrap; word-break:break-word; }
+.text-post-label { color:#38bdf8; font-size:10px; letter-spacing:1px; font-weight:bold; }
+.next-up-panel { margin-top:14px; background:#161616; border-radius:10px; padding:12px; }
+.next-up-heading { display:flex; justify-content:space-between; align-items:center; font-size:16px; font-weight:bold; margin-bottom:10px; }
+.next-up-heading span { color:#38bdf8; font-size:11px; font-weight:normal; }
+.next-up-panel .card { display:flex; margin:8px 0; min-height:78px; padding:0; }
+.next-up-panel .thumb { width:120px; min-width:120px; height:78px; }
+.next-up-panel .meta { padding:8px; }
+.next-up-panel .meta h4 { font-size:12px; }
+.next-up-panel .meta p { font-size:10px; }
+.next-up-panel .muted { color:#aaa; font-size:12px; }
+.text-post-preview + * { max-width:100%; }

@@ -1117,3 +1117,147 @@ window.addEventListener('popstate', event => {
     switchPage(page, { replace: true });
     flashHandlingPopState = false;
 });
+
+
+/* ---------- Feed/detail and live-account fixes ---------- */
+function ensureAccountCreatedAt() {
+    if (!currUser) return;
+    const valid = Number(currUser.createdAt) > 0 ? Number(currUser.createdAt) : Date.now();
+    currUser.createdAt = valid;
+    const stored = users.find(u => u.username === currUser.username);
+    if (stored) stored.createdAt = valid;
+    localStorage.setItem('flash_curr', JSON.stringify(currUser));
+    localStorage.setItem('flash_users', JSON.stringify(users));
+}
+function updateAccountDuration() {
+    if (!currUser) return;
+    ensureAccountCreatedAt();
+    const date = document.getElementById('accCreatedDateDisplay');
+    const duration = document.getElementById('accDurationLive');
+    if (date) date.textContent = new Date(currUser.createdAt).toLocaleString();
+    if (duration) duration.textContent = formatDurationDetailed(currUser.createdAt);
+}
+function textPostMarkup(c) {
+    return `<div class="text-post-preview"><span class="text-post-label">TEXT POST</span><p>${esc(c.title || '')}</p></div>`;
+}
+function cardMarkup(c) {
+    const info = getUploaderInfo(c.uploader);
+    let media;
+    if (c.type === 'post' && !c.url) media = textPostMarkup(c);
+    else if (c.fileType?.startsWith('image')) media = `<img src="${c.url}" alt="">`;
+    else if (c.fileType?.startsWith('audio')) media = `<audio controls src="${c.url}"></audio>`;
+    else if (c.fileType?.startsWith('video')) media = `<video src="${c.url}" preload="metadata" muted></video>`;
+    else media = textPostMarkup(c);
+    return `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${media}</div><div class="meta"><h4>${esc(c.playlist ? `[${c.playlist}] ` : '')}${esc(c.title || 'Untitled')}</h4><p>${esc(info.name)} • ${formatTimeAgo(c.createdAt || c.id)}</p></div></div>`;
+}
+function visibleItems(type) {
+    return contents.filter(c => (!type || c.type === type) && !blockedUsers.includes(c.uploader) && checkPrivacy(c));
+}
+function renderFeed() {
+    const grid = document.getElementById('feedGrid'); if (!grid) return;
+    const s = (document.getElementById('search')?.value || '').toLowerCase();
+    let data = visibleItems(filterType === 'all' ? null : filterType).filter(c => c.type !== 'post' && (c.title || '').toLowerCase().includes(s));
+    grid.innerHTML = data.length ? data.map(cardMarkup).join('') : '<p style="color:#aaa;text-align:center;grid-column:1/-1;">No data found.</p>';
+}
+function renderShorts() {
+    const grid = document.getElementById('shortsGrid'); if (!grid) return;
+    const data = visibleItems('short'); grid.innerHTML = data.length ? data.map(cardMarkup).join('') : '<p style="color:#aaa;text-align:center;grid-column:1/-1;">No shorts available.</p>';
+}
+function renderPosts() {
+    const grid = document.getElementById('postsGrid'); if (!grid) return;
+    const data = visibleItems('post'); grid.innerHTML = data.length ? data.map(cardMarkup).join('') : '<p style="color:#aaa;text-align:center;grid-column:1/-1;">No text posts available.</p>';
+}
+function getActivePlaylist() {
+    if (!currItem) return [];
+    const category = currItem.type;
+    let list = visibleItems(category);
+    if (currItem.playlist) list = list.filter(c => c.playlist === currItem.playlist);
+    else list = list.filter(c => !c.playlist);
+    return list.sort((a,b) => (a.createdAt || a.id) - (b.createdAt || b.id));
+}
+function renderNextUp() {
+    const panel = document.getElementById('nextUpPanel'); if (!panel || !currItem) return;
+    const list = getActivePlaylist(), index = list.findIndex(x => x.id === currItem.id);
+    const next = index >= 0 ? list.slice(index + 1) : [];
+    panel.innerHTML = `<div class="next-up-heading">Up next <span>${next.length} ${currItem.type === 'short' ? 'shorts' : currItem.type === 'video' ? 'videos' : 'posts'}</span></div>` + (next.length ? next.map(cardMarkup).join('') : '<p class="muted">ဒီအမျိုးအစားထဲမှာ နောက်ထပ်မရှိသေးပါ။</p>');
+}
+function openDetail(id) {
+    if (!currUser || currUser.status !== 'Approved') return openModal('loginModal');
+    currItem = contents.find(x => x.id === id); if (!currItem) return;
+    switchPage('detailPage');
+    const mb = document.getElementById('detailMedia');
+    const controls = `<button class="overlay-nav-btn" id="prevOverlayBtn" onclick="playPrevVideo()">⏮</button><button class="overlay-nav-btn" id="nextOverlayBtn" onclick="playNextVideo()">⏭</button>`;
+    if (currItem.type === 'post' && !currItem.url) mb.innerHTML = controls + textPostMarkup(currItem);
+    else if (currItem.type === 'post' && currItem.fileType?.startsWith('image')) mb.innerHTML = controls + `<img src="${currItem.url}" alt="">`;
+    else if (currItem.type === 'post' && currItem.fileType?.startsWith('audio')) mb.innerHTML = controls + `<audio controls autoplay src="${currItem.url}"></audio>`;
+    else if (currItem.type === 'post' && currItem.fileType?.startsWith('video')) mb.innerHTML = controls + `<video src="${currItem.url}" controls autoplay playsinline id="activeVideo" onended="playNextVideo()"></video>`;
+    else if (currItem.type === 'short' || currItem.type === 'video') mb.innerHTML = controls + `<video src="${currItem.url}" controls autoplay playsinline id="activeVideo" onloadedmetadata="adjustVideoOrientation(this)" onended="playNextVideo()"></video>`;
+    else mb.innerHTML = controls + textPostMarkup(currItem);
+    document.getElementById('detTitle').innerText = currItem.title || 'Untitled';
+    document.getElementById('detUploadTime').innerText = 'Uploaded: ' + new Date(currItem.createdAt || currItem.id).toLocaleString() + ' (' + formatTimeAgo(currItem.createdAt || currItem.id) + ')';
+    const info = getUploaderInfo(currItem.uploader); document.getElementById('detUploaderName').innerText = info.name; document.getElementById('detUploaderId').innerText = currItem.uploader;
+    const badge = document.getElementById('playlistBadge'); badge.style.display = currItem.playlist ? 'block' : 'none'; if (currItem.playlist) badge.innerText = '🎬 Playlist: ' + currItem.playlist;
+    document.getElementById('nextVideoBadge').innerText = '⏭ Next: ' + (getActivePlaylist().find((x,i) => x.id === currItem.id && i + 1 < getActivePlaylist().length) ? getActivePlaylist()[getActivePlaylist().findIndex(x => x.id === currItem.id) + 1].title : 'None');
+    const dl = document.getElementById('downloadBtn'); dl.style.display = currItem.allowDownload === 'yes' && currItem.url ? 'block' : 'none';
+    updateLikeBtnUI(); currentBgPlayState = false; updateBgPlayBtnUI(); renderComments(); renderNextUp();
+}
+
+function requestNotificationPermission() {
+    if (!('Notification' in window)) return showAnimeToast('ဒီ browser မှာ notification မထောက်ပံ့ပါ');
+    Notification.requestPermission().then(p => showAnimeToast(p === 'granted' ? 'Notifications enabled' : 'Notification permission denied'));
+}
+function notifyIncomingMessage(message) {
+    if (!message || message.sender === currUser?.username || !('Notification' in window) || Notification.permission !== 'granted') return;
+    new Notification('New message from ' + message.sender, { body: message.text || message.fileName || 'Attachment', tag: 'flash-message-' + message.id });
+}
+setInterval(() => { updateAccountDuration(); }, 1000);
+window.addEventListener('DOMContentLoaded', () => { ensureAccountCreatedAt(); updateAccountDuration(); });
+
+
+/* Inline comment replies: no popup/prompt */
+function addCommentReply(commentId) {
+    const input = document.querySelector(`input[data-reply-for="${commentId}"]`);
+    const text = input?.value.trim(); if (!text) return;
+    const c = (currItem.comments || []).find(x => x.id === commentId); if (!c) return;
+    c.replies = c.replies || []; c.replies.push({ id: Date.now(), user: currUser.username, text });
+    dbSaveContent(currItem); renderComments();
+}
+function renderComments() {
+    const list = document.getElementById('commList'); if (!list) return;
+    list.innerHTML = (currItem.comments || []).map(c => {
+        const info = getUploaderInfo(c.user);
+        const attachment = c.attachment ? `<div class="comment-attachment">${c.attachment.type.startsWith('image') ? `<img src="${c.attachment.url}" alt="">` : `<a href="${c.attachment.url}" download="${esc(c.attachment.name)}">📎 ${esc(c.attachment.name)}</a>`}</div>` : '';
+        const canDelete = c.user === currUser.username || currItem.uploader === currUser.username;
+        const replies = (c.replies || []).map(r => `<div class="comment-reply"><b>${esc(getUploaderInfo(r.user).name)}</b> ${esc(r.text)} <small>${formatTimeAgo(r.id)}</small>${r.user === currUser.username || currItem.uploader === currUser.username ? `<button class="text-btn danger" onclick="deleteCommentReply(${c.id},${r.id})">Delete</button>` : ''}</div>`).join('');
+        return `<div class="comment-item"><div><b>${esc(info.name)}</b> <span>${esc(c.text)}</span>${attachment}</div><small>${formatTimeAgo(c.id)}</small><div class="comment-actions"><input class="inline-reply-input" data-reply-for="${c.id}" placeholder="Reply…"><button class="text-btn" onclick="addCommentReply(${c.id})">↩ Reply</button>${canDelete ? `<button class="text-btn danger" onclick="deleteComment(${c.id})">Delete</button>` : ''}</div>${replies}</div>`;
+    }).join('') || '<p style="color:#aaa;">No comments yet.</p>';
+}
+
+/* Best-effort web notifications for messages arriving in another open tab. */
+let lastSeenMessageIds = new Set();
+function scanIncomingMessages() {
+    if (!currUser) return;
+    users.filter(u => u.username !== currUser.username).forEach(u => {
+        getChatMessagesListFor(currUser.username, u.username).filter(m => m.receiver === currUser.username).forEach(m => {
+            if (!lastSeenMessageIds.has(m.id)) { lastSeenMessageIds.add(m.id); if (m.status !== 'Seen') notifyIncomingMessage(m); }
+        });
+    });
+}
+window.addEventListener('storage', event => { if (event.key?.startsWith('flash_chat_')) scanIncomingMessages(); });
+setInterval(scanIncomingMessages, 3000);
+
+
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+
+
+/* Settings no longer references the removed avatar URL input. */
+function openSettingsPage() {
+    if (!currUser) return openModal('loginModal');
+    switchPage('settingsPage'); ensureAccountCreatedAt(); updateAccountDuration();
+    const name = document.getElementById('setAccountName'); if (name) name.value = currUser.accountName || currUser.username.substring(1);
+    const follow = document.getElementById('setFollowView'); if (follow) follow.checked = currUser.followView ?? true;
+    const follower = document.getElementById('setFollowerView'); if (follower) follower.checked = currUser.followerView ?? true;
+    const list = document.getElementById('visitorHistoryList'); if (!list) return;
+    const visitors = profileVisitors[currUser.username] || [];
+    list.innerHTML = visitors.length ? visitors.map(v => `<div>👤 <b>${esc(getUploaderInfo(v.username).name)}</b> (${esc(v.username)}) - ${v.count} visits</div>`).join('') : 'No visitors yet.';
+}
