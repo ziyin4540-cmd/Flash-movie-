@@ -1084,3 +1084,36 @@ function openInboxPage() {
     if (!currUser || currUser.status !== 'Approved') return openModal('loginModal');
     switchPage('inboxPage'); renderInbox();
 }
+
+
+/* ---------- In-app navigation history ---------- */
+const flashBaseSwitchPage = switchPage;
+let flashHistoryReady = false;
+let flashHandlingPopState = false;
+
+switchPage = function(pageId, options = {}) {
+    const current = document.querySelector('.page-section.active-page')?.id;
+    const shouldPush = flashHistoryReady && !flashHandlingPopState && !options.replace && current !== pageId;
+    if (shouldPush) history.pushState({ flashPage: pageId }, '', '#' + pageId);
+    flashBaseSwitchPage(pageId);
+};
+
+function appBack(fallback = 'homePage') {
+    if (history.state && history.state.flashPage) history.back();
+    else switchPage(fallback, { replace: true });
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const pageFromHash = location.hash.replace('#', '');
+    const firstPage = document.querySelector('.page-section.active-page')?.id || 'homePage';
+    history.replaceState({ flashPage: firstPage }, '', '#' + firstPage);
+    flashHistoryReady = true;
+    if (pageFromHash && document.getElementById(pageFromHash) && pageFromHash !== firstPage) switchPage(pageFromHash, { replace: true });
+});
+window.addEventListener('popstate', event => {
+    const page = event.state?.flashPage || location.hash.replace('#', '') || 'homePage';
+    if (!document.getElementById(page)) return;
+    flashHandlingPopState = true;
+    switchPage(page, { replace: true });
+    flashHandlingPopState = false;
+});

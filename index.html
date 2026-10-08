@@ -87,7 +87,7 @@
     <div class="container page-section" id="chatRoomPage">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:8px;">
             <div style="display:flex; align-items:center; gap:10px;">
-                <button class="btn" style="width:auto; padding:4px 10px; background:#333; margin:0;" onclick="openInboxPage()">⬅</button>
+                <button class="btn" style="width:auto; padding:4px 10px; background:#333; margin:0;" onclick="appBack('inboxPage')">⬅</button>
                 <div id="chatAvatar" style="width:36px; height:36px; background:#3b82f6; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; font-weight:bold;">U</div>
                 <div>
                     <b id="chatName" style="font-size:14px; display:block;">User</b>
@@ -124,7 +124,7 @@
 
     <div class="container page-section" id="settingsPage">
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
-            <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="switchPage('profilePage')">⬅ Back</button>
+            <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="appBack('profilePage')">⬅ Back</button>
             <h2>⚙️ App & Profile Settings</h2>
         </div>
         <div style="background:#1f1f1f; padding:15px; border-radius:8px; max-width:500px; margin:auto;">
@@ -162,7 +162,7 @@
 
     <div class="container page-section" id="adminPage">
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
-            <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="switchPage('homePage')">⬅ Back to Home</button>
+            <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="appBack('homePage')">⬅ Back to Home</button>
             <h2>🛡️ Admin Panel</h2>
         </div>
         <div style="background:#1f1f1f; padding:15px; border-radius:8px; max-width:650px; margin:auto;">
@@ -192,7 +192,7 @@
     </div>
     <div class="container page-section" id="userProfilePage">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
-            <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="switchPage('homePage')">⬅ Back</button>
+            <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="appBack('homePage')">⬅ Back</button>
             <button class="btn" style="width:auto; padding:5px 12px; background:#3b82f6; margin:0;" onclick="openChatRoom(selectedCreator)">💬 Message</button>
         </div>
         <div style="text-align:center; background:#1a1a1a; padding:20px; border-radius:12px; margin-bottom:15px;">
@@ -212,7 +212,7 @@
 
     <div class="container page-section" id="detailPage">
         <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-            <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="switchPage('homePage')">⬅ Back to Home</button>
+            <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="appBack('homePage')">⬅ Back to Home</button>
             <div id="playlistBadge" style="font-size:12px; color:#f59e0b; background:#1e293b; padding:4px 10px; border-radius:15px; border:1px solid #334155; display:none;">🎬 Playlist</div>
             <div id="nextVideoBadge" style="font-size:12px; color:#38bdf8; background:#1e293b; padding:4px 10px; border-radius:15px; border:1px solid #334155;">⏭ Next: None</div>
         </div>
