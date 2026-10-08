@@ -3,359 +3,320 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flâsh Movie - Pro</title>
+    <title>Flâsh Movie Pro</title>
     <style>
         body { font-family: sans-serif; background: #0f0f0f; color: #fff; margin: 0; padding-bottom: 70px; }
         header { background: #0f0f0f; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #222; }
         .logo { color: #ff0000; font-size: 20px; font-weight: bold; cursor: pointer; }
         .search-bar { display: flex; align-items: center; background: #121212; border: 1px solid #333; border-radius: 20px; padding: 5px 15px; width: 40%; }
         .search-bar input { background: transparent; border: none; color: #fff; width: 100%; outline: none; }
-        .header-icons { display: flex; gap: 15px; font-size: 20px; cursor: pointer; align-items: center; }
         .container { padding: 10px; max-width: 800px; margin: auto; }
-        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
-        .video-card { background: #1f1f1f; border-radius: 8px; overflow: hidden; cursor: pointer; }
-        .video-thumb-small { width: 100%; height: 130px; background: #000; display: flex; align-items: center; justify-content: center; }
-        .video-thumb-small video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
-        .video-meta { padding: 8px; }
-        .video-meta h4 { margin: 0 0 4px 0; font-size: 14px; }
-        .video-meta p { margin: 0; font-size: 11px; color: #aaa; }
-        #watchPage { display: none; padding: 10px; }
-        .player-container { width: 100%; background: #000; max-height: 250px; display: flex; justify-content: center; }
-        .player-container video { width: 100%; max-height: 250px; object-fit: contain; }
-        .watch-details { padding: 10px 0; border-bottom: 1px solid #222; }
-        .watch-title { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
-        .watch-stats { font-size: 12px; color: #aaa; margin-bottom: 10px; }
-        .action-buttons { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 5px; font-size: 13px; }
-        .action-btn { background: #272727; padding: 6px 12px; border-radius: 15px; display: flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap; }
-        .comments-section { margin-top: 15px; background: #1f1f1f; padding: 10px; border-radius: 8px; }
-        .comment-input-box { display: flex; gap: 10px; margin-top: 10px; }
-        .comment-input-box input { flex: 1; background: #121212; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 4px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+        .card { background: #1f1f1f; border-radius: 8px; overflow: hidden; cursor: pointer; padding-bottom: 5px; }
+        .thumb { width: 100%; height: 130px; background: #000; display: flex; align-items: center; justify-content: center; }
+        .thumb video, .thumb img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+        .meta { padding: 8px; }
+        .meta h4 { margin: 0 0 4px 0; font-size: 14px; }
+        .meta p { margin: 0; font-size: 11px; color: #aaa; }
+        #detailPage { display: none; padding: 10px; }
+        .player { width: 100%; background: #000; max-height: 250px; display: flex; justify-content: center; }
+        .player video, .player img { width: 100%; max-height: 250px; object-fit: contain; }
+        .actions { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; font-size: 13px; border-bottom: 1px solid #222; }
+        .btn-action { background: #272727; padding: 6px 12px; border-radius: 15px; cursor: pointer; white-space: nowrap; }
         #profilePage { display: none; padding: 15px; text-align: center; }
-        .profile-header { display: flex; flex-direction: column; align-items: center; gap: 10px; border-bottom: 1px solid #222; padding-bottom: 15px; }
-        .profile-avatar { width: 70px; height: 70px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; }
-        .profile-tabs { display: flex; justify-content: space-around; margin: 15px 0; border-bottom: 1px solid #333; padding-bottom: 5px; font-size: 14px; font-weight: bold; color: #aaa; cursor: pointer; }
-        .profile-tabs span.activeTab { color: #fff; border-bottom: 2px solid #ff0000; padding-bottom: 3px; }
         nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #212121; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; z-index: 1000; }
         nav div { text-align: center; font-size: 11px; color: #aaa; cursor: pointer; }
         nav div.active { color: #fff; }
         nav div span { display: block; font-size: 18px; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 2000; }
         .modal-content { background: #212121; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #333; max-height: 85vh; overflow-y: auto; }
-        .modal-content input, .modal-content textarea { width: 100%; padding: 10px; margin: 8px 0; background: #121212; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box; }
+        .modal-content input, .modal-content textarea, .modal-content select { width: 100%; padding: 10px; margin: 8px 0; background: #121212; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box; }
         .btn { background: #ff0000; color: #fff; border: none; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-secondary { background: #333; }
-        .progress-bar-bg { width: 100%; background: #333; border-radius: 4px; overflow: hidden; height: 8px; margin-top: 10px; display: none; }
-        .progress-bar-fill { width: 0%; height: 100%; background: #ff0000; }
+        .btn-sec { background: #333; }
     </style>
 </head>
 <body>
+
     <header>
         <div class="logo" onclick="goHome()">▶ Flâsh Movie</div>
-        <div class="search-bar"><input type="text" id="searchInput" placeholder="Search..." onkeyup="searchVideos()"></div>
-        <div class="header-icons">
-            <span onclick="openAdminModal()" title="Admin">🛡️</span>
-            <span onclick="openLoginModal()" title="Login">👤</span>
+        <div class="search-bar"><input type="text" id="search" placeholder="Search..." onkeyup="renderFeed()"></div>
+        <div style="display:flex; gap:15px; font-size:20px; cursor:pointer;">
+            <span onclick="openModal('adminModal')">🛡️</span>
+            <span onclick="openModal('loginModal')">👤</span>
         </div>
     </header>
-    <div class="container" id="homePage"><div class="video-grid" id="videoGrid"></div></div>
-    <div class="container" id="watchPage">
-        <div class="player-container"><video id="activeVideoPlayer" controls></video></div>
-        <div class="watch-details">
-            <div class="watch-title" id="watchTitle">Title</div>
-            <div class="watch-stats" id="watchStats">1.2K views</div>
-            <div class="action-buttons">
-                <div class="action-btn" onclick="alert('Liked!')">👍 Like</div>
-                <div class="action-btn" onclick="alert('Dislike')">👎</div>
-                <div class="action-btn" onclick="alert('Shared!')">↗️ Share</div>
-                <div class="action-btn" onclick="alert('Saved!')">💾 Save</div>
+
+    <!-- HOME -->
+    <div class="container" id="homePage">
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <button class="btn" style="width:auto; margin:0; background:#272727;" onclick="filterFeed('all')">All</button>
+            <button class="btn" style="width:auto; margin:0; background:#272727;" onclick="filterFeed('video')">Videos</button>
+            <button class="btn" style="width:auto; margin:0; background:#272727;" onclick="filterFeed('short')">Shorts</button>
+            <button class="btn" style="width:auto; margin:0; background:#272727;" onclick="filterFeed('post')">Posts</button>
+        </div>
+        <div class="grid" id="feedGrid"></div>
+    </div>
+
+    <!-- DETAIL -->
+    <div class="container" id="detailPage">
+        <div class="player" id="detailMedia"></div>
+        <div style="padding:10px 0; border-bottom:1px solid #222;">
+            <h3 id="detTitle" style="margin:0 0 5px 0;"></h3>
+            <p id="detStats" style="color:#aaa; font-size:12px; margin:0;"></p>
+            <div class="actions">
+                <div class="btn-action" onclick="alert('Liked!')">👍 Like</div>
+                <div class="btn-action" onclick="alert('Saved!')">💾 Save</div>
+                <div class="btn-action" onclick="reportItem('Content')" style="color:#ef4444;">⚠️ Report</div>
             </div>
         </div>
-        <div class="comments-section">
-            <h4>Comments <span id="commentCount">(0)</span></h4>
-            <div class="comment-input-box">
-                <input type="text" id="commentInput" placeholder="Add a comment...">
-                <button class="btn" style="width:auto; margin-top:0;" onclick="addComment()">Post</button>
-            </div>
-            <div id="commentsList" style="margin-top: 10px; font-size: 13px;"></div>
+        <div style="margin-top:15px; background:#1f1f1f; padding:10px; border-radius:8px;">
+            <h4>Comments</h4>
+            <input type="text" id="commText" placeholder="Write a comment..." style="width:100%; background:#121212; border:1px solid #333; color:#fff; padding:8px; border-radius:4px; margin-bottom:5px;">
+            <input type="text" id="commImg" placeholder="Image URL (Optional)" style="width:100%; background:#121212; border:1px solid #333; color:#fff; padding:8px; border-radius:4px; margin-bottom:5px;">
+            <button class="btn" style="margin-top:0;" onclick="addComment()">Post Comment</button>
+            <div id="commList" style="margin-top:10px; font-size:13px;"></div>
         </div>
     </div>
+
+    <!-- PROFILE -->
     <div class="container" id="profilePage">
-        <div class="profile-header">
-            <div class="profile-avatar" id="profileAvatarText">U</div>
-            <h2 id="profileUsernameName">@Username</h2>
-            <p id="profileStatusText" style="color: #10b981; font-size: 13px;">Status: Active</p>
+        <div style="text-align:center; border-bottom:1px solid #222; padding-bottom:15px;">
+            <div style="width:60px; height:60px; background:#3b82f6; border-radius:50%; margin:auto; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:bold;" id="profAvatar">U</div>
+            <h2 id="profName" style="margin:10px 0 5px 0;">@User</h2>
+            <div style="background:#1f1f1f; padding:10px; border-radius:8px; text-align:left; max-width:300px; margin:10px auto;">
+                <label style="font-size:11px; color:#aaa;">Current Password:</label>
+                <input type="text" id="currPassView" readonly style="background:#121212; border:1px solid #333; color:#fff; padding:5px; width:100%; margin-bottom:5px;">
+                <label style="font-size:11px; color:#aaa;">New Password:</label>
+                <input type="password" id="newPassVal" placeholder="New Password" style="background:#121212; border:1px solid #333; color:#fff; padding:5px; width:100%; margin-bottom:5px;">
+                <button class="btn" style="padding:5px; font-size:12px;" onclick="changePass()">Change Password</button>
+            </div>
         </div>
-        <div class="profile-tabs">
-            <span class="activeTab" onclick="switchProfileTab('videos')">Videos</span>
-            <span onclick="switchProfileTab('shorts')">Shorts</span>
-            <span onclick="switchProfileTab('posts')">Posts</span>
+        <div style="display:flex; justify-content:space-around; margin:15px 0; border-bottom:1px solid #333; padding-bottom:5px; font-size:14px; font-weight:bold; color:#aaa; cursor:pointer;">
+            <span onclick="switchTab('video')" style="color:#fff;">Videos</span>
+            <span onclick="switchTab('short')">Shorts</span>
+            <span onclick="switchTab('post')">Posts</span>
         </div>
-        <div id="profileTabContent" class="video-grid" style="margin-top: 15px;"></div>
+        <div class="grid" id="profGrid"></div>
     </div>
+
+    <!-- UPLOAD MODAL -->
     <div class="modal" id="uploadModal">
         <div class="modal-content">
-            <h3>Upload Video</h3>
-            <input type="text" id="upTitle" placeholder="Video Title">
-            <textarea id="upDesc" placeholder="Description" rows="2"></textarea>
-            <input type="file" id="upFile" accept="video/*" style="border:none; padding:0; margin-top:10px;">
-            <p id="progressText" style="font-size: 12px; margin: 5px 0; text-align: right; display:none;">Uploading: 0%</p>
-            <div class="progress-bar-bg" id="progressBarBg"><div class="progress-bar-fill" id="progressBar"></div></div>
-            <button class="btn" onclick="uploadVideo()">Upload Now</button>
-            <button class="btn btn-secondary" onclick="closeModal('uploadModal')">Cancel</button>
+            <h3>Upload Content</h3>
+            <select id="upType"><option value="video">Video</option><option value="short">Short Video</option><option value="post">Post</option></select>
+            <input type="text" id="upTitle" placeholder="Title / Caption">
+            <input type="file" id="upFile" accept="video/*,image/*" style="border:none; padding:0; margin-top:10px;">
+            <button class="btn" onclick="uploadContent()">Upload Now</button>
+            <button class="btn btn-sec" onclick="closeModal('uploadModal')">Cancel</button>
         </div>
     </div>
+
+    <!-- LOGIN MODAL -->
     <div class="modal" id="loginModal">
-        <div class="modal-content" style="text-align: center;">
+        <div class="modal-content" style="text-align:center;">
             <h3>Login / Register</h3>
-            <input type="text" id="authUsername" placeholder="Username">
-            <input type="password" id="authPassword" placeholder="Password">
+            <input type="text" id="authU" placeholder="Username">
+            <input type="password" id="authP" placeholder="Password">
             <button class="btn" onclick="handleAuth()">Sign In / Register</button>
-            <button class="btn btn-secondary" style="margin-top: 10px;" onclick="closeModal('loginModal')">Close</button>
+            <button class="btn btn-sec" onclick="closeModal('loginModal')">Close</button>
         </div>
     </div>
+
+    <!-- ADMIN MODAL -->
     <div class="modal" id="adminModal">
         <div class="modal-content">
             <h3>Admin Panel</h3>
-            <div id="adminLoginSection">
-                <input type="password" id="adminPass" placeholder="Enter Password">
-                <button class="btn" onclick="verifyAdmin()">Login Admin</button>
-            </div>
-            <div id="adminDashboard" style="display:none;">
-                <p style="color: #10b981; font-weight: bold;">Status: Logged In</p>
-                <h4>Account Approvals:</h4>
-                <div id="adminUserList" style="background: #121212; padding: 10px; border-radius: 6px; margin: 10px 0; max-height: 120px; overflow-y: auto; font-size: 13px;"></div>
-                <h4>Video Management:</h4>
-                <div id="adminVideoList" style="background: #121212; padding: 10px; border-radius: 6px; margin: 10px 0; max-height: 120px; overflow-y: auto; font-size: 13px;"></div>
-                <button class="btn btn-secondary" onclick="closeModal('adminModal')">Close</button>
+            <div id="admLogin"><input type="password" id="admPass" placeholder="Password (295802)"><button class="btn" onclick="verifyAdmin()">Login</button></div>
+            <div id="admDash" style="display:none;">
+                <p style="color:#10b981; font-weight:bold;">Admin Logged In</p>
+                <h4>Users & Passwords:</h4><div id="admUsers" style="background:#121212; padding:8px; max-height:100px; overflow-y:auto; font-size:12px;"></div>
+                <h4>Reports:</h4><div id="admReports" style="background:#121212; padding:8px; max-height:100px; overflow-y:auto; font-size:12px; color:#ef4444;"></div>
+                <h4>Content:</h4><div id="admContent" style="background:#121212; padding:8px; max-height:100px; overflow-y:auto; font-size:12px;"></div>
+                <button class="btn btn-sec" onclick="closeModal('adminModal')">Close</button>
             </div>
         </div>
     </div>
+
     <nav>
-        <div class="active" onclick="switchNav(0); goHome();"><span>🏠</span>Home</div>
-        <div onclick="switchNav(1); alert('Shorts');"><span>🩳</span>Shorts</div>
-        <div onclick="checkLoginAndUpload()"><span>➕</span>Upload</div>
-        <div onclick="switchNav(3); openProfilePage();"><span id="navUserIcon">👤</span><span id="navUserName">Profile</span></div>
+        <div class="active" onclick="goHome()"><span>🏠</span>Home</div>
+        <div onclick="alert('Shorts')"><span>🩳</span>Shorts</div>
+        <div onclick="checkUpload()"><span>➕</span>Upload</div>
+        <div onclick="openProfile()"><span>👤</span>Profile</div>
     </nav>
-<script>
-        let videos = JSON.parse(localStorage.getItem('flash_videos')) || [];
+
+    <script>
+        let contents = JSON.parse(localStorage.getItem('flash_contents')) || [];
         let users = JSON.parse(localStorage.getItem('flash_users')) || [];
-        let currentUser = JSON.parse(localStorage.getItem('flash_current_user')) || null;
-        let currentWatchingVideo = null;
+        let reports = JSON.parse(localStorage.getItem('flash_reports')) || [];
+        let currUser = JSON.parse(localStorage.getItem('flash_curr')) || null;
+        let currItem = null;
+        let filterType = 'all';
 
         function goHome() {
             document.getElementById('homePage').style.display = 'block';
-            document.getElementById('watchPage').style.display = 'none';
+            document.getElementById('detailPage').style.display = 'none';
             document.getElementById('profilePage').style.display = 'none';
-            renderVideos();
+            renderFeed();
         }
-
-        function checkLoginAndUpload() {
-            if(!currentUser || currentUser.status !== 'Approved') {
-                alert('Account pending admin approval or not signed in!');
-                openLoginModal();
-            } else {
-                document.getElementById('uploadModal').style.display = 'flex';
-            }
-        }
-
-        function openLoginModal() { document.getElementById('loginModal').style.display = 'flex'; }
-        function openAdminModal() { document.getElementById('adminModal').style.display = 'flex'; }
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
         function handleAuth() {
-            const uname = document.getElementById('authUsername').value.trim();
-            const pass = document.getElementById('authPassword').value;
-            if(!uname || !pass) { alert('Enter username & password!'); return; }
-            const fName = uname.startsWith('@') ? uname : '@' + uname;
-            let user = users.find(u => u.username === fName);
-
-            if(user) {
-                if(user.password !== pass) { alert('Incorrect password!'); return; }
-                if(user.status !== 'Approved') { alert('Pending admin approval!'); return; }
-                currentUser = user;
-                localStorage.setItem('flash_current_user', JSON.stringify(currentUser));
-                alert('Signed in!');
+            let u = document.getElementById('authU').value.trim();
+            let p = document.getElementById('authP').value;
+            if(!u || !p) return alert('Enter details');
+            let f = u.startsWith('@') ? u : '@' + u;
+            let usr = users.find(x => x.username === f);
+            if(usr) {
+                if(usr.password !== p) return alert('Wrong password');
+                if(usr.status !== 'Approved') return alert('Pending admin approval');
+                currUser = usr;
             } else {
-                user = { username: fName, password: pass, status: 'Pending' };
-                users.push(user);
-                localStorage.setItem('flash_users', JSON.stringify(users));
-                alert('Account created! Waiting for Admin approval.');
+                usr = { username: f, password: p, status: 'Pending' };
+                users.push(usr);
+                alert('Account created! Wait for admin approval.');
             }
+            localStorage.setItem('flash_curr', JSON.stringify(currUser));
+            localStorage.setItem('flash_users', JSON.stringify(users));
             closeModal('loginModal');
-            document.getElementById('navUserName').innerText = fName;
         }
 
-        function uploadVideo() {
-            const title = document.getElementById('upTitle').value;
-            const desc = document.getElementById('upDesc').value;
-            const fileInput = document.getElementById('upFile');
-            if(!title || fileInput.files.length === 0) { alert('Enter title & select file!'); return; }
-
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            document.getElementById('progressText').style.display = 'block';
-            document.getElementById('progressBarBg').style.display = 'block';
-
-            let progress = 0;
-            let interval = setInterval(() => {
-                progress += 5;
-                document.getElementById('progressBar').style.width = progress + '%';
-                document.getElementById('progressText').innerText = 'Uploading: ' + progress + '%';
-                if(progress >= 100) {
-                    clearInterval(interval);
-                    reader.onload = function(e) {
-                        videos.unshift({ id: Date.now(), title, desc, url: e.target.result, uploader: currentUser.username, time: 'Just now', comments: [] });
-                        localStorage.setItem('flash_videos', JSON.stringify(videos));
-                        goHome();
-                        alert('Uploaded successfully!');
-                        closeModal('uploadModal');
-                        document.getElementById('progressBarBg').style.display = 'none';
-                        document.getElementById('progressText').style.display = 'none';
-                        document.getElementById('upTitle').value = '';
-                        document.getElementById('upDesc').value = '';
-                        document.getElementById('upFile').value = '';
-                    };
-                    reader.readAsDataURL(file);
-                }
-            }, 100);
+        function checkUpload() {
+            if(!currUser || currUser.status !== 'Approved') return alert('Get admin approval first');
+            openModal('uploadModal');
         }
 
-        function renderVideos(filter = '') {
-            const grid = document.getElementById('videoGrid');
+        function uploadContent() {
+            let type = document.getElementById('upType').value;
+            let title = document.getElementById('upTitle').value;
+            let file = document.getElementById('upFile').files[0];
+            if(!title || !file) return alert('Enter title and file');
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                contents.unshift({ id: Date.now(), type, title, url: e.target.result, uploader: currUser.username, comments: [] });
+                localStorage.setItem('flash_contents', JSON.stringify(contents));
+                goHome();
+                closeModal('uploadModal');
+                alert('Uploaded successfully!');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function filterFeed(t) { filterType = t; renderFeed(); }
+
+        function renderFeed() {
+            let grid = document.getElementById('feedGrid');
             grid.innerHTML = '';
-            const filtered = videos.filter(v => v.title.toLowerCase().includes(filter.toLowerCase()));
-            if(filtered.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No videos.</p>'; return; }
-            filtered.forEach(v => {
-                grid.innerHTML += `
-                    <div class="video-card" onclick="openWatchPage(${v.id})">
-                        <div class="video-thumb-small"><video src="${v.url}"></video></div>
-                        <div class="video-meta"><h4>${v.title}</h4><p>${v.uploader} • ${v.time}</p></div>
-                    </div>
-                `;
+            let s = document.getElementById('search').value.toLowerCase();
+            let data = contents.filter(c => c.title.toLowerCase().includes(s));
+            if(filterType !== 'all') data = data.filter(c => c.type === filterType);
+            if(data.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No data found.</p>'; return; }
+            data.forEach(c => {
+                let m = c.type === 'post' ? `<img src="${c.url}">` : `<video src="${c.url}"></video>`;
+                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>[${c.type.toUpperCase()}] ${c.title}</h4><p>${c.uploader}</p></div></div>`;
             });
         }
 
-        function openWatchPage(id) {
-            if(!currentUser || currentUser.status !== 'Approved') {
-                alert('Please sign in and get admin approval first!');
-                openLoginModal();
-                return;
-            }
-            currentWatchingVideo = videos.find(v => v.id === id);
-            if(!currentWatchingVideo) return;
-
+        function openDetail(id) {
+            if(!currUser || currUser.status !== 'Approved') return alert('Sign in and get approval first');
+            currItem = contents.find(x => x.id === id);
             document.getElementById('homePage').style.display = 'none';
             document.getElementById('profilePage').style.display = 'none';
-            document.getElementById('watchPage').style.display = 'block';
-
-            document.getElementById('activeVideoPlayer').src = currentWatchingVideo.url;
-            document.getElementById('watchTitle').innerText = currentWatchingVideo.title;
-            document.getElementById('watchStats').innerText = `${currentWatchingVideo.uploader} • ${currentWatchingVideo.time}`;
+            document.getElementById('detailPage').style.display = 'block';
+            let mb = document.getElementById('detailMedia');
+            mb.innerHTML = currItem.type === 'post' ? `<img src="${currItem.url}">` : `<video src="${currItem.url}" controls></video>`;
+            document.getElementById('detTitle').innerText = currItem.title;
+            document.getElementById('detStats').innerText = currItem.uploader;
             renderComments();
         }
 
         function addComment() {
-            const txt = document.getElementById('commentInput').value.trim();
-            if(!txt) return;
-            if(!currentWatchingVideo.comments) currentWatchingVideo.comments = [];
-            currentWatchingVideo.comments.push({user: currentUser.username, text: txt});
-            localStorage.setItem('flash_videos', JSON.stringify(videos));
-            document.getElementById('commentInput').value = '';
+            let txt = document.getElementById('commText').value.trim();
+            let img = document.getElementById('commImg').value.trim();
+            if(!txt && !img) return;
+            if(!currItem.comments) currItem.comments = [];
+            currItem.comments.push({ id: Date.now(), user: currUser.username, text: txt, img: img, likes: 0 });
+            localStorage.setItem('flash_contents', JSON.stringify(contents));
+            document.getElementById('commText').value = '';
+            document.getElementById('commImg').value = '';
             renderComments();
         }
 
+        function reportItem(t) {
+            reports.push({ type: t, target: currItem ? currItem.title : 'Account', by: currUser.username });
+            localStorage.setItem('flash_reports', JSON.stringify(reports));
+            alert('Reported successfully!');
+        }
+
         function renderComments() {
-            const list = document.getElementById('commentsList');
+            let list = document.getElementById('commList');
             list.innerHTML = '';
-            const comments = currentWatchingVideo.comments || [];
-            document.getElementById('commentCount').innerText = `(${comments.length})`;
-            comments.forEach(c => { list.innerHTML += `<p><b>${c.user}:</b> ${c.text}</p>`; });
+            (currItem.comments || []).forEach(c => {
+                let im = c.img ? `<br><img src="${c.img}" style="max-width:100px; margin-top:5px;">` : '';
+                list.innerHTML += `<div style="background:#121212; padding:6px; margin-top:5px; border-radius:4px;"><p><b>${c.user}:</b> ${c.text} ${im}</p><div style="font-size:10px; color:#aaa; cursor:pointer;" onclick="alert('Comment Liked')">👍 Like (${c.likes})</div></div>`;
+            });
         }
 
-        function openProfilePage() {
-            if(!currentUser || currentUser.status !== 'Approved') {
-                alert('Please sign in first!');
-                openLoginModal();
-                return;
-            }
+        function openProfile() {
+            if(!currUser || currUser.status !== 'Approved') return alert('Sign in first');
             document.getElementById('homePage').style.display = 'none';
-            document.getElementById('watchPage').style.display = 'none';
+            document.getElementById('detailPage').style.display = 'none';
             document.getElementById('profilePage').style.display = 'block';
-
-            document.getElementById('profileUsernameName').innerText = currentUser.username;
-            document.getElementById('profileAvatarText').innerText = currentUser.username.charAt(1).toUpperCase();
-            switchProfileTab('videos');
+            document.getElementById('profName').innerText = currUser.username;
+            document.getElementById('profAvatar').innerText = currUser.username.charAt(1).toUpperCase();
+            document.getElementById('currPassView').value = currUser.password;
+            switchTab('video');
         }
 
-        function switchProfileTab(tab) {
-            document.querySelectorAll('.profile-tabs span').forEach(el => el.classList.remove('activeTab'));
-            event.target.classList.add('activeTab');
-            const content = document.getElementById('profileTabContent');
-            content.innerHTML = '';
-            if(tab === 'videos') {
-                const myVids = videos.filter(v => v.uploader === currentUser.username);
-                if(myVids.length === 0) { content.innerHTML = '<p style="color:#aaa; grid-column:1/-1;">No uploaded videos.</p>'; return; }
-                myVids.forEach(v => {
-                    content.innerHTML += `
-                        <div class="video-card" onclick="openWatchPage(${v.id})">
-                            <div class="video-thumb-small"><video src="${v.url}"></video></div>
-                            <div class="video-meta"><h4>${v.title}</h4><p>${v.time}</p></div>
-                        </div>
-                    `;
-                });
-            } else { content.innerHTML = `<p style="color:#aaa; grid-column:1/-1;">No ${tab}.</p>`; }
+        function changePass() {
+            let np = document.getElementById('newPassVal').value;
+            if(!np) return alert('Enter new password');
+            currUser.password = np;
+            let u = users.find(x => x.username === currUser.username);
+            if(u) u.password = np;
+            localStorage.setItem('flash_users', JSON.stringify(users));
+            localStorage.setItem('flash_curr', JSON.stringify(currUser));
+            document.getElementById('currPassView').value = np;
+            document.getElementById('newPassVal').value = '';
+            alert('Password changed!');
         }
 
-        function searchVideos() { renderVideos(document.getElementById('searchInput').value); }
+        function switchTab(t) {
+            let grid = document.getElementById('profGrid');
+            grid.innerHTML = '';
+            let items = contents.filter(c => c.uploader === currUser.username && c.type === t);
+            if(items.length === 0) { grid.innerHTML = '<p style="color:#aaa; grid-column:1/-1;">No items.</p>'; return; }
+            items.forEach(c => {
+                let m = c.type === 'post' ? `<img src="${c.url}">` : `<video src="${c.url}"></video>`;
+                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>${c.title}</h4></div></div>`;
+            });
+        }
+
         function verifyAdmin() {
-            if(document.getElementById('adminPass').value === '295802') {
-                document.getElementById('adminLoginSection').style.display = 'none';
-                document.getElementById('adminDashboard').style.display = 'block';
-                renderAdminPanel();
-            } else { alert('Incorrect password!'); }
+            if(document.getElementById('admPass').value === '295802') {
+                document.getElementById('admLogin').style.display = 'none';
+                document.getElementById('admDash').style.display = 'block';
+                renderAdmin();
+            } else alert('Wrong password');
         }
 
-        function renderAdminPanel() {
-            const uList = document.getElementById('adminUserList');
+        function renderAdmin() {
+            let uList = document.getElementById('admUsers');
             uList.innerHTML = '';
-            if(users.length === 0) uList.innerHTML = '<p>No users.</p>';
             users.forEach((u, i) => {
-                uList.innerHTML += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                        <span>${u.username} (${u.status})</span>
-                        <div>
-                            ${u.status !== 'Approved' ? `<button onclick="approveUser(${i})" style="background:green; color:white; border:none; padding:2px 5px;">Accept</button>` : ''}
-                            <button onclick="rejectUser(${i})" style="background:red; color:white; border:none; padding:2px 5px;">Reject</button>
-                        </div>
-                    </div>
-                `;
+                uList.innerHTML += `<div>${u.username} (Pass: ${u.password}) - ${u.status} ${u.status !== 'Approved' ? `<button onclick="users[${i}].status='Approved';localStorage.setItem('flash_users',JSON.stringify(users));renderAdmin();">Accept</button>` : ''}</div>`;
             });
-
-            const vList = document.getElementById('adminVideoList');
-            vList.innerHTML = '';
-            if(videos.length === 0) vList.innerHTML = '<p>No videos.</p>';
-            videos.forEach(v => {
-                vList.innerHTML += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                        <span>${v.title} (${v.uploader})</span>
-                        <button onclick="adminDeleteVideo(${v.id})" style="background:red; color:white; border:none; padding:2px 5px;">Delete</button>
-                    </div>
-                `;
+            let rList = document.getElementById('admReports');
+            rList.innerHTML = '';
+            reports.forEach(r => { rList.innerHTML += `<div>[${r.type}] ${r.target} by ${r.by}</div>`; });
+            let cList = document.getElementById('admContent');
+            cList.innerHTML = '';
+            contents.forEach((c, i) => {
+                cList.innerHTML += `<div>${c.title} <button onclick="contents.splice(${i},1);localStorage.setItem('flash_contents',JSON.stringify(contents));renderAdmin();">Delete</button></div>`;
             });
         }
 
-        function approveUser(i) { users[i].status = 'Approved'; localStorage.setItem('flash_users', JSON.stringify(users)); renderAdminPanel(); }
-        function rejectUser(i) { users.splice(i, 1); localStorage.setItem('flash_users', JSON.stringify(users)); renderAdminPanel(); }
-        function adminDeleteVideo(id) { videos = videos.filter(v => v.id !== id); localStorage.setItem('flash_videos', JSON.stringify(videos)); renderAdminPanel(); goHome(); }
-
-        function switchNav(index) {
-            document.querySelectorAll('nav div').forEach((el, i) => {
-                if(i === index) el.classList.add('active'); else el.classList.remove('active');
-            });
-        }
-
-        if(currentUser) { document.getElementById('navUserName').innerText = currentUser.username; }
-        renderVideos();
+        renderFeed();
     </script>
 </body>
 </html>
