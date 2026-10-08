@@ -56,9 +56,7 @@ function getDeviceID() {
 }
 
 function getDeviceLimits() {
-    let limits = JSON.parse(localStorage.getItem('flash_device_limits')) || {};
-    let devId = getDeviceID();
-    return limits[devId] || 2;
+    return 2;
 }
 
 function formatDurationDetailed(startTime) {
@@ -94,15 +92,15 @@ function formatTimeAgo(timestamp) {
 }
 
 let contents = [];
-let users = JSON.parse(localStorage.getItem('flash_users')) || [];
-let deviceAccounts = JSON.parse(localStorage.getItem('flash_device_accs')) || [];
-let limitRequests = JSON.parse(localStorage.getItem('flash_limit_requests')) || [];
+let users = [];
+let deviceAccounts = [];
+let limitRequests = [];
 let profileVisitors = JSON.parse(localStorage.getItem('flash_visitors')) || {};
 let reports = JSON.parse(localStorage.getItem('flash_reports')) || [];
 let blockedUsers = JSON.parse(localStorage.getItem('flash_blocked')) || [];
 let following = JSON.parse(localStorage.getItem('flash_following')) || [];
 let notInterestedList = JSON.parse(localStorage.getItem('flash_not_interested')) || [];
-let currUser = JSON.parse(localStorage.getItem('flash_curr')) || null;
+let currUser = null;
 let appSettings = JSON.parse(localStorage.getItem('flash_settings')) || { resume: true, bgPlay: false, followView: true, followerView: true };
 let currItem = null;
 let filterType = 'all';
@@ -173,45 +171,10 @@ function openModal(id) {
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
 function handleAuth() {
-    let u = document.getElementById('authU').value.trim();
-    let p = document.getElementById('authP').value;
-    if(!u || !p) return showAnimeToast('Enter details');
-    let f = u.startsWith('@') ? u : '@' + u;
-    let devId = getDeviceID();
-    let maxAllowed = getDeviceLimits();
-
-    let usr = users.find(x => x.username === f);
-    if(usr) {
-        if(usr.password !== p) return showAnimeToast('Wrong password');
-        if(usr.status !== 'Approved') return showAnimeToast('Pending admin approval');
-        currUser = usr;
-        if(!currUser.createdAt) currUser.createdAt = Date.now();
-        if(!currUser.deviceId) currUser.deviceId = devId;
-    } else {
-        if(deviceAccounts.length >= maxAllowed) return showAnimeToast('Device limit reached! Request limit increase.');
-        let permissionGranted = confirm("Flâsh Movie requests permission to register your Device ID (" + devId + ") for account management. Allow?");
-        if(!permissionGranted) return showAnimeToast('Permission denied');
-
-        usr = { username: f, password: p, accountName: f.substring(1), avatar: '', deviceId: devId, createdAt: Date.now(), status: 'Pending', followView: true, followerView: true };
-        users.push(usr);
-        if(!deviceAccounts.includes(f)) deviceAccounts.push(f);
-        showAnimeToast('Account created! Wait for approval.');
-    }
-    if(!deviceAccounts.includes(currUser.username) && currUser.status === 'Approved') {
-        if(deviceAccounts.length >= maxAllowed) return showAnimeToast('Device limit reached!');
-        deviceAccounts.push(currUser.username);
-    }
-    if(!currUser.accountName) currUser.accountName = currUser.username.substring(1);
-    if(!currUser.createdAt) currUser.createdAt = Date.now();
-    if(!currUser.deviceId) currUser.deviceId = devId;
-    localStorage.setItem('flash_curr', JSON.stringify(currUser));
-    localStorage.setItem('flash_users', JSON.stringify(users));
-    localStorage.setItem('flash_device_accs', JSON.stringify(deviceAccounts));
-    closeModal('loginModal');
-    showAnimeToast('Successfully Signed In!');
+    return showAnimeToast('Supabase Auth ကိုအသုံးပြု၍ Sign In သို့မဟုတ် Create Account ကိုရွေးပါ');
 }
 
-function signOut() { currUser = null; localStorage.removeItem('flash_curr'); switchPage('homePage'); showAnimeToast('Signed out successfully'); }
+function signOut() { return window.signOutWithSupabase?.(); }
 function checkUpload() { if(!currUser || currUser.status !== 'Approved') return showAnimeToast('Get admin approval first'); switchPage('uploadPage'); }
 function togglePlaylistInput() {
     let isChecked = document.getElementById('playlistToggle').checked;
@@ -219,11 +182,7 @@ function togglePlaylistInput() {
 }
 
 function requestAccountLimit() {
-    let devId = getDeviceID();
-    let req = { id: Date.now(), deviceId: devId, user: currUser.username, status: 'Pending' };
-    limitRequests.push(req);
-    localStorage.setItem('flash_limit_requests', JSON.stringify(limitRequests));
-    showAnimeToast('📥 Limit increase request sent to Admin!');
+    return window.requestAccountLimitInCloud?.();
 }
 
 async function uploadContent() {
@@ -815,19 +774,13 @@ function saveProfileSettings() {
 }
 
 function updateUserStorage() {
-    let u = users.find(x => x.username === currUser.username);
-    if(u) { u.accountName = currUser.accountName; u.avatar = currUser.avatar; u.followView = currUser.followView; u.followerView = currUser.followerView; }
-    localStorage.setItem('flash_curr', JSON.stringify(currUser));
-    localStorage.setItem('flash_users', JSON.stringify(users));
-    showAnimeToast('Profile updated successfully!');
-    openProfile();
+    return window.persistProfileToSupabase?.();
 }
 
 function openAdminPage() {
     switchPage('adminPage');
     document.getElementById('admLoginBox').style.display = 'block';
     document.getElementById('admDashBox').style.display = 'none';
-    document.getElementById('admPass').value = '';
 }
 
 function saveAppSettings() {
@@ -858,12 +811,12 @@ async function deleteMyContent(id) {
 }
 
 function verifyAdmin() {
-    if(document.getElementById('admPass').value === '295802') {
+    if (currUser?.role === 'admin') {
         document.getElementById('admLoginBox').style.display = 'none';
         document.getElementById('admDashBox').style.display = 'block';
-        renderAdmin();
-        showAnimeToast('Admin Access Granted!');
-    } else showAnimeToast('Wrong password');
+        return renderAdmin();
+    }
+    showAnimeToast('Supabase Auth admin account ဖြင့်ဝင်ပါ');
 }
 
 function switchAdminTab(tabName, btnElem) {
@@ -885,7 +838,8 @@ function renderAdmin() {
     let lList = document.getElementById('admLimitsList');
     lList.innerHTML = limitRequests.length === 0 ? '<p style="color:#aaa;">No limit requests.</p>' : '';
     limitRequests.forEach((req, idx) => {
-        lList.innerHTML += `<div style="background:#121212; padding:10px; border-radius:6px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;"><div><b>User:</b> ${req.user}<br><small style="color:#38bdf8;">Device ID: ${req.deviceId}</small></div><button onclick="approveLimitRequest(${idx})" style="background:green; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Increase Limit to 5</button></div>`;
+        const suggested = Number.isInteger(Number(req.requestedLimit)) ? Number(req.requestedLimit) : Math.max(getDeviceLimits() + 1, 3);
+        lList.innerHTML += `<div style="background:#121212; padding:10px; border-radius:6px; margin-bottom:8px;"><div><b>User:</b> ${esc(req.user || 'Unknown')}<br><small style="color:#38bdf8;">Device ID: ${esc(req.deviceId || 'Unknown')}</small><br><small style="color:#aaa;">Requested: ${suggested} accounts</small></div><div style="display:flex; gap:8px; align-items:center; margin-top:8px;"><label for="limitInput-${idx}" style="font-size:12px; color:#aaa;">Set maximum:</label><input id="limitInput-${idx}" type="number" min="1" step="1" value="${suggested}" style="width:100px; padding:6px; background:#121212; color:#fff; border:1px solid #444; border-radius:4px;"><button onclick="approveLimitRequest(${idx})" style="background:green; color:white; border:none; padding:7px 10px; border-radius:4px; cursor:pointer;">Save limit</button></div></div>`;
     });
 
     let cList = document.getElementById('admContentList');
@@ -895,18 +849,15 @@ function renderAdmin() {
     });
 }
 
-function approveAdminUser(i) { users[i].status = 'Approved'; localStorage.setItem('flash_users', JSON.stringify(users)); renderAdmin(); showAnimeToast('Approved'); }
-function deleteAdminUser(i) { users.splice(i, 1); localStorage.setItem('flash_users', JSON.stringify(users)); renderAdmin(); showAnimeToast('Deleted'); }
+function approveAdminUser(i) { return window.setAccountStatusInCloud?.(i, 'approved'); }
+function deleteAdminUser() { showAnimeToast('Account deletion is disabled in this admin view'); }
 
 function approveLimitRequest(idx) {
-    let req = limitRequests[idx];
-    let limits = JSON.parse(localStorage.getItem('flash_device_limits')) || {};
-    limits[req.deviceId] = 5;
-    localStorage.setItem('flash_device_limits', JSON.stringify(limits));
-    limitRequests.splice(idx, 1);
-    localStorage.setItem('flash_limit_requests', JSON.stringify(limitRequests));
-    renderAdmin();
-    showAnimeToast('Limit increased to 5 for Device: ' + req.deviceId);
+    return window.approveLimitRequestInCloud?.(idx);
+}
+
+function saveDeviceLimitManually() {
+    return window.saveDeviceLimitToCloud?.();
 }
 
 async function adminDeleteContent(id) { await dbDeleteContent(id); contents = await dbGetAllContents(); renderAdmin(); renderFeed(); showAnimeToast('Deleted'); }
@@ -1121,10 +1072,6 @@ function ensureAccountCreatedAt() {
     if (!currUser) return;
     const valid = Number(currUser.createdAt) > 0 ? Number(currUser.createdAt) : Date.now();
     currUser.createdAt = valid;
-    const stored = users.find(u => u.username === currUser.username);
-    if (stored) stored.createdAt = valid;
-    localStorage.setItem('flash_curr', JSON.stringify(currUser));
-    localStorage.setItem('flash_users', JSON.stringify(users));
 }
 function updateAccountDuration() {
     if (!currUser) return;
@@ -1451,52 +1398,18 @@ function normalizeUserDevices(user) {
     return user.deviceIds;
 }
 function getDeviceAccountsFor(deviceId = getDeviceID()) {
-    users.forEach(normalizeUserDevices);
-    const names = [...new Set(users.filter(u => normalizeUserDevices(u).includes(deviceId)).map(u => u.username))];
-    deviceAccounts = names;
-    localStorage.setItem('flash_device_accs', JSON.stringify(names));
-    localStorage.setItem('flash_users', JSON.stringify(users));
-    return names;
+    return deviceId === getDeviceID() ? deviceAccounts : [];
 }
 function getDeviceLimits() {
-    const limits = JSON.parse(localStorage.getItem('flash_device_limits') || '{}');
-    return Math.max(1, Number(limits[getDeviceID()] || 2));
+    return 2;
 }
-function persistAuthState() {
-    localStorage.setItem('flash_users', JSON.stringify(users));
-    localStorage.setItem('flash_device_accs', JSON.stringify(getDeviceAccountsFor()));
-    if (currUser) localStorage.setItem('flash_curr', JSON.stringify(currUser));
-}
+function persistAuthState() { /* Supabase Auth manages the session. */ }
 function handleAuth() {
-    const raw = document.getElementById('authU').value.trim(), password = document.getElementById('authP').value;
-    if (!raw || !password) return showAnimeToast('Enter details');
-    const username = raw.startsWith('@') ? raw : '@' + raw;
-    const deviceId = getDeviceID(), limit = getDeviceLimits(), accounts = getDeviceAccountsFor(deviceId);
-    let user = users.find(x => x.username === username);
-    if (user) {
-        if (user.password !== password) return showAnimeToast('Wrong password');
-        if (user.status !== 'Approved') return showAnimeToast('Pending admin approval');
-        const ids = normalizeUserDevices(user);
-        if (!ids.includes(deviceId)) {
-            if (accounts.length >= limit) return showAnimeToast(`Device limit reached: ${limit} accounts`);
-            ids.push(deviceId); user.deviceIds = [...new Set(ids)];
-        }
-        currUser = user;
-        if (!currUser.createdAt) currUser.createdAt = Date.now();
-        persistAuthState(); closeModal('loginModal'); showAnimeToast('Successfully Signed In!'); return;
-    }
-    if (accounts.length >= limit) return showAnimeToast(`Device limit reached: ${limit} accounts`);
-    if (!confirm(`Allow this website to register Device ID ${deviceId} for account management?`)) return showAnimeToast('Permission denied');
-    user = { username, password, accountName: username.slice(1), avatar: '', deviceId, deviceIds: [deviceId], createdAt: Date.now(), status: 'Pending', followView: true, followerView: true };
-    users.push(user); persistAuthState();
-    document.getElementById('authP').value = '';
-    closeModal('loginModal'); showAnimeToast('Account created. Wait for admin approval.');
+    return showAnimeToast('Supabase Auth ကိုအသုံးပြု၍ Sign In သို့မဟုတ် Create Account ကိုရွေးပါ');
 }
 function openModal(id) {
     if (id === 'loginModal' && !currUser) {
-        const limit = getDeviceLimits(), count = getDeviceAccountsFor().length;
-        document.getElementById('modalLimitText').innerText = limit;
-        if (count >= limit) return showAnimeToast(`Device limit reached: ${limit} accounts`);
+        refreshDeviceUsage().catch(() => {});
     }
     document.getElementById(id).style.display = 'flex';
 }
