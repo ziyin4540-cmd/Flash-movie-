@@ -11,6 +11,12 @@
         .intro-title { font-size: 32px; font-weight: bold; color: #fff; letter-spacing: 5px; display: flex; gap: 5px; }
         .intro-title span { opacity: 0; transform: translateY(20px); animation: fadeInChar 0.4s forwards; }
         @keyframes fadeInChar { to { opacity: 1; transform: translateY(0); } }
+        
+        /* Marquee Broadcast Banner */
+        #broadcastBanner { background: #1e1e1e; color: #38bdf8; padding: 8px 0; overflow: hidden; white-space: nowrap; border-bottom: 1px solid #333; font-size: 13px; font-weight: bold; display: none; }
+        #broadcastBanner span { display: inline-block; padding-left: 100%; animation: marquee 15s linear infinite; }
+        @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
+
         header { background: #0f0f0f; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #222; }
         .logo { color: #ff0000; font-size: 20px; font-weight: bold; cursor: pointer; }
         .search-bar { display: flex; align-items: center; background: #121212; border: 1px solid #333; border-radius: 20px; padding: 5px 15px; width: 40%; }
@@ -25,8 +31,8 @@
         .meta p { margin: 0; font-size: 11px; color: #aaa; }
         .page-section { display: none; padding: 10px; }
         .page-section.active-page { display: block; }
-        .player { width: 100%; background: #000; max-height: 250px; display: flex; justify-content: center; }
-        .player video, .player img { width: 100%; max-height: 250px; object-fit: contain; }
+        .player { width: 100%; background: #000; max-height: 300px; display: flex; justify-content: center; position: relative; }
+        .player video, .player img { width: 100%; max-height: 300px; object-fit: contain; }
         .actions { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; font-size: 13px; border-bottom: 1px solid #222; }
         .btn-action { background: #272727; padding: 6px 12px; border-radius: 15px; cursor: pointer; white-space: nowrap; }
         nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #212121; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; z-index: 1000; }
@@ -48,6 +54,9 @@
         <div class="intro-city">⚡ Futuristic City Stream ⚡</div>
         <div class="intro-title" id="introTitleContainer"></div>
     </div>
+    
+    <div id="broadcastBanner"><span id="broadcastText"></span></div>
+
     <header>
         <div class="logo" onclick="switchPage('homePage')">▶ Flâsh Movie</div>
         <div class="search-bar"><input type="text" id="search" placeholder="Search..." onkeyup="renderFeed()"></div>
@@ -61,14 +70,20 @@
             <button class="btn" style="width:auto; margin:0; background:#272727;" onclick="filterFeed('all')">All</button>
             <button class="btn" style="width:auto; margin:0; background:#272727;" onclick="filterFeed('video')">Videos</button>
             <button class="btn" style="width:auto; margin:0; background:#272727;" onclick="filterFeed('short')">Shorts</button>
-            <button class="btn" style="width:auto; margin:0; background:#272727;" onclick="filterFeed('post')">Posts</button>
         </div>
         <div class="grid" id="feedGrid"></div>
     </div>
+
     <div class="container page-section" id="shortsPage">
         <h3>Shorts Feed</h3>
         <div class="grid" id="shortsGrid"></div>
     </div>
+
+    <div class="container page-section" id="postsPage">
+        <h3>Posts Feed</h3>
+        <div class="grid" id="postsGrid"></div>
+    </div>
+
     <div class="container page-section" id="detailPage">
         <div class="player" id="detailMedia"></div>
         <div style="padding:10px 0; border-bottom:1px solid #222;">
@@ -76,8 +91,9 @@
             <p id="detStats" style="color:#aaa; font-size:12px; margin:0;"></p>
             <div class="actions">
                 <div class="btn-action" onclick="toggleFollow()" id="followBtn">👤 Follow</div>
-                <div class="btn-action" onclick="alert('Liked!')">👍 Like</div>
+                <div class="btn-action" onclick="toggleLike()" id="likeBtn">👍 Like</div>
                 <div class="btn-action" onclick="toggleBgPlay()" id="bgPlayBtn" style="background:#3b82f6;">🎵 Background Play: OFF</div>
+                <div class="btn-action" onclick="downloadContent()" id="downloadBtn" style="background:#10b981; display:none;">📥 Download</div>
                 <div class="btn-action" onclick="notInterested()" style="color:#f59e0b;">🚫 Not Interested</div>
                 <div class="btn-action" onclick="blockUser()" style="color:#ef4444;">⛔ Block User</div>
                 <div class="btn-action" onclick="reportItem('Content')" style="color:#ef4444;">⚠️ Report</div>
@@ -91,6 +107,7 @@
             <div id="commList" style="margin-top:10px; font-size:13px;"></div>
         </div>
     </div>
+
     <div class="container page-section" id="profilePage">
         <div style="background:#1e293b; padding:12px; border-radius:8px; margin-bottom:15px; text-align:center;">
             <p style="font-size:12px; color:#38bdf8; margin:0;">📱 Device Account Limit: <b id="deviceCount">0</b> / 2 Accounts used</p>
@@ -120,7 +137,7 @@
             </div>
         </div>
         <div style="display:flex; justify-content:space-around; margin:15px 0; border-bottom:1px solid #333; padding-bottom:5px; font-size:14px; font-weight:bold; color:#aaa; cursor:pointer;">
-            <span onclick="switchTab('video')" style="color:#fff;">Videos</span>
+            <span onclick="switchTab('video')" style="color:#fff;" id="pTabVid">Videos</span>
             <span onclick="switchTab('short')">Shorts</span>
             <span onclick="switchTab('post')">Posts</span>
         </div>
@@ -132,10 +149,18 @@
             <select id="upType"><option value="video">Video</option><option value="short">Short Video</option><option value="post">Post</option></select>
             <input type="text" id="upTitle" placeholder="Title / Caption">
             <input type="file" id="upFile" accept="video/*,image/*" style="border:none; padding:0; margin-top:10px;">
+            
+            <label style="font-size:12px; color:#aaa; margin-top:10px; display:block;">Privacy:</label>
+            <select id="upPrivacy"><option value="public">Public</option><option value="followers">Followers Only</option><option value="private">Only Me</option></select>
+            
+            <label style="font-size:12px; color:#aaa; margin-top:10px; display:block;">Allow Download:</label>
+            <select id="upDownload"><option value="yes">Yes (Allowed)</option><option value="no">No (Restricted)</option></select>
+
             <button class="btn" onclick="uploadContent()">Upload Now</button>
             <button class="btn btn-sec" onclick="closeModal('uploadModal')">Cancel</button>
         </div>
     </div>
+
     <div class="modal" id="loginModal">
         <div class="modal-content" style="text-align:center;">
             <h3>Login / Register</h3>
@@ -146,6 +171,7 @@
             <button class="btn btn-sec" onclick="closeModal('loginModal')">Close</button>
         </div>
     </div>
+
     <div class="modal" id="adminModal">
         <div class="modal-content">
             <h3>Admin Panel</h3>
@@ -174,9 +200,11 @@
             </div>
         </div>
     </div>
+
     <nav>
         <div class="active" onclick="switchNav(0); switchPage('homePage')"><span>🏠</span>Home</div>
         <div onclick="switchNav(1); openShortsPage()"><span>🩳</span>Shorts</div>
+        <div onclick="switchNav(2); openPostsPage()"><span>📝</span>Posts</div>
         <div onclick="switchNav(2); checkUpload()"><span>➕</span>Upload</div>
         <div onclick="switchNav(3); openProfile()"><span>👤</span>Profile</div>
     </nav>
@@ -199,7 +227,10 @@
             let bMsg = localStorage.getItem('flash_broadcast_alert');
             if(bMsg) {
                 let bData = JSON.parse(bMsg);
-                alert("📢 Admin Announcement: " + bData.title + "\n\n" + bData.msg);
+                let banner = document.getElementById('broadcastBanner');
+                let bText = document.getElementById('broadcastText');
+                bText.innerText = "📢 " + bData.title + ": " + bData.msg;
+                banner.style.display = 'block';
             }
         });
 
@@ -220,6 +251,7 @@
             document.getElementById(pageId).classList.add('active-page');
             if(pageId === 'homePage') renderFeed();
             if(pageId === 'shortsPage') renderShorts();
+            if(pageId === 'postsPage') renderPosts();
         }
 
         function openModal(id) { 
@@ -264,6 +296,7 @@
             switchPage('homePage');
             alert('Signed out successfully');
         }
+
         function checkUpload() {
             if(!currUser || currUser.status !== 'Approved') return alert('Get admin approval first');
             openModal('uploadModal');
@@ -273,10 +306,16 @@
             let type = document.getElementById('upType').value;
             let title = document.getElementById('upTitle').value;
             let file = document.getElementById('upFile').files[0];
+            let privacy = document.getElementById('upPrivacy').value;
+            let allowDownload = document.getElementById('upDownload').value;
             if(!title || !file) return alert('Enter title and file');
             let reader = new FileReader();
             reader.onload = function(e) {
-                contents.unshift({ id: Date.now(), type, title, url: e.target.result, uploader: currUser.username, comments: [] });
+                contents.unshift({ 
+                    id: Date.now(), type, title, url: e.target.result, 
+                    uploader: currUser.username, privacy, allowDownload, 
+                    likes: [], comments: [] 
+                });
                 localStorage.setItem('flash_contents', JSON.stringify(contents));
                 switchPage('homePage');
                 closeModal('uploadModal');
@@ -287,43 +326,92 @@
 
         function filterFeed(t) { filterType = t; renderFeed(); }
 
+        function checkPrivacy(c) {
+            if(c.uploader === currUser?.username) return true;
+            if(c.privacy === 'public' || !c.privacy) return true;
+            if(c.privacy === 'followers' && following.includes(c.uploader)) return true;
+            return false;
+        }
+
         function renderFeed() {
             let grid = document.getElementById('feedGrid');
             grid.innerHTML = '';
             let s = document.getElementById('search').value.toLowerCase();
             let data = contents.filter(c => c.title.toLowerCase().includes(s));
-            data = data.filter(c => !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id));
+            data = data.filter(c => c.type !== 'post' && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id) && checkPrivacy(c));
             if(filterType !== 'all') data = data.filter(c => c.type === filterType);
             if(data.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No data found.</p>'; return; }
             data.forEach(c => {
-                let m = c.type === 'post' ? `<img src="${c.url}">` : `<video src="${c.url}" preload="metadata"></video>`;
+                let m = `<video src="${c.url}#t=0.5" preload="metadata"></video>`;
                 grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>[${c.type.toUpperCase()}] ${c.title}</h4><p>${c.uploader}</p></div></div>`;
             });
         }
 
         function openShortsPage() { switchPage('shortsPage'); }
+        function openPostsPage() { switchPage('postsPage'); }
 
         function renderShorts() {
             let grid = document.getElementById('shortsGrid');
             grid.innerHTML = '';
-            let shorts = contents.filter(c => c.type === 'short' && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id));
+            let shorts = contents.filter(c => c.type === 'short' && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id) && checkPrivacy(c));
             if(shorts.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No shorts available.</p>'; return; }
             shorts.forEach(c => {
-                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb"><video src="${c.url}" preload="metadata"></video></div><div class="meta"><h4>${c.title}</h4><p>${c.uploader}</p></div></div>`;
+                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb"><video src="${c.url}#t=0.5" preload="metadata"></video></div><div class="meta"><h4>${c.title}</h4><p>${c.uploader}</p></div></div>`;
             });
         }
 
+        function renderPosts() {
+            let grid = document.getElementById('postsGrid');
+            grid.innerHTML = '';
+            let posts = contents.filter(c => c.type === 'post' && !blockedUsers.includes(c.uploader) && !notInterestedList.includes(c.id) && checkPrivacy(c));
+            if(posts.length === 0) { grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No posts available.</p>'; return; }
+            posts.forEach(c => {
+                let m = c.url ? `<img src="${c.url}">` : '';
+                grid.innerHTML += `<div class="card" onclick="openDetail(${c.id})"><div class="thumb">${m}</div><div class="meta"><h4>${c.title}</h4><p>${c.uploader}</p></div></div>`;
+            });
+        }
         function openDetail(id) {
             if(!currUser || currUser.status !== 'Approved') return alert('Sign in and get approval first');
             currItem = contents.find(x => x.id === id);
             switchPage('detailPage');
             let mb = document.getElementById('detailMedia');
-            let playerHtml = currItem.type === 'post' ? `<img src="${currItem.url}">` : `<video src="${currItem.url}" controls autoplay playsinline id="activeVideo"></video>`;
-            mb.innerHTML = playerHtml;
+            
+            if(currItem.type === 'post') {
+                mb.innerHTML = currItem.url ? `<img src="${currItem.url}">` : `<div style="padding:40px; text-align:center;"><h3>${currItem.title}</h3></div>`;
+            } else {
+                mb.innerHTML = `<video src="${currItem.url}" controls autoplay playsinline id="activeVideo" onloadedmetadata="adjustVideoOrientation(this)"></video>`;
+            }
+
             document.getElementById('detTitle').innerText = currItem.title;
             document.getElementById('detStats').innerText = currItem.uploader;
+            
+            let dlBtn = document.getElementById('downloadBtn');
+            if(currItem.allowDownload === 'yes') dlBtn.style.display = 'block'; else dlBtn.style.display = 'none';
+
             updateFollowBtn();
+            updateLikeBtnUI();
             updateBgPlayBtnUI();
+            renderComments();
+        }
+
+        function adjustVideoOrientation(v) {
+            if(v.videoHeight > v.videoWidth) {
+                v.style.maxHeight = '350px';
+                v.style.objectFit = 'contain';
+            } else {
+                v.style.maxHeight = '220px';
+                v.style.objectFit = 'cover';
+            }
+        }
+
+        function downloadContent() {
+            if(!currItem || !currItem.url) return;
+            let a = document.createElement('a');
+            a.href = currItem.url;
+            a.download = currItem.title || 'download';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         let currentBgPlayState = false;
@@ -331,11 +419,8 @@
             currentBgPlayState = !currentBgPlayState;
             let v = document.getElementById('activeVideo');
             if(v) {
-                if(currentBgPlayState) {
-                    v.removeAttribute('controls');
-                } else {
-                    v.setAttribute('controls', 'true');
-                }
+                if(currentBgPlayState) v.removeAttribute('controls');
+                else v.setAttribute('controls', 'true');
             }
             updateBgPlayBtnUI();
         }
@@ -352,6 +437,7 @@
         }
 
         function toggleFollow() {
+            if(currItem.uploader === currUser.username) return alert("You cannot follow yourself!");
             if(following.includes(currItem.uploader)) {
                 following = following.filter(u => u !== currItem.uploader);
                 alert('Unfollowed ' + currItem.uploader);
@@ -365,11 +451,42 @@
 
         function updateFollowBtn() {
             let btn = document.getElementById('followBtn');
+            if(currItem.uploader === currUser.username) {
+                btn.style.display = 'none';
+                return;
+            }
+            btn.style.display = 'block';
             if(following.includes(currItem.uploader)) {
                 btn.innerText = '👤 Following';
                 btn.style.color = '#38bdf8';
             } else {
                 btn.innerText = '👤 Follow';
+                btn.style.color = '#fff';
+            }
+        }
+
+        function toggleLike() {
+            if(!currItem.likes) currItem.likes = [];
+            let idx = currItem.likes.indexOf(currUser.username);
+            if(idx > -1) {
+                currItem.likes.splice(idx, 1);
+                alert('Like removed');
+            } else {
+                currItem.likes.push(currUser.username);
+                alert('Liked!');
+            }
+            localStorage.setItem('flash_contents', JSON.stringify(contents));
+            updateLikeBtnUI();
+        }
+
+        function updateLikeBtnUI() {
+            let btn = document.getElementById('likeBtn');
+            let liked = currItem.likes && currItem.likes.includes(currUser.username);
+            if(liked) {
+                btn.innerText = `👍 Liked (${currItem.likes.length})`;
+                btn.style.color = '#38bdf8';
+            } else {
+                btn.innerText = `👍 Like (${currItem.likes ? currItem.likes.length : 0})`;
                 btn.style.color = '#fff';
             }
         }
@@ -402,10 +519,10 @@
             renderComments();
         }
 
-        function reportItem(t) {
-            reports.push({ type: t, target: currItem ? currItem.title : 'Account', by: currUser.username });
-            localStorage.setItem('flash_reports', JSON.stringify(reports));
-            alert('Reported successfully!');
+        function deleteComment(commId) {
+            currItem.comments = currItem.comments.filter(c => c.id !== commId);
+            localStorage.setItem('flash_contents', JSON.stringify(contents));
+            renderComments();
         }
 
         function renderComments() {
@@ -413,8 +530,15 @@
             list.innerHTML = '';
             (currItem.comments || []).forEach(c => {
                 let im = c.img ? `<br><img src="${c.img}" style="max-width:100px; margin-top:5px;">` : '';
-                list.innerHTML += `<div style="background:#121212; padding:6px; margin-top:5px; border-radius:4px;"><p><b>${c.user}:</b> ${c.text} ${im}</p><div style="font-size:10px; color:#aaa; cursor:pointer;" onclick="alert('Comment Liked')">👍 Like (${c.likes})</div></div>`;
+                let delBtn = (c.user === currUser.username || currItem.uploader === currUser.username) ? `<span style="float:right; color:red; cursor:pointer;" onclick="deleteComment(${c.id})">🗑️ Delete</span>` : '';
+                list.innerHTML += `<div style="background:#121212; padding:8px; margin-top:5px; border-radius:4px;"><p style="margin:0;"><b>${c.user}:</b> ${c.text} ${im} ${delBtn}</p></div>`;
             });
+        }
+
+        function reportItem(t) {
+            reports.push({ type: t, target: currItem ? currItem.title : 'Account', by: currUser.username });
+            localStorage.setItem('flash_reports', JSON.stringify(reports));
+            alert('Reported successfully!');
         }
 
         function openProfile() {
@@ -457,7 +581,7 @@
             let items = contents.filter(c => c.uploader === currUser.username && c.type === t);
             if(items.length === 0) { grid.innerHTML = '<p style="color:#aaa; grid-column:1/-1;">No items uploaded.</p>'; return; }
             items.forEach(c => {
-                let m = c.type === 'post' ? `<img src="${c.url}">` : `<video src="${c.url}"></video>`;
+                let m = c.type === 'post' ? (c.url ? `<img src="${c.url}">` : `<div style="padding:20px; text-align:center;">${c.title}</div>`) : `<video src="${c.url}"></video>`;
                 grid.innerHTML += `
                     <div class="card">
                         <div class="thumb" onclick="openDetail(${c.id})">${m}</div>
