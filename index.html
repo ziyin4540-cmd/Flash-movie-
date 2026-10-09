@@ -45,30 +45,38 @@
         </header>
 
         <main class="main-content">
-            <!-- 1. HOME PAGE (Videos & Shorts Feed + Upload Button) -->
+            <!-- HOME PAGE -->
             <section id="page-home" class="main-section">
                 <div class="top-upload-bar">
                     <h3>🎬 Movie & Shorts Feed</h3>
-                    <button class="upload-trigger-btn" onclick="openUploadModal()">➕ ဗီဒီယို/Shorts တင်မည်</button>
+                    <button class="upload-trigger-btn" onclick="openUploadModal()">➕ ဗီဒီယိုတင်မည်</button>
                 </div>
-
-                <!-- Video Feed Container -->
-                <div id="videoFeedContainer" class="video-feed-list">
-                    <!-- Dynamic Videos will load here -->
-                </div>
+                <div id="videoFeedContainer" class="video-feed-list"></div>
             </section>
 
-            <!-- 2. CHAT PAGE (Dedicated Chat Section) -->
+            <!-- CHAT PAGE -->
             <section id="page-chat" class="main-section hidden">
-                <h3 style="color: #3ea6ff; margin-bottom: 10px;">💬 Messages & Conversations</h3>
-                <div id="tgChatContainer" class="tg-messages-list-full"></div>
-                <div class="tg-input-area" style="margin-top: 15px;">
-                    <input type="text" id="tgMessageInput" placeholder="စာတို ရေးရန်...">
-                    <button onclick="sendTgMessage()">ပို့မည်</button>
+                <div class="messenger-container">
+                    <div class="chat-sidebar" id="chatSidebar">
+                        <div class="sidebar-header">💬 စကားပြောများ</div>
+                        <div id="contactListContainer" class="contact-list"></div>
+                    </div>
+                    <div class="chat-room" id="chatRoomArea">
+                        <div class="chat-room-header" id="activeChatHeader">
+                            <span>စကားပြောရန် လူတစ်ဦးကို ရွေးပါ</span>
+                        </div>
+                        <div id="activeChatMessages" class="chat-messages-body">
+                            <p style="color: #666; text-align: center; margin-top: 40px;">မက်ဆေ့ချ် မရှိသေးပါ။</p>
+                        </div>
+                        <div class="chat-input-footer">
+                            <input type="text" id="chatMessageInput" placeholder="စကားလက်ဆုံပြောရန် ရေးပါ...">
+                            <button onclick="sendChatMessage()">ပို့မည်</button>
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            <!-- 3. ADMIN PAGE -->
+            <!-- ADMIN PAGE -->
             <section id="page-admin" class="main-section hidden">
                 <div id="admin-lock-screen" class="admin-lock-box">
                     <h2>🔒 Admin Verification</h2>
@@ -86,7 +94,7 @@
                 </div>
             </section>
 
-            <!-- 4. PROFILE PAGE (With Edit Profile & Photo Change) -->
+            <!-- PROFILE PAGE -->
             <section id="page-profile" class="main-section hidden">
                 <div class="profile-top-bar">
                     <div class="profile-top-actions">
@@ -103,7 +111,6 @@
                     <h2 id="profileNameDisplay" class="profile-name">Account Name</h2>
                     <p id="profileUserDisplay" class="profile-username">@username</p>
                     
-                    <!-- Edit Profile Photo & Name Section -->
                     <div class="edit-profile-box">
                         <input type="text" id="editDisplayNameInput" placeholder="နာမည်အသစ်ပြောင်းရန်...">
                         <input type="file" id="editPhotoPicker" accept="image/*" style="font-size: 0.75rem; color: #aaa;">
@@ -124,7 +131,7 @@
                 </div>
             </section>
 
-            <!-- 5. SETTINGS PAGE -->
+            <!-- SETTINGS PAGE -->
             <section id="page-settings" class="main-section hidden">
                 <h2>⚙️ App Settings</h2>
                 <div class="admin-card">
@@ -140,7 +147,7 @@
             </section>
         </main>
 
-        <!-- Upload Modal Popup -->
+        <!-- Upload Modal -->
         <div id="uploadModal" class="modal-overlay hidden">
             <div class="modal-card">
                 <h3>📤 Upload Video / Shorts</h3>
@@ -154,7 +161,7 @@
             </div>
         </div>
 
-        <!-- Bottom Navigation (Home, Chat, Profile) -->
+        <!-- Bottom Navigation -->
         <nav class="bottom-nav">
             <button onclick="switchMainPage('home')" id="nav-btn-home" class="nav-btn active">🏠 Home</button>
             <button onclick="switchMainPage('chat')" id="nav-btn-chat" class="nav-btn">💬 Chat</button>
@@ -162,6 +169,7 @@
         </nav>
     </div>
 
+    <script src="chat.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
