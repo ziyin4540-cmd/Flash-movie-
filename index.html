@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flâsh Movie Pro</title>
+    <title>Flâsh Movie Pro - Ultimate Edition</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
         <h1 class="lightning-text">⚡ FLÂSH MOVIE PRO ⚡</h1>
     </div>
 
-    <!-- Auth Page (Login / Register - Full Page, No Popups) -->
+    <!-- Auth Page (Login / Register - Full Page) -->
     <div id="page-auth" class="full-page">
         <div class="auth-card">
             <h2 id="auth-title" style="color: #ff0033;">🔑 Login to Flâsh Movie</h2>
@@ -25,7 +25,7 @@
                 <p class="nav-link-text" onclick="switchAuthView('register')">အကောင့်အသစ်ဖွင့်ရန် (Register)</p>
             </div>
 
-            <!-- Register View (With Profile Photo & Account Name) -->
+            <!-- Register View -->
             <div id="view-register" class="auth-form hidden">
                 <input type="text" id="regUser" placeholder="Username">
                 <input type="password" id="regPass" placeholder="Password">
@@ -38,7 +38,7 @@
         </div>
     </div>
 
-    <!-- Main App Container (Full Pages) -->
+    <!-- Main App Container -->
     <div id="app-container" class="hidden">
         <header class="app-header">
             <h2 class="logo-text">▶ Flâsh Movie</h2>
@@ -48,20 +48,40 @@
             </div>
         </header>
 
+        <!-- Main Pages Container -->
         <main class="main-content">
-            <!-- Home Page -->
+            <!-- Home Page (YouTube Style Video Feed & Player) -->
             <section id="page-home" class="main-section">
-                <h3>🎬 Video Feed</h3>
-                <div class="search-box">
-                    <input type="text" id="videoSearchInput" placeholder="ဗီဒီယိုအမည်ဖြင့် ရှာရန်...">
-                    <button onclick="searchVideos()">ရှာမည်</button>
+                <div class="filter-tabs">
+                    <button class="filter-btn active">All</button>
+                    <button class="filter-btn">Videos</button>
+                    <button class="filter-btn">Shorts</button>
                 </div>
-                <div id="adminVideoList" class="admin-list" style="margin-top: 15px;"></div>
+
+                <div class="video-container" style="margin-top: 15px;">
+                    <video id="mainVideoPlayer" controls width="100%"></video>
+                </div>
+                
+                <div class="video-info-box" style="padding: 10px 0;">
+                    <h3 id="displayTitle">Flâsh Movie Pro - Welcome</h3>
+                    <p style="color: #aaa; font-size: 0.85rem;">Flâsh Official • HD Stream</p>
+                </div>
+
+                <!-- Telegram Style Chat & Conversation Room -->
+                <div class="telegram-chat-box">
+                    <h3>💬 Live Group Chat & Conversations</h3>
+                    <div id="tgChatContainer" class="tg-messages-list"></div>
+                    <div class="tg-input-area">
+                        <input type="text" id="tgMessageInput" placeholder="စာတို ရေးရန်...">
+                        <button onclick="sendTgMessage()">ပို့မည်</button>
+                    </div>
+                </div>
             </section>
 
             <!-- Admin Panel Page -->
             <section id="page-admin" class="main-section hidden">
                 <h2>🛠️ Admin Control Panel</h2>
+                
                 <div class="admin-card">
                     <h3>👥 User Account Approvals</h3>
                     <div id="pendingAccountsList">
@@ -73,6 +93,12 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <div class="admin-card">
+                    <h3>📹 Video Management & Search</h3>
+                    <input type="text" id="videoSearchInput" placeholder="ဗီဒီယိုအမည်ဖြင့် ရှာရန်...">
+                    <div id="adminVideoList" style="margin-top: 10px;"></div>
                 </div>
 
                 <div class="admin-card">
