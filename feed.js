@@ -206,7 +206,6 @@ async function handleDirectVideoUpload() {
     }, 80);
 }
 
-// ဗီဒီယိုဟောင်းများပါ မကျန်အောင် အပြည့်အစုံ ဆွဲထုတ်ပေးမည့် function
 async function loadHomeVideos(searchQuery = '') {
     const container = document.getElementById('homeVideoFeedContainer');
     if(!container) return;
@@ -217,7 +216,6 @@ async function loadHomeVideos(searchQuery = '') {
         return;
     }
 
-    // is_video true ဖြစ်သော (သို့မဟုတ် is_video null/undefined ဖြစ်နေသော်လည်း media ပါသော) ဗီဒီယိုဟောင်းများပါ ဖမ်းယူပေးခြင်း
     let videoPosts = posts.filter(p => p.is_video === true || p.media_type === 'video' || p.media_type === 'telegram_video' || (p.media_url && p.media_url.includes('t.me')));
     
     if(videoPosts.length === 0) {
@@ -248,7 +246,7 @@ async function loadHomeVideos(searchQuery = '') {
             mediaPreviewHtml = `
                 <div style="width:100%; height:100%; background:#181820; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#00ffff;">
                     <span style="font-size:1.8rem;">🎬</span>
-                    <span style="font-size:0.75rem; font-weight:bold; margin-top:4px;">Telegram Video Player</span>
+                    <span style="font-size:0.75rem; font-weight:bold; margin-top:4px;">Telegram Video Widget</span>
                 </div>`;
         } else {
             mediaPreviewHtml = `<video src="${v.media_url}#t=0.5" preload="metadata" muted></video>`;
@@ -272,100 +270,9 @@ async function loadHomeVideos(searchQuery = '') {
     });
 }
 
-async function openCreatorProfile(username) {
-    const currentUser = localStorage.getItem('flash_logged_user');
-    if(username === currentUser) {
-        switchMainPage('profile');
-        return;
-    }
-
-    const { data: user } = await supabaseClient.from('flash_users').select('*').eq('username', username).single();
-    if(!user) return;
-
-    let profileModal = document.getElementById('creatorProfileModal');
-    if(!profileModal) {
-        profileModal = document.createElement('div');
-        profileModal.id = 'creatorProfileModal';
-        profileModal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#070709; z-index:999999; overflow-y:auto; box-sizing:border-box; padding:0;';
-        document.body.appendChild(profileModal);
-    }
-
-    const { data: userPosts } = await supabaseClient.from('flash_posts').select('*').eq('username', username).order('created_at', { ascending: false });
-    const postsList = userPosts || [];
-    const videosList = postsList.filter(p => p.is_video === true || p.media_type === 'video' || p.media_type === 'telegram_video' || (p.media_url && p.media_url.includes('t.me')));
-    const normalPostsList = postsList.filter(p => !videosList.includes(p));
-
-    let followersArr = user.followers || [];
-    const isFollowing = followersArr.includes(currentUser);
-
-    let uploadsHtml = '';
-    videosList.forEach(item => {
-        uploadsHtml += `
-            <div class="upload-item-card" onclick="document.getElementById('creatorProfileModal').remove(); openWatchVideoScreen('${item.id}')">
-                <video src="${item.media_url}" width="100%" style="border-radius:4px; height:100px; object-fit:cover; background:#000;"></video>
-                <p style="font-size:0.75rem; margin:4px 0 0 0; color:#ccc;">${escapeHtml(item.post_text)}</p>
-            </div>`;
-    });
-
-    profileModal.innerHTML = `
-        <div style="background:#111116; padding:12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233; position:sticky; top:0; z-index:10;">
-            <button onclick="document.getElementById('creatorProfileModal').remove()" style="background:none; border:none; color:#00ffff; font-weight:bold; font-size:0.9rem; cursor:pointer;">◄ နောက်သို့</button>
-            <span style="color:#ff0033; font-weight:bold; font-size:0.9rem;">Creator Profile</span>
-        </div>
-        <div class="profile-card-modern" style="margin:15px; border-radius:16px;">
-            <div class="profile-banner" style="background-image: url('${user.banner_url || ''}');"></div>
-            <div class="profile-avatar-wrapper">
-                <img src="${user.photo_url || 'https://via.placeholder.com/90'}" class="profile-img-preview-modern">
-            </div>
-            <h2 class="profile-name" style="color:#fff; margin:8px 0 2px 0;">${escapeHtml(user.display_name || user.username)}</h2>
-            <p class="profile-username" style="color:#888; font-size:0.8rem; margin:0;">@${user.username}</p>
-            ${user.bio ? `<p style="font-size:0.8rem; color:#aaa; margin:5px 15px 10px 15px;">${escapeHtml(user.bio)}</p>` : ''}
-            
-            <div style="margin: 10px 15px;">
-                <button onclick="toggleFollowUser('${user.username}')" style="width:100%; background:${isFollowing ? '#333344' : '#ff0033'}; color:#fff; border:none; padding:10px; font-weight:bold; border-radius:8px; cursor:pointer;">
-                    ${isFollowing ? '✓ Following (Unfollow)' : '+ Follow'}
-                </button>
-            </div>
-
-            <div class="profile-stats">
-                <div class="stat-item"><span class="stat-num">${normalPostsList.length}</span><span class="stat-label">Posts</span></div>
-                <div class="stat-item"><span class="stat-num">${videosList.length}</span><span class="stat-label">Videos</span></div>
-                <div class="stat-item"><span class="stat-num">${followersArr.length}</span><span class="stat-label">Followers</span></div>
-                <div class="stat-item"><span class="stat-num">${(user.following || []).length}</span><span class="stat-label">Following</span></div>
-            </div>
-        </div>
-        <div style="padding:15px;">
-            <h4 style="color:#00ffff; margin-bottom:10px;">🎥 Uploaded Videos</h4>
-            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px;">
-                ${uploadsHtml || '<p style="color:#666; font-size:0.8rem;">ဗီဒီယိုများ မရှိသေးပါ။</p>'}
-            </div>
-        </div>
-    `;
-    profileModal.classList.remove('hidden');
-}
-
-async function toggleFollowUser(targetUsername) {
-    const currentUser = localStorage.getItem('flash_logged_user');
-    const { data: targetUser } = await supabaseClient.from('flash_users').select('*').eq('username', targetUsername).single();
-    if(!targetUser) return;
-
-    let followers = targetUser.followers || [];
-    if(followers.includes(currentUser)) {
-        followers = followers.filter(u => u !== currentUser);
-        showToast('Unfollowed', 'success');
-    } else {
-        followers.push(currentUser);
-        showToast('Following!', 'success');
-    }
-
-    await supabaseClient.from('flash_users').update({ followers: followers }).eq('username', targetUsername);
-    openCreatorProfile(targetUsername);
-}
-
+// မြန်ဆန်သော Watch Screen Player နှင့် Previous / Next Controls များပါဝင်သည့် စနစ်
 async function openWatchVideoScreen(videoId) {
     activeWatchVideoId = videoId;
-    const { data: v } = await supabaseClient.from('flash_posts').select('*').eq('id', videoId).single();
-    if(!v) return;
 
     let watchPage = document.getElementById('page-watch-video');
     if(!watchPage) {
@@ -376,6 +283,19 @@ async function openWatchVideoScreen(videoId) {
         document.body.appendChild(watchPage);
     }
 
+    document.querySelectorAll('.main-section').forEach(sec => sec.classList.add('hidden'));
+    watchPage.classList.remove('hidden');
+
+    const { data: v } = await supabaseClient.from('flash_posts').select('*').eq('id', videoId).single();
+    if(!v) return;
+
+    const { data: allVideoPosts } = await supabaseClient.from('flash_posts').select('*').order('created_at', { ascending: false });
+    let videoList = (allVideoPosts || []).filter(item => item.is_video === true || item.media_type === 'video' || item.media_type === 'telegram_video' || (item.media_url && item.media_url.includes('t.me')));
+
+    let currentIndex = videoList.findIndex(item => item.id === videoId);
+    let prevVideo = currentIndex > 0 ? videoList[currentIndex - 1] : null;
+    let nextVideo = currentIndex < videoList.length - 1 ? videoList[currentIndex + 1] : null;
+
     const currentUser = localStorage.getItem('flash_logged_user');
     const likesArr = v.likes || [];
     const isLiked = likesArr.includes(currentUser);
@@ -383,20 +303,18 @@ async function openWatchVideoScreen(videoId) {
 
     let mediaContent = '';
     if(v.media_type === 'telegram_video' || (v.media_url && v.media_url.includes('t.me'))) {
-        let embedUrl = v.media_url.includes('t.me/') ? v.media_url.replace('t.me/', 't.me/s/') : v.media_url;
+        let postPath = v.media_url.replace('https://t.me/', '');
         mediaContent = `
-            <div style="width:100%; height:250px; background:#000; position:relative;">
-                <iframe src="${embedUrl}" width="100%" height="100%" frameborder="0" allowfullscreen style="border:none;"></iframe>
+            <div style="width:100%; min-height:260px; background:#111116; display:flex; justify-content:center; align-items:center; padding:10px 0;">
+                <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="${postPath}" data-width="100%" data-dark="1"></script>
             </div>`;
     } else {
         mediaContent = `<video src="${v.media_url}" controls autoplay width="100%" style="background:#000; max-height:300px;"></video>`;
     }
 
-    const { data: allPosts } = await supabaseClient.from('flash_posts').select('*').order('created_at', { ascending: false });
     let nextVideosHtml = '';
-    if(allPosts) {
-        let otherVideos = allPosts.filter(item => item.id !== videoId && (item.is_video === true || item.media_type === 'video' || item.media_type === 'telegram_video' || (item.media_url && item.media_url.includes('t.me'))));
-        otherVideos.slice(0, 5).forEach(nv => {
+    videoList.slice(0, 6).forEach(nv => {
+        if(nv.id !== videoId) {
             nextVideosHtml += `
                 <div onclick="openWatchVideoScreen('${nv.id}')" style="display:flex; gap:10px; background:#111116; padding:8px; border-radius:8px; cursor:pointer; margin-bottom:8px; border:1px solid #222233;">
                     <div style="width:100px; height:60px; background:#000; border-radius:6px; overflow:hidden; flex-shrink:0;">
@@ -407,16 +325,24 @@ async function openWatchVideoScreen(videoId) {
                         <p style="margin:0; font-size:0.7rem; color:#888;">${escapeHtml(nv.display_name || nv.username)}</p>
                     </div>
                 </div>`;
-        });
-    }
+        }
+    });
 
     watchPage.innerHTML = `
-        <div style="background:#111116; padding:12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233; position:sticky; top:0; z-index:10;">
+        <div style="background:#111116; padding:12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233; position:sticky; top:0; z-index:100;">
             <button onclick="closeWatchVideoScreen()" style="background:none; border:none; color:#00ffff; font-weight:bold; font-size:0.9rem; cursor:pointer;">◄ နောက်သို့ (Back)</button>
             <span style="color:#ff0033; font-weight:bold; font-size:0.9rem;">Flâsh Watch</span>
         </div>
+
         ${mediaContent}
-        <div style="padding:15px;">
+
+        <!-- Previous / Next Controls ခလုတ်များ -->
+        <div style="display:flex; justify-content:space-between; background:#181820; padding:8px 15px; border-bottom:1px solid #222233;">
+            <button ${prevVideo ? `onclick="openWatchVideoScreen('${prevVideo.id}')"` : 'disabled'} style="background:${prevVideo ? '#222233' : '#111'}; color:${prevVideo ? '#00ffff' : '#555'}; border:1px solid #333; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.8rem;">⏮ ရှေ့ဗီဒီယို (Prev)</button>
+            <button ${nextVideo ? `onclick="openWatchVideoScreen('${nextVideo.id}')"` : 'disabled'} style="background:${nextVideo ? '#ff0033' : '#111'}; color:${nextVideo ? '#fff' : '#555'}; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.8rem;">နောက်ဗီဒီယို (Next) ⏭</button>
+        </div>
+
+        <div style="padding:15px; position:relative; z-index:10;">
             <h3 style="color:#fff; font-size:1rem; margin-bottom:8px;">${escapeHtml(v.post_text)}</h3>
             <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; cursor:pointer;" onclick="openCreatorProfile('${v.username}')">
                 <img src="${v.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar">
@@ -437,9 +363,6 @@ async function openWatchVideoScreen(videoId) {
             ${nextVideosHtml || '<p style="color:#666; font-size:0.8rem;">ဗီဒီယို အခြားမရှိသေးပါ။</p>'}
         </div>
     `;
-
-    document.querySelectorAll('.main-section').forEach(sec => sec.classList.add('hidden'));
-    watchPage.classList.remove('hidden');
 }
 
 function closeWatchVideoScreen() {
@@ -449,7 +372,7 @@ function closeWatchVideoScreen() {
 }
 
 async function toggleLikeWatchVideo(videoId) {
-    await toggleLikePost(videoId);
+    await toggleLikePost(postId);
     openWatchVideoScreen(videoId);
 }
 
