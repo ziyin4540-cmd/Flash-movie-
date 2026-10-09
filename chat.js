@@ -1,6 +1,8 @@
 let activeChatUser = null;
 let replyToMessageId = null;
 let editingMessageId = null;
+let tempChatMediaData = "";
+let tempChatMediaType = "";
 
 async function loadContactList(searchQuery = '') {
     const container = document.getElementById('contactListContainer');
@@ -8,16 +10,13 @@ async function loadContactList(searchQuery = '') {
 
     const currentUser = localStorage.getItem('flash_logged_user');
     
-    // ၁။ ယူဆာအားလုံးကို ဆွဲထုတ်ခြင်း
     const { data: users } = await supabaseClient.from('flash_users').select('*').neq('username', currentUser);
-    // ၂။ ပို့ထားသော/လက်ခံရရှိထားသော မက်ဆေ့ချ်များကို ဆွဲထုတ်ခြင်း
     const { data: messages } = await supabaseClient.from('flash_chats')
         .select('*')
         .or(`sender.eq.${currentUser},receiver.eq.${currentUser}`);
 
     if(!users) return;
 
-    // အမှန်တကယ် စကားပြောဖူးသူများ (သို့မဟုတ် search ဝင်ထားသူများ) ၏ username များကို စုစည်းခြင်း
     let activeChatUsernames = new Set();
     if(messages) {
         messages.forEach(m => {
@@ -30,7 +29,6 @@ async function loadContactList(searchQuery = '') {
         const matchSearch = (u.username || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
                             (u.display_name || '').toLowerCase().includes(searchQuery.toLowerCase());
         
-        // Search ရှာထားလျှင် Search Result ပြမည်၊ မရှာထားလျှင် Chat ဖူးသူများကိုသာ ပြမည်
         if(searchQuery.trim() !== '') {
             return matchSearch;
         } else {
@@ -71,7 +69,38 @@ async function openChatRoom(username, displayName, photoUrl) {
     document.getElementById('activeChatName').innerText = displayName || username;
     document.getElementById('activeChatAvatar').src = photoUrl || 'https://via.placeholder.com/35';
     
+    // Chat Footer တွင် File Picker ထည့်သွင်းခြင်း
+    ensureChatInputUI();
     loadChatMessages();
+}
+
+function ensureChatInputUI() {
+    const footer = document.querySelector('.chat-input-footer');
+    if(footer && !document.getElementById('chatMediaPicker')) {
+        footer.innerHTML = `
+            <input type="file" id="chatMediaPicker" accept="image/*,video/*" style="display:none;">
+            <button onclick="document.getElementById('chatMediaPicker').click()" style="background:#181820; color:#00ffff; border:1px solid #333344; padding:8px 12px; border-radius:8px; cursor:pointer;" title="Photo/Video ပို့ရန်">📎</button>
+            <input type="text" id="chatMessageInput" placeholder="မက်ဆေ့ချ် ရေးရန်..." onkeydown="if(event.key === 'Enter') sendChatMessage()">
+            <button onclick="sendChatMessage()">ပေးပို့</button>
+        `;
+
+        document.getElementById('chatMediaPicker').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(file) {
+                if(file.size > 5 * 1024 * 1024) {
+                    showToast('⚠️ ဖိုင်ဆိုဒ် ကြီးလွန်းပါသည် (5MB အောက်သာ)', 'error');
+                    return;
+                }
+                tempChatMediaType = file.type.startsWith('image') ? 'image' : 'video';
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    tempChatMediaData = ev.target.result;
+                    showToast('📎 ဖိုင်တွဲပြီးပါပြီ။ Send နှိပ်ပါ။', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
 }
 
 function closeChatRoom() {
@@ -102,15 +131,21 @@ async function loadChatMessages() {
 
         let replyHtml = msg.reply_to ? `<div style="font-size:0.75rem; background:rgba(0,0,0,0.2); padding:3px 6px; border-radius:4px; margin-bottom:4px; border-left:2px solid #00ffff;">↳ ${escapeHtml(msg.reply_text || 'Reply')}</div>` : '';
         let pinBadge = msg.is_pinned ? `<span style="color:#ff0033; font-size:0.65rem;">📌 Pin</span> ` : '';
+        
+        let mediaHtml = '';
+        if(msg.media_url) {
+            mediaHtml = msg.media_type === 'image' ? `<img src="${msg.media_url}" width="100%" style="border-radius:6px; margin-top:6px; max-height:200px; object-fit:cover;">` : `<video src="${msg.media_url}" controls width="100%" style="border-radius:6px; margin-top:6px; background:#000;"></video>`;
+        }
 
         div.innerHTML = `
             ${replyHtml}
-            <div>${pinBadge}${escapeHtml(msg.message)}</div>
+            <div>${pinBadge}${escapeHtml(msg.message || '')}</div>
+            ${mediaHtml}
             <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:4px; font-size:0.65rem; opacity:0.8;">
-                <span onclick="setReplyMessage('${msg.id}', '${escapeHtml(msg.message)}')">Reply</span>
-                ${isOutgoing ? `<span onclick="startEditMessage('${msg.id}', '${escapeHtml(msg.message)}')">Edit</span>` : ''}
-                <span onclick="togglePinMessage('${msg.id}', ${!msg.is_pinned})">Pin</span>
-                <span onclick="deleteChatMessage('${msg.id}')" style="color:#ff0033;">Delete</span>
+                <span onclick="setReplyMessage('${msg.id}', '${escapeHtml(msg.message || 'Media')}')" style="cursor:pointer;">Reply</span>
+                ${isOutgoing ? `<span onclick="startEditMessage('${msg.id}', '${escapeHtml(msg.message || '')}')" style="cursor:pointer;">Edit</span>` : ''}
+                <span onclick="togglePinMessage('${msg.id}', ${!msg.is_pinned})" style="cursor:pointer;">Pin</span>
+                <span onclick="deleteChatMessage('${msg.id}')" style="color:#ff0033; cursor:pointer;">Delete</span>
             </div>
         `;
         container.appendChild(div);
@@ -120,14 +155,14 @@ async function loadChatMessages() {
 
 async function sendChatMessage() {
     const input = document.getElementById('chatMessageInput');
-    const text = input.value.trim();
+    const text = input ? input.value.trim() : '';
     const currentUser = localStorage.getItem('flash_logged_user');
-    if(!text || !activeChatUser) return;
+    if((!text && !tempChatMediaData) || !activeChatUser) return;
 
     if(editingMessageId) {
         await supabaseClient.from('flash_chats').update({ message: text }).eq('id', editingMessageId);
         editingMessageId = null;
-        input.value = '';
+        if(input) input.value = '';
         loadChatMessages();
         return;
     }
@@ -136,6 +171,8 @@ async function sendChatMessage() {
         sender: currentUser,
         receiver: activeChatUser,
         message: text,
+        media_url: tempChatMediaData,
+        media_type: tempChatMediaType,
         reply_to: replyToMessageId,
         reply_text: replyToMessageId ? text : null,
         is_pinned: false,
@@ -143,11 +180,13 @@ async function sendChatMessage() {
     }]);
 
     if(!error) {
-        input.value = '';
+        if(input) input.value = '';
         replyToMessageId = null;
+        tempChatMediaData = "";
+        tempChatMediaType = "";
         loadChatMessages();
     } else {
-        showToast('မက်ဆေ့ချ် ပို့၍မရပါ', 'error');
+        showToast('❌ မက်ဆေ့ချ် ပို့၍မရပါ: ' + error.message, 'error');
     }
 }
 
