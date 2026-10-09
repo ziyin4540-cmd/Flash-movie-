@@ -46,13 +46,11 @@ body {
 .main-section { padding: 15px; max-width: 800px; margin: 0 auto; }
 .video-container { background: #000; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
 
-/* Admin Lock Screen Box */
 .admin-lock-box {
     background: #212121; padding: 30px; border-radius: 12px; text-align: center;
     border: 1px solid #383838; max-width: 350px; margin: 50px auto; display: flex; flex-direction: column; gap: 15px; align-items: center;
 }
 
-/* Telegram Chat Box */
 .telegram-chat-box {
     background: #1f1f1f; padding: 15px; border-radius: 10px; margin-top: 20px; border: 1px solid #333;
 }
@@ -73,7 +71,6 @@ body {
     background: #3ea6ff; color: #000; border: none; padding: 10px 18px; font-weight: bold; border-radius: 6px; cursor: pointer;
 }
 
-/* Admin Card & Settings */
 .admin-card {
     background: #212121; padding: 15px; border-radius: 10px;
     margin-bottom: 15px; border: 1px solid #383838; display: flex; flex-direction: column; gap: 10px;
@@ -95,14 +92,12 @@ body {
 .btn-danger { background: #cc0000; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
 .primary-btn { background: #cc0000; color: #fff; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; }
 
-/* Profile */
 .profile-page-box { text-align: center; padding: 30px; background: #212121; border-radius: 12px; border: 1px solid #383838; }
 .profile-img-preview {
     width: 90px; height: 90px; border-radius: 50%; object-fit: cover;
     border: 2px solid #ff0000; margin: 0 auto 15px; background: #333;
 }
 
-/* Bottom Nav */
 .bottom-nav {
     position: fixed; bottom: 0; left: 0; width: 100%;
     background: #212121; display: flex; justify-content: space-around;
