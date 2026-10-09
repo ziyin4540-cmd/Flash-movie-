@@ -9,13 +9,15 @@ document.addEventListener('DOMContentLoaded', () => {
         mediaPicker.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
                 if (file.size > 5 * 1024 * 1024) {
-                    showToast('⚠️ ဖိုင်ဆိုဒ် ကြီးလွန်းပါသည် (5MB အောက်သာ)။', 'error');
+                    showToast(`⚠️ ဖိုင်ဆိုဒ် ကြီးလွန်းပါသည် (${fileSizeMB}MB / 5MB အောက်သာ)။`, 'error');
                     this.value = '';
+                    document.getElementById('selectedMediaName').innerText = '';
                     return;
                 }
                 tempMediaType = file.type.startsWith('image') ? 'image' : 'video';
-                document.getElementById('selectedMediaName').innerText = `ရွေးပြီး: ${file.name}`;
+                document.getElementById('selectedMediaName').innerText = `ရွေးပြီး: ${file.name} (${fileSizeMB}MB)`;
                 compressImageOrFile(file, (base64) => { tempFbMediaData = base64; });
             }
         });
@@ -26,12 +28,14 @@ document.addEventListener('DOMContentLoaded', () => {
         appVideoPicker.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if(file) {
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
                 if(file.size > 5 * 1024 * 1024) {
-                    showToast('⚠️ ဖိုင်ဆိုဒ် ကြီးလွန်းပါသည် (5MB အောက်သာ)။', 'error');
+                    showToast(`⚠️ ဗီဒီယိုဖိုင်ဆိုဒ် ကြီးလွန်းပါသည် (${fileSizeMB}MB / 5MB အောက်သာ)။ Telegram Link သုံးပါ။`, 'error');
                     this.value = '';
+                    document.getElementById('uploadVideoPreviewName').innerText = '';
                     return;
                 }
-                document.getElementById('uploadVideoPreviewName').innerText = `ရွေးပြီး: ${file.name}`;
+                document.getElementById('uploadVideoPreviewName').innerText = `ရွေးပြီး: ${file.name} (${fileSizeMB}MB)`;
                 const reader = new FileReader();
                 reader.onload = (ev) => { tempAppVideoData = ev.target.result; };
                 reader.readAsDataURL(file);
@@ -73,7 +77,7 @@ async function handleCreateFbPost() {
 
     let userPhoto = 'https://via.placeholder.com/35';
     let displayName = currentUser;
-    const { data: uData } = await supabaseClient.from('flash_users').select('*').eq('username', currentUser).single();
+    const { data: uData, error: uError } = await supabaseClient.from('flash_users').select('*').eq('username', currentUser).single();
     if(uData) {
         if(uData.photo_url) userPhoto = uData.photo_url;
         if(uData.display_name) displayName = uData.display_name;
@@ -93,7 +97,7 @@ async function handleCreateFbPost() {
     }]);
 
     if(error) {
-        showToast('ပို့စ်တင်၍မရပါ: ' + error.message, 'error');
+        showToast('❌ ပို့စ်တင်၍မရပါ: ' + error.message, 'error');
         return;
     }
 
@@ -102,7 +106,7 @@ async function handleCreateFbPost() {
     tempFbMediaData = "";
     tempMediaType = "";
     
-    showToast('ပို့စ်တင်ခြင်း အောင်မြင်ပါသည်။', 'success');
+    showToast('✅ ပို့စ်တင်ခြင်း အောင်မြင်ပါသည်။', 'success');
     switchMainPage('feed');
     loadFbFeed();
 }
@@ -167,7 +171,7 @@ async function handleDirectVideoUpload() {
             if(progressBar) progressBar.style.width = '0%';
 
             if(error) {
-                showToast('ဗီဒီယိုတင်၍မရပါ: ' + error.message, 'error');
+                showToast('❌ ဗီဒီယိုတင်၍မရပါ: ' + error.message, 'error');
                 return;
             }
 
@@ -176,7 +180,7 @@ async function handleDirectVideoUpload() {
             document.getElementById('uploadVideoPreviewName').innerText = '';
             tempAppVideoData = "";
 
-            showToast('ဗီဒီယို တင်ခြင်း အောင်မြင်ပါသည်။', 'success');
+            showToast('✅ ဗီဒီယို တင်ခြင်း အောင်မြင်ပါသည်။', 'success');
             switchMainPage('home');
             loadHomeVideos();
         }
@@ -370,4 +374,5 @@ function setupLongPressDelete(element, postId) {
         }, 800);
     });
     element.addEventListener('touchend', () => clearTimeout(pressTimer));
-    }
+}
+    
