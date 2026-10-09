@@ -3,115 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flâsh Movie Pro</title>
+    <title>Flâsh Movie Pro - Login Required</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Intro Animation Screen -->
+    <!-- Intro Screen -->
     <div id="intro-screen" class="intro-container">
         <h1 class="lightning-text">⚡ FLÂSH MOVIE PRO ⚡</h1>
-        <p>Loading Cinematic Experience...</p>
     </div>
 
-    <!-- Main App Container -->
+    <!-- Auth Overlay (Login / Register Modal - Required before viewing anything) -->
+    <div id="auth-overlay" class="auth-overlay hidden">
+        <div class="auth-box">
+            <h2 id="auth-title" style="color: #ff0033;">🔑 Login to Flâsh Movie</h2>
+            
+            <!-- Login Form -->
+            <div id="login-form" class="form-panel">
+                <input type="text" id="loginUser" placeholder="Username">
+                <input type="password" id="loginPass" placeholder="Password">
+                <button class="primary-btn" onclick="handleLogin()">Login</button>
+                <p class="switch-auth-text" onclick="toggleAuthMode('register')">အကောင့်မရှိသေးဘူးလား? Register လုပ်ရန်</p>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form" class="form-panel hidden">
+                <input type="text" id="regUser" placeholder="Choose Username">
+                <input type="password" id="regPass" placeholder="Choose Password">
+                <button class="primary-btn" onclick="handleRegister()">Register</button>
+                <p class="switch-auth-text" onclick="toggleAuthMode('login')">အကောင့်ရှိပြီးသားလား? Login ဝင်ရန်</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Container (Hidden until logged in) -->
     <div id="app-container" class="hidden">
         <header class="app-header">
-            <div class="logo-area">
-                <h2 style="color: #ff0033; margin:0;">▶ Flâsh Movie</h2>
+            <h2 class="logo-text">▶ Flâsh Movie</h2>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div id="account-timer" class="timer-box">0Y / 0M / 0D / 0H / 0M / 0S</div>
+                <button onclick="handleLogout()" class="logout-btn">Logout</button>
             </div>
-            <div id="account-timer" class="timer-box">0Y / 0M / 0D / 0H / 0M / 0S</div>
         </header>
 
-        <!-- Main Pages Area -->
         <main class="main-content">
             <!-- Home Page -->
             <section id="page-home" class="page-section">
-                <div class="filter-tabs">
-                    <button class="filter-btn active" onclick="filterContent('all')">All</button>
-                    <button class="filter-btn" onclick="filterContent('video')">Videos</button>
-                    <button class="filter-btn" onclick="filterContent('shorts')">Shorts</button>
+                <h3>🎬 Video Feed & Movies</h3>
+                <div class="search-box">
+                    <input type="text" id="videoSearchInput" placeholder="ဗီဒီယိုအမည်ဖြင့် ရှာရန်...">
+                    <button onclick="searchVideos()">ရှာမည်</button>
                 </div>
-                
-                <div class="video-container" style="margin-top: 15px;">
-                    <video id="mainVideoPlayer" controls width="100%"></video>
-                </div>
+                <div id="adminVideoList" class="admin-list"></div>
+            </section>
 
-                <div class="video-info-box" style="padding: 10px 0;">
-                    <h3 id="displayTitle">Flâsh Movie Pro - Welcome</h3>
-                    <p style="color: #aaa; font-size: 0.85rem;">Flâsh Official • Live Stream</p>
-                </div>
-
-                <!-- Comments & Conversations -->
-                <div class="comments-section">
-                    <h3>💬 မှတ်ချက်များနှင့် Conversation များ</h3>
-                    <div class="comment-input-box">
-                        <input type="text" id="commentInput" placeholder="အများနဲ့ ဆွေးနွေးရန် မှတ်ချက်ရေးပါ...">
-                        <button id="sendCommentBtn">တင်မည်</button>
+            <!-- Admin Panel Page -->
+            <section id="page-admin" class="page-section hidden">
+                <h2>🛠️ Admin Control Panel</h2>
+                <div class="admin-card">
+                    <h3>👥 User Account Approvals</h3>
+                    <div id="pendingAccountsList">
+                        <div class="approval-item">
+                            <span>User: @ziyin_new (Pending)</span>
+                            <div>
+                                <button class="btn-success" onclick="acceptAccount(this)">Accept</button>
+                                <button class="btn-danger" onclick="declineAccount(this)">Decline</button>
+                            </div>
+                        </div>
                     </div>
-                    <div id="commentsList" class="comments-list"></div>
                 </div>
-            </section>
 
-            <!-- Shorts Page -->
-            <section id="page-shorts" class="page-section hidden">
-                <h2>🩳 Shorts Feed</h2>
-                <div id="shortsContainer"></div>
-            </section>
+                <div class="admin-card">
+                    <h3>🚨 Reports Management</h3>
+                    <div id="reportsList">
+                        <div class="report-item">
+                            <span>Report #102: Copyright violation</span>
+                            <div>
+                                <button class="btn-success" onclick="resolveReport(this, 'Accepted')">Accept</button>
+                                <button class="btn-danger" onclick="resolveReport(this, 'Rejected')">Reject</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <!-- Posts Page -->
-            <section id="page-posts" class="page-section hidden">
-                <h2>📝 Community Posts</h2>
-                <div id="postsContainer"></div>
-            </section>
-
-            <!-- Upload Page (Admin Panel) -->
-            <section id="page-upload" class="page-section hidden">
-                <h2>⚡ Upload New Content</h2>
-                <div class="upload-form">
-                    <label>Content Type:</label>
-                    <select id="contentType">
-                        <option value="Video">Video</option>
-                        <option value="Shorts">Shorts</option>
-                        <option value="Post">Post</option>
-                    </select>
-
-                    <label><input type="checkbox" id="playlistMode"> Playlist Mode</label>
-                    
-                    <input type="text" id="playlistNameInput" placeholder="Playlist / Movie Series Name">
-                    <input type="text" id="videoTitleInput" placeholder="Title / Caption">
-                    
-                    <label>Select File (Device Storage):</label>
-                    <input type="file" id="deviceFilePicker" accept="video/*,image/*,audio/*,.zip">
-                    
-                    <label>Privacy:</label>
-                    <select id="privacySetting">
-                        <option value="Public">Public</option>
-                        <option value="Private">Private</option>
-                    </select>
-
-                    <label>Allow Download:</label>
-                    <select id="downloadSetting">
-                        <option value="Yes">Yes (Allowed)</option>
-                        <option value="No">No</option>
-                    </select>
-
-                    <button id="uploadNowBtn" class="primary-btn">Upload Now</button>
+                <div class="admin-card">
+                    <h3>📢 Send Notification / Alert</h3>
+                    <input type="text" id="notifTitle" placeholder="အကြောင်းအရာ ခေါင်းစဉ်...">
+                    <textarea id="notifMessage" placeholder="အသိပေးစာ အကြောင်းအရာရေးရန်..."></textarea>
+                    <button class="primary-btn" onclick="sendNotification()">အသိပေးစာ ပို့မည်</button>
                 </div>
             </section>
 
             <!-- Profile Page -->
             <section id="page-profile" class="page-section hidden">
                 <div class="profile-box" style="text-align: center; padding: 20px;">
-                    <div class="profile-avatar" style="width: 70px; height: 70px; background: #00ffff; color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; margin: 0 auto 10px;">Z</div>
-                    <h3>@ziyin</h3>
-                    <p style="color: #aaa;">Followers: 0 | Following: 0</p>
-                    <div class="timer-box" style="display: inline-block; margin-top: 10px;">📱 Device Account Limit: 0 / 2 Accounts used</div>
-                </div>
-
-                <div class="settings-box" style="background: #181818; padding: 15px; border-radius: 8px; margin-top: 15px;">
-                    <h3>⚙️ App Settings</h3>
-                    <label><input type="checkbox" checked> Auto Resume</label><br><br>
-                    <label><input type="checkbox" checked> Background Play Default</label>
+                    <div class="profile-avatar" id="profileAvatarDisplay">U</div>
+                    <h3 id="profileUsernameDisplay">@username</h3>
+                    <p style="color: #aaa;">Status: Logged In (Username & Password)</p>
                 </div>
             </section>
         </main>
@@ -119,9 +106,7 @@
         <!-- Bottom Navigation Bar -->
         <nav class="bottom-nav">
             <button onclick="switchPage('home')" class="nav-btn active">🏠 Home</button>
-            <button onclick="switchPage('shorts')" class="nav-btn">🩳 Shorts</button>
-            <button onclick="switchPage('posts')" class="nav-btn">📝 Posts</button>
-            <button onclick="switchPage('upload')" class="nav-btn">➕ Upload</button>
+            <button onclick="switchPage('admin')" class="nav-btn">🛠️ Admin</button>
             <button onclick="switchPage('profile')" class="nav-btn">👤 Profile</button>
         </nav>
     </div>
