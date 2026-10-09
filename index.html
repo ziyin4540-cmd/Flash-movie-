@@ -70,17 +70,17 @@
                 </div>
             </section>
 
-            <!-- 2. ADMIN LOCK SCREEN & PANEL -->
+            <!-- 2. ADMIN PAGE (Password 295802 Protected) -->
             <section id="page-admin" class="main-section hidden">
-                <!-- Password Protection Gate -->
+                <!-- Lock Screen -->
                 <div id="admin-lock-screen" class="admin-lock-box">
-                    <h2>🔒 Admin Verification Required</h2>
+                    <h2>🔒 Admin Verification</h2>
                     <p style="color: #aaa; font-size: 0.9rem;">Admin Panel ဝင်ရန် Password ထည့်ပါ</p>
-                    <input type="password" id="adminPassInput" placeholder="Password ထည့်ရန်..." style="padding: 10px; background: #121212; border: 1px solid #444; color: #fff; border-radius: 6px; width: 80%;">
+                    <input type="password" id="adminPassInput" placeholder="Password..." style="padding: 10px; background: #121212; border: 1px solid #444; color: #fff; border-radius: 6px; width: 80%;">
                     <button class="primary-btn" onclick="verifyAdminPassword()" style="margin-top: 10px; width: 80%;">ဝင်မည်</button>
                 </div>
 
-                <!-- Actual Admin Content (Hidden until correct password) -->
+                <!-- Admin Content -->
                 <div id="admin-content-box" class="hidden">
                     <h2>🛠️ Admin Control Panel</h2>
                     
@@ -143,10 +143,6 @@
                     </label>
                     <label class="setting-toggle">
                         <span>Background Play Default</span>
-                        <input type="checkbox" checked>
-                    </label>
-                    <label class="setting-toggle">
-                        <span>Enable Push Notifications</span>
                         <input type="checkbox" checked>
                     </label>
                 </div>
