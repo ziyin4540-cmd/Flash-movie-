@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flâsh Movie Pro - Ultimate Edition</title>
+    <title>Flâsh Movie Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
         <h1 class="lightning-text">⚡ FLÂSH MOVIE PRO ⚡</h1>
     </div>
 
-    <!-- Auth Page (Login / Register - Full Page) -->
+    <!-- Auth Page (Login / Register) -->
     <div id="page-auth" class="full-page">
         <div class="auth-card">
             <h2 id="auth-title" style="color: #ff0033;">🔑 Login to Flâsh Movie</h2>
@@ -48,28 +48,20 @@
             </div>
         </header>
 
-        <!-- Main Pages Container -->
         <main class="main-content">
-            <!-- Home Page (YouTube Style Video Feed & Player) -->
+            <!-- 1. HOME PAGE -->
             <section id="page-home" class="main-section">
-                <div class="filter-tabs">
-                    <button class="filter-btn active">All</button>
-                    <button class="filter-btn">Videos</button>
-                    <button class="filter-btn">Shorts</button>
-                </div>
-
-                <div class="video-container" style="margin-top: 15px;">
+                <div class="video-container">
                     <video id="mainVideoPlayer" controls width="100%"></video>
                 </div>
                 
                 <div class="video-info-box" style="padding: 10px 0;">
-                    <h3 id="displayTitle">Flâsh Movie Pro - Welcome</h3>
-                    <p style="color: #aaa; font-size: 0.85rem;">Flâsh Official • HD Stream</p>
+                    <h3 id="displayTitle">Flâsh Movie Pro - Featured Stream</h3>
+                    <p style="color: #aaa; font-size: 0.85rem;">Flâsh Official • HD</p>
                 </div>
 
-                <!-- Telegram Style Chat & Conversation Room -->
                 <div class="telegram-chat-box">
-                    <h3>💬 Live Group Chat & Conversations</h3>
+                    <h3>💬 Community Chat & Conversations</h3>
                     <div id="tgChatContainer" class="tg-messages-list"></div>
                     <div class="tg-input-area">
                         <input type="text" id="tgMessageInput" placeholder="စာတို ရေးရန်...">
@@ -78,57 +70,97 @@
                 </div>
             </section>
 
-            <!-- Admin Panel Page -->
+            <!-- 2. ADMIN LOCK SCREEN & PANEL -->
             <section id="page-admin" class="main-section hidden">
-                <h2>🛠️ Admin Control Panel</h2>
-                
-                <div class="admin-card">
-                    <h3>👥 User Account Approvals</h3>
-                    <div id="pendingAccountsList">
-                        <div class="approval-item">
-                            <span>User: @ziyin_new (Pending)</span>
-                            <div>
-                                <button class="btn-success" onclick="adminAction('အကောင့်လက်ခံလိုက်ပါပြီ')">Accept</button>
-                                <button class="btn-danger" onclick="adminAction('အကောင့်ငြင်းပယ်လိုက်ပါပြီ')">Decline</button>
+                <!-- Password Protection Gate -->
+                <div id="admin-lock-screen" class="admin-lock-box">
+                    <h2>🔒 Admin Verification Required</h2>
+                    <p style="color: #aaa; font-size: 0.9rem;">Admin Panel ဝင်ရန် Password ထည့်ပါ</p>
+                    <input type="password" id="adminPassInput" placeholder="Password ထည့်ရန်..." style="padding: 10px; background: #121212; border: 1px solid #444; color: #fff; border-radius: 6px; width: 80%;">
+                    <button class="primary-btn" onclick="verifyAdminPassword()" style="margin-top: 10px; width: 80%;">ဝင်မည်</button>
+                </div>
+
+                <!-- Actual Admin Content (Hidden until correct password) -->
+                <div id="admin-content-box" class="hidden">
+                    <h2>🛠️ Admin Control Panel</h2>
+                    
+                    <div class="admin-card">
+                        <h3>👥 User Account Approvals</h3>
+                        <div id="pendingAccountsList">
+                            <div class="approval-item">
+                                <span>User: @ziyin_new (Pending)</span>
+                                <div>
+                                    <button class="btn-success" onclick="adminAction(this, 'Accepted')">Accept</button>
+                                    <button class="btn-danger" onclick="adminAction(this, 'Declined')">Decline</button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="admin-card">
-                    <h3>📹 Video Management & Search</h3>
-                    <input type="text" id="videoSearchInput" placeholder="ဗီဒီယိုအမည်ဖြင့် ရှာရန်...">
-                    <div id="adminVideoList" style="margin-top: 10px;"></div>
-                </div>
-
-                <div class="admin-card">
-                    <h3>🚨 Reports Management</h3>
-                    <div id="reportsList">
-                        <div class="report-item">
-                            <span>Report #102: Copyright violation</span>
-                            <div>
-                                <button class="btn-success" onclick="adminAction('Report ကိုလက်ခံပြီးပါပြီ')">Accept</button>
-                                <button class="btn-danger" onclick="adminAction('Report ကိုငြင်းပယ်လိုက်ပါပြီ')">Reject</button>
+                    <div class="admin-card">
+                        <h3>📹 Video Management & Search</h3>
+                        <input type="text" id="videoSearchInput" placeholder="ဗီဒီယိုအမည်ဖြင့် ရှာရန်...">
+                        <div id="adminVideoList" style="margin-top: 10px;">
+                            <div class="approval-item">
+                                <span>📹 Action Movie Trailer.mp4 (@user1)</span>
+                                <button class="btn-danger" onclick="this.parentElement.remove()">ဖျက်မည်</button>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="admin-card">
-                    <h3>📢 Send Notification</h3>
-                    <input type="text" id="notifTitle" placeholder="ခေါင်းစဉ်...">
-                    <textarea id="notifMessage" placeholder="အသိပေးစာ အကြောင်းအရာ..."></textarea>
-                    <button class="primary-btn" onclick="sendNotification()">အသိပေးစာ ပို့မည်</button>
+                    <div class="admin-card">
+                        <h3>📢 Send Notification</h3>
+                        <input type="text" id="notifTitle" placeholder="ခေါင်းစဉ်...">
+                        <textarea id="notifMessage" placeholder="အသိပေးစာ အကြောင်းအရာ..."></textarea>
+                        <button class="primary-btn" onclick="sendNotification()">အသိပေးစာ ပို့မည်</button>
+                    </div>
                 </div>
             </section>
 
-            <!-- Profile Page -->
+            <!-- 3. PROFILE PAGE -->
             <section id="page-profile" class="main-section hidden">
                 <div class="profile-page-box">
                     <img id="profileImgDisplay" src="" alt="Profile Photo" class="profile-img-preview">
                     <h2 id="profileNameDisplay">Account Name</h2>
                     <p id="profileUserDisplay" style="color: #aaa;">@username</p>
                     <div class="timer-box" style="display: inline-block; margin-top: 10px;">Status: Active User</div>
+                </div>
+            </section>
+
+            <!-- 4. SETTINGS PAGE -->
+            <section id="page-settings" class="main-section hidden">
+                <h2>⚙️ App Settings & Preferences</h2>
+                
+                <div class="admin-card">
+                    <h3>🎨 Appearance & Playback</h3>
+                    <label class="setting-toggle">
+                        <span>Dark Theme / Night Mode</span>
+                        <input type="checkbox" id="settingDarkMode" checked>
+                    </label>
+                    <label class="setting-toggle">
+                        <span>Auto Resume Videos</span>
+                        <input type="checkbox" checked>
+                    </label>
+                    <label class="setting-toggle">
+                        <span>Background Play Default</span>
+                        <input type="checkbox" checked>
+                    </label>
+                    <label class="setting-toggle">
+                        <span>Enable Push Notifications</span>
+                        <input type="checkbox" checked>
+                    </label>
+                </div>
+
+                <div class="admin-card">
+                    <h3>🔒 Security & Account</h3>
+                    <input type="password" id="currentPassInput" placeholder="Current Password">
+                    <input type="password" id="newPassInput" placeholder="New Password">
+                    <button class="primary-btn" onclick="changeUserPassword()">စကားဝှက်ပြောင်းမည်</button>
+                </div>
+
+                <div class="admin-card">
+                    <h3>💾 Storage & Cache</h3>
+                    <button class="btn-danger" onclick="clearAppCache()">Clear Cache & Data</button>
                 </div>
             </section>
         </main>
@@ -138,6 +170,7 @@
             <button onclick="switchMainPage('home')" id="nav-btn-home" class="nav-btn active">🏠 Home</button>
             <button onclick="switchMainPage('admin')" id="nav-btn-admin" class="nav-btn">🛠️ Admin</button>
             <button onclick="switchMainPage('profile')" id="nav-btn-profile" class="nav-btn">👤 Profile</button>
+            <button onclick="switchMainPage('settings')" id="nav-btn-settings" class="nav-btn">⚙️ Settings</button>
         </nav>
     </div>
 
