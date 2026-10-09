@@ -2,7 +2,6 @@ let tempFbMediaData = "";
 let tempMediaType = "";
 let activeCommentPostId = null;
 let tempAppVideoData = "";
-let currentSelectedPlaylist = 'all';
 
 document.addEventListener('DOMContentLoaded', () => {
     const mediaPicker = document.getElementById('fbMediaPicker');
@@ -104,8 +103,8 @@ async function handleCreateFbPost() {
 
 async function handleDirectVideoUpload() {
     const title = document.getElementById('uploadVideoTitle').value.trim();
+    const playlistInput = document.getElementById('uploadPlaylistInput').value.trim() || 'General';
     const telegramLink = document.getElementById('telegramVideoLinkInput').value.trim();
-    const playlistCategory = document.getElementById('uploadPlaylistCategory').value;
     const isPlaylistEnabled = document.getElementById('playlistToggleSwitch').checked;
     const currentUser = localStorage.getItem('flash_logged_user');
 
@@ -150,7 +149,7 @@ async function handleDirectVideoUpload() {
                 post_text: title,
                 media_url: finalMediaUrl,
                 media_type: finalMediaType,
-                playlist: playlistCategory,
+                playlist: playlistInput,
                 playlist_active: isPlaylistEnabled,
                 likes: [],
                 comments: [],
@@ -172,13 +171,6 @@ async function handleDirectVideoUpload() {
     }, 100);
 }
 
-function filterPlaylist(category) {
-    currentSelectedPlaylist = category;
-    document.querySelectorAll('.playlist-filter-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    loadHomeVideos();
-}
-
 async function loadHomeVideos(searchQuery = '') {
     const container = document.getElementById('homeVideoFeedContainer');
     if(!container) return;
@@ -191,13 +183,13 @@ async function loadHomeVideos(searchQuery = '') {
 
     let filtered = posts.filter(p => {
         const matchSearch = (p.post_text || '').toLowerCase().includes(searchQuery.toLowerCase());
-        const matchPlaylist = (currentSelectedPlaylist === 'all') || (p.playlist === currentSelectedPlaylist && p.playlist_active !== false);
-        return matchSearch && matchPlaylist;
+        const matchActive = p.playlist_active !== false;
+        return matchSearch && matchActive;
     });
 
     container.innerHTML = '';
     if(filtered.length === 0) {
-        container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ဤ Playlist ထဲတွင် ဗီဒီယို မရှိသေးပါ။</p>';
+        container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ဗီဒီယို မရှိသေးပါ။</p>';
         return;
     }
 
