@@ -3,19 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flâsh Movie Pro</title>
+    <title>Flâsh Movie Pro - Real-time</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Intro Screen -->
+    <!-- Cinematic Intro Screen -->
     <div id="intro-screen" class="intro-container">
-        <h1 class="lightning-text">⚡ FLÂSH MOVIE PRO ⚡</h1>
+        <div class="intro-content">
+            <h1 class="lightning-text">⚡ FLÂSH MOVIE PRO ⚡</h1>
+            <p class="intro-sub">Real-time Cinematic Experience</p>
+        </div>
     </div>
 
     <!-- Auth Page (Login / Register) -->
     <div id="page-auth" class="full-page">
         <div class="auth-card">
-            <h2 id="auth-title" style="color: #ff0033;">🔑 Login to Flâsh Movie</h2>
+            <h2 id="auth-title" style="color: #ff0033; margin-bottom: 5px;">🔑 Login</h2>
+            <p style="color: #888; font-size: 0.85rem; margin-bottom: 20px;">Flâsh Movie Pro သို့ ဝင်ရောက်ပါ</p>
             
             <!-- Login View -->
             <div id="view-login" class="auth-form">
@@ -30,7 +34,7 @@
                 <input type="text" id="regUser" placeholder="Username">
                 <input type="password" id="regPass" placeholder="Password">
                 <input type="text" id="regDisplayName" placeholder="Account Name (ပြသရန်နာမည်)">
-                <label style="font-size: 0.85rem; color: #aaa; text-align: left;">Profile Photo တင်ရန်:</label>
+                <label style="font-size: 0.85rem; color: #aaa; text-align: left; margin-top: 5px;">Profile Photo တင်ရန်:</label>
                 <input type="file" id="regPhotoPicker" accept="image/*">
                 <button class="primary-btn" onclick="handleRegister()">Register ပြုလုပ်မည်</button>
                 <p class="nav-link-text" onclick="switchAuthView('login')">အကောင့်ရှိပြီးသားလား? Login သို့သွားရန်</p>
@@ -41,7 +45,7 @@
     <!-- Main App Container -->
     <div id="app-container" class="hidden">
         <header class="app-header">
-            <h2 class="logo-text">▶ Flâsh Movie</h2>
+            <h2 class="logo-text">⚡ Flâsh Movie</h2>
             <div style="display: flex; align-items: center; gap: 8px;">
                 <div id="account-timer" class="timer-box">0Y / 0M / 0D / 0H / 0M / 0S</div>
                 <button onclick="handleLogout()" class="logout-btn">Logout</button>
@@ -55,13 +59,13 @@
                     <video id="mainVideoPlayer" controls width="100%"></video>
                 </div>
                 
-                <div class="video-info-box" style="padding: 10px 0;">
-                    <h3 id="displayTitle">Flâsh Movie Pro - Featured Stream</h3>
-                    <p style="color: #aaa; font-size: 0.85rem;">Flâsh Official • HD</p>
+                <div class="video-info-box">
+                    <h3 id="displayTitle">Flâsh Movie Pro - Stream</h3>
+                    <p style="color: #aaa; font-size: 0.85rem;">HD Stream</p>
                 </div>
 
                 <div class="telegram-chat-box">
-                    <h3>💬 Community Chat & Conversations</h3>
+                    <div class="chat-header-title">💬 Real-time Community Chat</div>
                     <div id="tgChatContainer" class="tg-messages-list"></div>
                     <div class="tg-input-area">
                         <input type="text" id="tgMessageInput" placeholder="စာတို ရေးရန်...">
@@ -70,42 +74,26 @@
                 </div>
             </section>
 
-            <!-- 2. ADMIN PAGE (Password 295802 Protected) -->
+            <!-- 2. ADMIN PAGE -->
             <section id="page-admin" class="main-section hidden">
-                <!-- Lock Screen -->
                 <div id="admin-lock-screen" class="admin-lock-box">
                     <h2>🔒 Admin Verification</h2>
                     <p style="color: #aaa; font-size: 0.9rem;">Admin Panel ဝင်ရန် Password ထည့်ပါ</p>
-                    <input type="password" id="adminPassInput" placeholder="Password..." style="padding: 10px; background: #121212; border: 1px solid #444; color: #fff; border-radius: 6px; width: 80%;">
-                    <button class="primary-btn" onclick="verifyAdminPassword()" style="margin-top: 10px; width: 80%;">ဝင်မည်</button>
+                    <input type="password" id="adminPassInput" placeholder="Password...">
+                    <button class="primary-btn" onclick="verifyAdminPassword()" style="margin-top: 10px; width: 100%;">ဝင်မည်</button>
                 </div>
 
-                <!-- Admin Content -->
                 <div id="admin-content-box" class="hidden">
                     <h2>🛠️ Admin Control Panel</h2>
-                    
                     <div class="admin-card">
                         <h3>👥 User Account Approvals</h3>
-                        <div id="pendingAccountsList">
-                            <div class="approval-item">
-                                <span>User: @ziyin_new (Pending)</span>
-                                <div>
-                                    <button class="btn-success" onclick="adminAction(this, 'Accepted')">Accept</button>
-                                    <button class="btn-danger" onclick="adminAction(this, 'Declined')">Decline</button>
-                                </div>
-                            </div>
-                        </div>
+                        <div id="pendingAccountsList"></div>
                     </div>
 
                     <div class="admin-card">
-                        <h3>📹 Video Management & Search</h3>
+                        <h3>📹 Video Management</h3>
                         <input type="text" id="videoSearchInput" placeholder="ဗီဒီယိုအမည်ဖြင့် ရှာရန်...">
-                        <div id="adminVideoList" style="margin-top: 10px;">
-                            <div class="approval-item">
-                                <span>📹 Action Movie Trailer.mp4 (@user1)</span>
-                                <button class="btn-danger" onclick="this.parentElement.remove()">ဖျက်မည်</button>
-                            </div>
-                        </div>
+                        <div id="adminVideoList" style="margin-top: 10px;"></div>
                     </div>
 
                     <div class="admin-card">
@@ -119,11 +107,42 @@
 
             <!-- 3. PROFILE PAGE -->
             <section id="page-profile" class="main-section hidden">
-                <div class="profile-page-box">
-                    <img id="profileImgDisplay" src="" alt="Profile Photo" class="profile-img-preview">
-                    <h2 id="profileNameDisplay">Account Name</h2>
-                    <p id="profileUserDisplay" style="color: #aaa;">@username</p>
-                    <div class="timer-box" style="display: inline-block; margin-top: 10px;">Status: Active User</div>
+                <div class="profile-top-actions">
+                    <button class="top-icon-btn" onclick="switchMainPage('settings')">⚙️ Settings</button>
+                    <button class="top-icon-btn admin-btn-top" onclick="switchMainPage('admin')">🛠️ Admin</button>
+                </div>
+
+                <div class="profile-card-modern">
+                    <div class="profile-banner"></div>
+                    <div class="profile-avatar-wrapper">
+                        <img id="profileImgDisplay" src="" alt="Profile Photo" class="profile-img-preview-modern">
+                    </div>
+                    <h2 id="profileNameDisplay" class="profile-name">Account Name</h2>
+                    <p id="profileUserDisplay" class="profile-username">@username</p>
+                    
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <span class="stat-num" id="statVideos">0</span>
+                            <span class="stat-label">Videos</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-num">0</span>
+                            <span class="stat-label">Followers</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-num">0</span>
+                            <span class="stat-label">Following</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-num">0</span>
+                            <span class="stat-label">Likes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="user-uploads-section">
+                    <h3>📂 ကိုယ်တိုင်တင်ထားသော ဗီဒီယိုများနှင့် ပို့စ်များ</h3>
+                    <div id="userUploadsFeed" class="uploads-grid"></div>
                 </div>
             </section>
 
@@ -164,9 +183,7 @@
         <!-- Bottom Navigation Bar -->
         <nav class="bottom-nav">
             <button onclick="switchMainPage('home')" id="nav-btn-home" class="nav-btn active">🏠 Home</button>
-            <button onclick="switchMainPage('admin')" id="nav-btn-admin" class="nav-btn">🛠️ Admin</button>
             <button onclick="switchMainPage('profile')" id="nav-btn-profile" class="nav-btn">👤 Profile</button>
-            <button onclick="switchMainPage('settings')" id="nav-btn-settings" class="nav-btn">⚙️ Settings</button>
         </nav>
     </div>
 
