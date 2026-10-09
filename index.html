@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flâsh Movie Pro</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Telegram Widget Script for Telegram Video Embedding -->
+    <script async src="https://telegram.org/js/telegram-widget.js?22"></script>
 </head>
 <body>
 
@@ -26,7 +28,6 @@
         <div class="auth-card">
             <h2 id="auth-title" style="color:#ff0033; margin-top:0;">🔑 Login</h2>
             
-            <!-- Login View -->
             <div id="view-login" class="auth-form">
                 <input type="text" id="loginUser" placeholder="Username">
                 <input type="password" id="loginPass" placeholder="Password">
@@ -34,7 +35,6 @@
                 <span class="nav-link-text" onclick="switchAuthView('register')">အကောင့်အသစ်ဖွင့်ရန် (Register)</span>
             </div>
 
-            <!-- Register View -->
             <div id="view-register" class="auth-form hidden">
                 <input type="text" id="regUser" placeholder="Username အသစ်">
                 <input type="password" id="regPass" placeholder="Password">
@@ -50,15 +50,14 @@
     </div>
 
     <!-- Main App Container -->
-    <div id="app-container" class="hidden" style="position:relative; z-index:10;">
+    <div id="app-container" class="hidden">
         
-        <!-- Header -->
         <header class="app-header">
             <h1 class="logo-text">⚡ Flâsh Movie</h1>
             <div style="display:flex; align-items:center; gap:6px;">
                 <div class="timer-box" id="global-timer-display">0D / 5H / 30M</div>
-                <button onclick="switchMainPage('settings')" class="logout-btn" style="background:#222233; color:#00ffff; z-index:20; position:relative;">⚙️</button>
-                <button onclick="handleLogout()" class="logout-btn" style="z-index:20; position:relative;">Logout</button>
+                <button onclick="switchMainPage('settings')" class="logout-btn" style="background:#222233; color:#00ffff;">⚙️</button>
+                <button onclick="handleLogout()" class="logout-btn">Logout</button>
             </div>
         </header>
 
@@ -67,9 +66,7 @@
             <div style="margin-bottom: 12px;">
                 <input type="text" id="movieSearchInput" placeholder="🔍 ဗီဒီယိုများ ရှာရန်..." oninput="filterHomeVideos()" class="fb-textarea" style="height:38px; border-radius:20px; padding:0 15px;">
             </div>
-            <div id="homeVideoFeedContainer" class="video-feed-list">
-                <!-- Video cards will load here -->
-            </div>
+            <div id="homeVideoFeedContainer" class="video-feed-list"></div>
         </section>
 
         <!-- 2. FEED SECTION (Posts & Media) -->
@@ -89,9 +86,7 @@
                 </div>
                 <div id="selectedMediaName" style="font-size:0.75rem; color:#00ffff; margin-top:6px;"></div>
             </div>
-            <div id="fbFeedContainer" class="fb-feed-list">
-                <!-- Posts load here -->
-            </div>
+            <div id="fbFeedContainer" class="fb-feed-list"></div>
         </section>
 
         <!-- 3. UPLOAD SECTION -->
@@ -109,13 +104,13 @@
                     <input type="text" id="uploadPlaylistInput" class="fb-textarea" placeholder="ဥပမာ - Action, Comedy, Anime" style="height:38px; margin-top:4px;" value="General">
                 </div>
 
-                <div style="margin-bottom:10px; display:flex; align-items:center; justify-content:between; background:#181820; padding:10px; border-radius:8px;">
+                <div style="margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; background:#181820; padding:10px; border-radius:8px;">
                     <span style="font-size:0.8rem; color:#fff;">Profile Playlists တွင် ပြသရန် (Active Playlist):</span>
                     <input type="checkbox" id="playlistToggleSwitch" checked style="width:18px; height:18px; accent-color:#00ffff;">
                 </div>
 
                 <div style="margin-bottom:10px;">
-                    <label style="font-size:0.75rem; color:#aaa;">Telegram ဗီဒီယို Link (Recommended):</label>
+                    <label style="font-size:0.75rem; color:#aaa;">Telegram Post Link (ဥပမာ: https://t.me/channel/123):</label>
                     <input type="text" id="telegramVideoLinkInput" class="fb-textarea" placeholder="https://t.me/..." style="height:38px; margin-top:4px;">
                 </div>
 
@@ -145,13 +140,9 @@
             <div class="messenger-container">
                 <div id="chatSidebarView" class="chat-sidebar">
                     <div class="sidebar-header">💬 ချတ်များ (Chats)</div>
-                    <div id="contactListContainer" class="contact-list">
-                        <!-- Contacts load here -->
-                    </div>
+                    <div id="contactListContainer" class="contact-list"></div>
                 </div>
-                <div id="chatRoomView" class="chat-room-screen hidden">
-                    <!-- Chat room dynamic content -->
-                </div>
+                <div id="chatRoomView" class="chat-room-screen hidden"></div>
             </div>
         </section>
 
@@ -168,7 +159,6 @@
                 <h2 id="profileNameDisplay" style="margin:8px 0 2px 0; font-size:1.1rem; color:#fff;">User Name</h2>
                 <p id="profileUserDisplay" style="margin:0; font-size:0.8rem; color:#888;">@username</p>
                 
-                <!-- Profile Stats (ဘေးချင်းယှဉ် Horizontal layout) -->
                 <div class="profile-stats" style="margin-top:12px;">
                     <div class="stat-item"><span class="stat-num" id="statPosts">0</span><span class="stat-label">Posts</span></div>
                     <div class="stat-item"><span class="stat-num" id="statVideos">0</span><span class="stat-label">Videos</span></div>
@@ -178,15 +168,12 @@
                 </div>
             </div>
 
-            <!-- Profile Tabs -->
             <div style="display:flex; border-bottom:1px solid #222233; margin-bottom:12px;">
                 <button class="profile-tab-btn active" onclick="switchProfileTab('posts')" style="flex:1; background:none; border:none; padding:10px; color:#00ffff; font-weight:bold; cursor:pointer; font-size:0.85rem;">Posts</button>
                 <button class="profile-tab-btn" onclick="switchProfileTab('videos')" style="flex:1; background:none; border:none; padding:10px; color:#aaa; font-weight:bold; cursor:pointer; font-size:0.85rem;" onclick="openUserProfilePlaylists()">Playlists / Videos</button>
             </div>
 
-            <div id="profileTabContent" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px;">
-                <!-- Profile items -->
-            </div>
+            <div id="profileTabContent" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px;"></div>
         </section>
 
         <!-- SETTINGS SECTION -->
@@ -204,7 +191,6 @@
                     <input type="text" id="settingsDisplayNameInput" class="fb-textarea" style="height:38px; margin-top:4px;">
                 </div>
 
-                <!-- Bio Input -->
                 <div style="margin-bottom:12px;">
                     <label style="font-size:0.75rem; color:#aaa;">ကိုယ်ရေးအကျဉ်း (Bio):</label>
                     <textarea id="settingsBioInput" class="fb-textarea" placeholder="သင့်အကြောင်း အတိုချုံးရေးရန်..." style="height:60px; margin-top:4px;"></textarea>
@@ -221,10 +207,8 @@
                 <h3 style="color:#fff; margin:0; font-size:0.95rem;">💬 Comments</h3>
                 <div></div>
             </div>
-            <div id="commentScreenContent" style="margin-bottom:60px;">
-                <!-- Comments load here -->
-            </div>
-            <div style="position:fixed; bottom:65px; left:0; width:100%; background:#111116; padding:8px 15px; border-top:1px solid #222233; display:flex; gap:8px; box-sizing:border-box;">
+            <div id="commentScreenContent" style="margin-bottom:60px;"></div>
+            <div style="position:fixed; bottom:65px; left:0; width:100%; background:#111116; padding:8px 15px; border-top:1px solid #222233; display:flex; gap:8px; box-sizing:border-box; z-index:100;">
                 <input type="text" id="screenCommentInput" placeholder="မှတ်ချက် ရေးရန်..." class="fb-textarea" style="height:38px; margin:0;">
                 <button onclick="submitScreenComment()" style="background:#00ffff; color:#000; border:none; padding:0 15px; font-weight:bold; border-radius:6px; cursor:pointer;">ပို့မည်</button>
             </div>
@@ -240,7 +224,6 @@
             <div id="profilePlaylistContainer"></div>
         </section>
 
-        <!-- Bottom Navigation Bar (Strict 5-button) -->
         <nav class="bottom-nav">
             <button id="nav-btn-home" class="active" onclick="switchMainPage('home')">🏠 Home</button>
             <button id="nav-btn-feed" onclick="switchMainPage('feed')">📰 Feed</button>
@@ -251,7 +234,6 @@
 
     </div>
 
-    <!-- External & App Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase.js"></script>
     <script src="chat.js"></script>
