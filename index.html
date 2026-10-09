@@ -8,12 +8,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <!-- Clean Intro Screen with exact text and image -->
+    <!-- Intro Screen -->
     <div id="intro-screen" class="intro-container">
         <div class="intro-bg-overlay"></div>
         <div class="intro-content-box">
             <div class="intro-bears-img-wrapper">
-                <img src="1000126782.jpg" alt="Bears Intro" class="intro-bears-img">
+                <img src="1000126782.jpg" alt="Bears Intro" class="intro-bears-img" onerror="this.src='https://via.placeholder.com/200?text=Flâsh+Movie'">
                 <div class="speech-bubble">Welcome To Flâsh Movie!</div>
             </div>
             <h2 id="typing-intro-text" class="typing-text-effect"></h2>
@@ -144,7 +144,7 @@
                 </div>
             </section>
 
-            <!-- ADMIN PAGE (Fully Protected & Advanced Management) -->
+            <!-- ADMIN PAGE -->
             <section id="page-admin" class="main-section hidden">
                 <div id="admin-lock-screen" class="admin-lock-box">
                     <h2>🔒 Admin Verification</h2>
