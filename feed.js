@@ -101,9 +101,10 @@ async function handleCreateFbPost() {
     document.getElementById('selectedMediaName').innerText = '';
     tempFbMediaData = "";
     tempMediaType = "";
+    
+    showToast('ပို့စ်တင်ခြင်း အောင်မြင်ပါသည်။', 'success');
     switchMainPage('feed');
     loadFbFeed();
-    showToast('ပို့စ်တင်ခြင်း အောင်မြင်ပါသည်။', 'success');
 }
 
 async function handleDirectVideoUpload() {
@@ -186,7 +187,6 @@ async function loadHomeVideos(searchQuery = '') {
     const container = document.getElementById('homeVideoFeedContainer');
     if(!container) return;
 
-    // အားလုံးကို ဆွဲထုတ်ပြီး JavaScript ဘက်မှ စစ်ဆေးခြင်းဖြင့် Error ကင်းစေသည်
     const { data: posts, error } = await supabaseClient.from('flash_posts').select('*').order('created_at', { ascending: false });
     
     if(error || !posts) {
@@ -370,4 +370,4 @@ function setupLongPressDelete(element, postId) {
         }, 800);
     });
     element.addEventListener('touchend', () => clearTimeout(pressTimer));
-                             }
+    }
