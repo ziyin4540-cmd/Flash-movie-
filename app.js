@@ -1,12 +1,14 @@
 let tempProfilePhotoData = "https://via.placeholder.com/90";
+let tempUploadVideoData = "";
 
 window.addEventListener('load', () => {
     setTimeout(() => {
         document.getElementById('intro-screen').classList.add('hidden');
         checkUserSession();
-    }, 1200);
+    }, 1000);
     startLiveTimer();
     loadTgMessages();
+    loadVideoFeed();
 });
 
 function checkUserSession() {
@@ -37,9 +39,7 @@ document.getElementById('regPhotoPicker').addEventListener('change', function(e)
     const file = e.target.files[0];
     if (file) {
         const reader = new FileReader();
-        reader.onload = function(event) {
-            tempProfilePhotoData = event.target.result;
-        };
+        reader.onload = function(event) { tempProfilePhotoData = event.target.result; };
         reader.readAsDataURL(file);
     }
 });
@@ -49,30 +49,18 @@ function handleRegister() {
     const pass = document.getElementById('regPass').value.trim();
     const displayName = document.getElementById('regDisplayName').value.trim();
     
-    if(!user || !pass || !displayName) {
-        alert('အချက်အလက်များကို အပြည့်အစုံ ဖြည့်ပါ။');
-        return;
-    }
-
-    const userData = { pass, displayName, photo: tempProfilePhotoData, uploads: [] };
-    localStorage.setItem('flash_user_data_' + user, JSON.stringify(userData));
-    alert('အကောင့်ဖွင့်ခြင်း အောင်မြင်ပါသည်။ Login ဝင်ပါ။');
+    if(!user || !pass || !displayName) { alert('အချက်အလက် ဖြည့်ပါ။'); return; }
+    localStorage.setItem('flash_user_data_' + user, JSON.stringify({ pass, displayName, photo: tempProfilePhotoData, uploads: [] }));
+    alert('အောင်မြင်ပါသည်။');
     switchAuthView('login');
 }
 
 function handleLogin() {
     const user = document.getElementById('loginUser').value.trim();
     const pass = document.getElementById('loginPass').value.trim();
-    const storedDataStr = localStorage.getItem('flash_user_data_' + user);
+    const stored = localStorage.getItem('flash_user_data_' + user);
     
-    let isValid = false;
-    if(user === 'admin' && pass === 'admin123') {
-        isValid = true;
-    } else if(storedDataStr) {
-        const storedData = JSON.parse(storedDataStr);
-        if(storedData.pass === pass) isValid = true;
-    }
-
+    let isValid = (user === 'admin' && pass === 'admin123') || (stored && JSON.parse(stored).pass === pass);
     if(isValid) {
         localStorage.setItem('flash_logged_user', user);
         checkUserSession();
@@ -87,17 +75,16 @@ function handleLogout() {
     checkUserSession();
 }
 
+// Profile Loading & Editing
 function loadUserProfile(username) {
     const dataStr = localStorage.getItem('flash_user_data_' + username);
     if(dataStr) {
         const data = JSON.parse(dataStr);
         document.getElementById('profileNameDisplay').innerText = data.displayName || username;
         document.getElementById('profileUserDisplay').innerText = `@${username}`;
-        if(data.photo) {
-            document.getElementById('profileImgDisplay').src = data.photo;
-        }
+        document.getElementById('editDisplayNameInput').value = data.displayName || username;
+        if(data.photo) document.getElementById('profileImgDisplay').src = data.photo;
         
-        // Load Real User Uploads & Stats
         const uploadsFeed = document.getElementById('userUploadsFeed');
         uploadsFeed.innerHTML = '';
         if(data.uploads && data.uploads.length > 0) {
@@ -105,18 +92,41 @@ function loadUserProfile(username) {
             data.uploads.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'upload-item-card';
-                div.innerHTML = `<p style="font-size: 0.85rem; margin: 5px 0;">📹 ${escapeHtml(item)}</p>`;
+                div.innerHTML = `
+                    <video src="${item.url}" width="100%" controls style="border-radius: 4px;"></video>
+                    <p style="font-size: 0.75rem; margin: 3px 0;">${escapeHtml(item.title)}</p>
+                `;
                 uploadsFeed.appendChild(div);
             });
         } else {
             document.getElementById('statVideos').innerText = '0';
-            uploadsFeed.innerHTML = '<p style="color: #666; font-size: 0.85rem; text-align: center; padding: 15px;">တင်ထားသော ဗီဒီယို မရှိသေးပါ။</p>';
+            uploadsFeed.innerHTML = '<p style="color: #666; font-size: 0.8rem; text-align: center;">ဗီဒီယို မရှိသေးပါ။</p>';
         }
-    } else {
-        document.getElementById('profileNameDisplay').innerText = username;
-        document.getElementById('profileUserDisplay').innerText = `@${username}`;
-        document.getElementById('statVideos').innerText = '0';
-        document.getElementById('userUploadsFeed').innerHTML = '<p style="color: #666; font-size: 0.85rem; text-align: center; padding: 15px;">တင်ထားသော ဗီဒီယို မရှိသေးပါ။</p>';
+    }
+}
+
+let tempNewPhotoData = "";
+document.getElementById('editPhotoPicker').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) { tempNewPhotoData = event.target.result; };
+        reader.readAsDataURL(file);
+    }
+});
+
+function updateProfileInfo() {
+    const currentUser = localStorage.getItem('flash_logged_user');
+    const newName = document.getElementById('editDisplayNameInput').value.trim();
+    const dataStr = localStorage.getItem('flash_user_data_' + currentUser);
+    
+    if(dataStr) {
+        let data = JSON.parse(dataStr);
+        if(newName) data.displayName = newName;
+        if(tempNewPhotoData) data.photo = tempNewPhotoData;
+        localStorage.setItem('flash_user_data_' + currentUser, JSON.stringify(data));
+        alert('Profile အောင်မြင်စွာ ပြောင်းလဲပြီးပါပြီ။');
+        loadUserProfile(currentUser);
     }
 }
 
@@ -125,53 +135,72 @@ function viewOtherProfile(username) {
     switchMainPage('profile');
 }
 
-// Admin Verification (Password: 295802)
-function verifyAdminPassword() {
-    const enteredPass = document.getElementById('adminPassInput').value.trim();
-    if(enteredPass === "295802") {
-        sessionStorage.setItem('admin_verified', 'true');
-        document.getElementById('admin-lock-screen').classList.add('hidden');
-        document.getElementById('admin-content-box').classList.remove('hidden');
-    } else {
-        alert('Admin Password မှားယွင်းနေပါသည်။');
-        document.getElementById('adminPassInput').value = '';
+// Video Upload Logic
+function openUploadModal() { document.getElementById('uploadModal').classList.remove('hidden'); }
+function closeUploadModal() { document.getElementById('uploadModal').classList.add('hidden'); }
+
+document.getElementById('videoFilePicker').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) { tempUploadVideoData = event.target.result; };
+        reader.readAsDataURL(file);
     }
-}
+});
 
-function changeUserPassword() {
+function handleVideoUpload() {
+    const title = document.getElementById('uploadTitleInput').value.trim();
     const currentUser = localStorage.getItem('flash_logged_user');
-    const currentPass = document.getElementById('currentPassInput').value.trim();
-    const newPass = document.getElementById('newPassInput').value.trim();
-
-    if(!currentPass || !newPass) {
-        alert('စကားဝှက်ဟောင်းနှင့် အသစ်ကို အပြည့်အစုံ ရေးပါ။');
+    
+    if(!title || !tempUploadVideoData) {
+        alert('ခေါင်းစဉ်နှင့် ဗီဒီယိုဖိုင်ကို ရွေးချယ်ပါ။');
         return;
     }
 
+    // Save to global feed
+    let allVideos = JSON.parse(localStorage.getItem('flash_all_videos') || '[]');
+    const newVideo = { id: Date.now(), user: currentUser, title: title, url: tempUploadVideoData };
+    allVideos.unshift(newVideo);
+    localStorage.setItem('flash_all_videos', JSON.stringify(allVideos));
+
+    // Save to user profile uploads
     const dataStr = localStorage.getItem('flash_user_data_' + currentUser);
     if(dataStr) {
         let data = JSON.parse(dataStr);
-        if(data.pass === currentPass) {
-            data.pass = newPass;
-            localStorage.setItem('flash_user_data_' + currentUser, JSON.stringify(data));
-            alert('စကားဝှက်ကို အောင်မြင်စွာ ပြောင်းလဲပြီးပါပြီ။');
-            document.getElementById('currentPassInput').value = '';
-            document.getElementById('newPassInput').value = '';
-        } else {
-            alert('စကားဝှက်ဟောင်း မှားယွင်းနေပါသည်။');
-        }
+        if(!data.uploads) data.uploads = [];
+        data.uploads.unshift(newVideo);
+        localStorage.setItem('flash_user_data_' + currentUser, JSON.stringify(data));
     }
+
+    alert('ဗီဒီယို အောင်မြင်စွာ တင်ပြီးပါပြီ!');
+    closeUploadModal();
+    document.getElementById('uploadTitleInput').value = '';
+    loadVideoFeed();
 }
 
-function clearAppCache() {
-    if(confirm('App ဒေတာများနှင့် Cache များကို ရှင်းလင်းလိုသည်မှာ သေချာပါသလား?')) {
-        localStorage.removeItem('flash_tg_messages');
-        alert('Cache များကို အောင်မြင်စွာ ရှင်းလင်းပြီးပါပြီ။');
-        loadTgMessages();
+function loadVideoFeed() {
+    const container = document.getElementById('videoFeedContainer');
+    let allVideos = JSON.parse(localStorage.getItem('flash_all_videos') || '[]');
+    container.innerHTML = '';
+
+    if(allVideos.length === 0) {
+        container.innerHTML = '<p style="color: #666; font-size: 0.85rem; text-align: center; margin-top: 30px;">တင်ထားသော ဗီဒီယိုများ မရှိသေးပါ။</p>';
+        return;
     }
+
+    allVideos.forEach(v => {
+        const div = document.createElement('div');
+        div.className = 'video-card-item';
+        div.innerHTML = `
+            <video src="${v.url}" controls width="100%" style="border-radius: 8px; background:#000;"></video>
+            <h4 style="margin: 8px 0 4px 0; font-size: 0.95rem;">${escapeHtml(v.title)}</h4>
+            <p style="color: #3ea6ff; font-size: 0.8rem; cursor: pointer;" onclick="viewOtherProfile('${v.user}')">Uploaded by @${v.user}</p>
+        `;
+        container.appendChild(div);
+    });
 }
 
-// Telegram Real-time Chat System
+// Chat System
 function sendTgMessage() {
     const input = document.getElementById('tgMessageInput');
     const text = input.value.trim();
@@ -188,45 +217,51 @@ function sendTgMessage() {
 
 function loadTgMessages() {
     const container = document.getElementById('tgChatContainer');
+    if(!container) return;
     let messages = JSON.parse(localStorage.getItem('flash_tg_messages') || '[]');
+    container.innerHTML = messages.length === 0 ? '<p style="color: #666; font-size: 0.85rem; text-align: center;">မက်ဆေ့ချ် မရှိသေးပါ။</p>' : '';
     
-    container.innerHTML = '';
-    if(messages.length === 0) {
-        container.innerHTML = '<p style="color: #666; font-size: 0.85rem; text-align: center; margin-top: 20px;">မက်ဆေ့ချ် မရှိသေးပါ။</p>';
-        return;
-    }
-
     messages.forEach(msg => {
         const div = document.createElement('div');
         div.className = 'tg-msg';
-        div.innerHTML = `
-            <strong style="cursor:pointer; color:#3ea6ff;" onclick="viewOtherProfile('${msg.user}')">@${msg.user}:</strong> ${escapeHtml(msg.text)}
-            <br><span class="tg-msg-actions" onclick="editTgMessage(${msg.id})">Edit</span> | 
-            <span class="tg-msg-actions" style="color:#cc0000;" onclick="deleteTgMessage(${msg.id})">Delete</span>
-        `;
+        div.innerHTML = `<strong style="cursor:pointer; color:#3ea6ff;" onclick="viewOtherProfile('${msg.user}')">@${msg.user}:</strong> ${escapeHtml(msg.text)}`;
         container.appendChild(div);
     });
     container.scrollTop = container.scrollHeight;
 }
 
-function editTgMessage(id) {
-    let messages = JSON.parse(localStorage.getItem('flash_tg_messages') || '[]');
-    const msg = messages.find(m => m.id === id);
-    if(msg) {
-        const newText = prompt("မက်ဆေ့ချ်ကို ပြင်ရန်:", msg.text);
-        if(newText !== null && newText.trim() !== '') {
-            msg.text = newText + " (Edited)";
-            localStorage.setItem('flash_tg_messages', JSON.stringify(messages));
-            loadTgMessages();
-        }
+function verifyAdminPassword() {
+    if(document.getElementById('adminPassInput').value.trim() === "295802") {
+        sessionStorage.setItem('admin_verified', 'true');
+        document.getElementById('admin-lock-screen').classList.add('hidden');
+        document.getElementById('admin-content-box').classList.remove('hidden');
+    } else {
+        alert('Password မှားယွင်းနေပါသည်။');
     }
 }
 
-function deleteTgMessage(id) {
-    let messages = JSON.parse(localStorage.getItem('flash_tg_messages') || '[]');
-    messages = messages.filter(m => m.id !== id);
-    localStorage.setItem('flash_tg_messages', JSON.stringify(messages));
-    loadTgMessages();
+function changeUserPassword() {
+    const currentUser = localStorage.getItem('flash_logged_user');
+    const curr = document.getElementById('currentPassInput').value.trim();
+    const neu = document.getElementById('newPassInput').value.trim();
+    const dataStr = localStorage.getItem('flash_user_data_' + currentUser);
+    
+    if(dataStr) {
+        let data = JSON.parse(dataStr);
+        if(data.pass === curr) {
+            data.pass = neu;
+            localStorage.setItem('flash_user_data_' + currentUser, JSON.stringify(data));
+            alert('စကားဝှက် ပြောင်းပြီးပါပြီ။');
+        } else { alert('စကားဝှက်ဟောင်း မှားနေပါသည်။'); }
+    }
+}
+
+function clearAppCache() {
+    if(confirm('Cache များကို ရှင်းလင်းမည်မှာ သေချာပါသလား?')) {
+        localStorage.removeItem('flash_tg_messages');
+        alert('ရှင်းလင်းပြီးပါပြီ။');
+        loadTgMessages();
+    }
 }
 
 function switchMainPage(pageName) {
@@ -236,9 +271,13 @@ function switchMainPage(pageName) {
     if(pageName === 'home') {
         document.getElementById('page-home').classList.remove('hidden');
         document.getElementById('nav-btn-home').classList.add('active');
+        loadVideoFeed();
+    } else if(pageName === 'chat') {
+        document.getElementById('page-chat').classList.remove('hidden');
+        document.getElementById('nav-btn-chat').classList.add('active');
+        loadTgMessages();
     } else if(pageName === 'admin') {
         document.getElementById('page-admin').classList.remove('hidden');
-        
         if(sessionStorage.getItem('admin_verified') === 'true') {
             document.getElementById('admin-lock-screen').classList.add('hidden');
             document.getElementById('admin-content-box').classList.remove('hidden');
@@ -270,21 +309,11 @@ function startLiveTimer() {
     }, 1000);
 }
 
-function adminAction(btn, status) {
-    alert(`အကောင့်ကို ${status} လုပ်ပြီးပါပြီ။`);
-    btn.parentElement.parentElement.remove();
-}
-
 function sendNotification() {
-    if(document.getElementById('notifTitle').value && document.getElementById('notifMessage').value) {
-        alert('အသိပေးစာ အောင်မြင်စွာ ပို့ပြီးပါပြီ!');
-        document.getElementById('notifTitle').value = '';
-        document.getElementById('notifMessage').value = '';
-    } else {
-        alert('ခေါင်းစဉ်နှင့် အကြောင်းအရာကို အပြည့်အစုံ ဖြည့်ပါ။');
-    }
+    if(document.getElementById('notifTitle').value) { alert('ပို့ပြီးပါပြီ!'); }
 }
 
 function escapeHtml(text) {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                                               }
+}
+
