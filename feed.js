@@ -246,7 +246,7 @@ async function loadHomeVideos(searchQuery = '') {
             mediaPreviewHtml = `
                 <div style="width:100%; height:100%; background:#181820; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#00ffff;">
                     <span style="font-size:1.8rem;">🎬</span>
-                    <span style="font-size:0.75rem; font-weight:bold; margin-top:4px;">Telegram Video Widget</span>
+                    <span style="font-size:0.75rem; font-weight:bold; margin-top:4px;">Telegram Video</span>
                 </div>`;
         } else {
             mediaPreviewHtml = `<video src="${v.media_url}#t=0.5" preload="metadata" muted></video>`;
@@ -270,7 +270,6 @@ async function loadHomeVideos(searchQuery = '') {
     });
 }
 
-// မြန်ဆန်သော Watch Screen Player နှင့် Previous / Next Controls များပါဝင်သည့် စနစ်
 async function openWatchVideoScreen(videoId) {
     activeWatchVideoId = videoId;
 
@@ -278,13 +277,9 @@ async function openWatchVideoScreen(videoId) {
     if(!watchPage) {
         watchPage = document.createElement('div');
         watchPage.id = 'page-watch-video';
-        watchPage.className = 'main-section hidden';
-        watchPage.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#070709; z-index:99999; overflow-y:auto; box-sizing:border-box; padding:0;';
+        watchPage.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#070709; z-index:9999; overflow-y:auto; box-sizing:border-box; padding:0;';
         document.body.appendChild(watchPage);
     }
-
-    document.querySelectorAll('.main-section').forEach(sec => sec.classList.add('hidden'));
-    watchPage.classList.remove('hidden');
 
     const { data: v } = await supabaseClient.from('flash_posts').select('*').eq('id', videoId).single();
     if(!v) return;
@@ -303,10 +298,12 @@ async function openWatchVideoScreen(videoId) {
 
     let mediaContent = '';
     if(v.media_type === 'telegram_video' || (v.media_url && v.media_url.includes('t.me'))) {
-        let postPath = v.media_url.replace('https://t.me/', '');
+        // Correct Telegram Embed URL formatting
+        let cleanUrl = v.media_url.replace('https://t.me/', '');
+        let embedUrl = `https://t.me/${cleanUrl}?embed=1&dark=1`;
         mediaContent = `
-            <div style="width:100%; min-height:260px; background:#111116; display:flex; justify-content:center; align-items:center; padding:10px 0;">
-                <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="${postPath}" data-width="100%" data-dark="1"></script>
+            <div style="width:100%; height:280px; background:#000;">
+                <iframe src="${embedUrl}" width="100%" height="100%" frameborder="0" allowfullscreen style="border:none;"></iframe>
             </div>`;
     } else {
         mediaContent = `<video src="${v.media_url}" controls autoplay width="100%" style="background:#000; max-height:300px;"></video>`;
@@ -336,13 +333,12 @@ async function openWatchVideoScreen(videoId) {
 
         ${mediaContent}
 
-        <!-- Previous / Next Controls ခလုတ်များ -->
         <div style="display:flex; justify-content:space-between; background:#181820; padding:8px 15px; border-bottom:1px solid #222233;">
             <button ${prevVideo ? `onclick="openWatchVideoScreen('${prevVideo.id}')"` : 'disabled'} style="background:${prevVideo ? '#222233' : '#111'}; color:${prevVideo ? '#00ffff' : '#555'}; border:1px solid #333; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.8rem;">⏮ ရှေ့ဗီဒီယို (Prev)</button>
             <button ${nextVideo ? `onclick="openWatchVideoScreen('${nextVideo.id}')"` : 'disabled'} style="background:${nextVideo ? '#ff0033' : '#111'}; color:${nextVideo ? '#fff' : '#555'}; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.8rem;">နောက်ဗီဒီယို (Next) ⏭</button>
         </div>
 
-        <div style="padding:15px; position:relative; z-index:10;">
+        <div style="padding:15px;">
             <h3 style="color:#fff; font-size:1rem; margin-bottom:8px;">${escapeHtml(v.post_text)}</h3>
             <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; cursor:pointer;" onclick="openCreatorProfile('${v.username}')">
                 <img src="${v.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar">
@@ -363,83 +359,6 @@ async function openWatchVideoScreen(videoId) {
             ${nextVideosHtml || '<p style="color:#666; font-size:0.8rem;">ဗီဒီယို အခြားမရှိသေးပါ။</p>'}
         </div>
     `;
-}
-
-function closeWatchVideoScreen() {
-    const watchPage = document.getElementById('page-watch-video');
-    if(watchPage) watchPage.classList.add('hidden');
-    switchMainPage('home');
-}
-
-async function toggleLikeWatchVideo(videoId) {
-    await toggleLikePost(postId);
-    openWatchVideoScreen(videoId);
-}
-
-function openCommentPage(postId) {
-    activeCommentPostId = postId;
-    switchMainPage('comment');
-    loadCommentScreenContent();
-}
-
-async function openShareToChatModal(videoId, videoTitle) {
-    const currentUser = localStorage.getItem('flash_logged_user');
-    const { data: users } = await supabaseClient.from('flash_users').select('*').neq('username', currentUser);
-    
-    let modal = document.getElementById('shareChatModal');
-    if(!modal) {
-        modal = document.createElement('div');
-        modal.id = 'shareChatModal';
-        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:999999; display:flex; justify-content:center; align-items:center;';
-        document.body.appendChild(modal);
-    }
-
-    let usersHtml = '';
-    if(users) {
-        users.forEach(u => {
-            usersHtml += `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:#181820; padding:10px; border-radius:8px; margin-bottom:8px;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <img src="${u.photo_url || 'https://via.placeholder.com/35'}" class="contact-avatar">
-                        <div>
-                            <div style="font-weight:bold; font-size:0.85rem; color:#fff;">${escapeHtml(u.display_name || u.username)}</div>
-                            <div style="color:#888; font-size:0.7rem;">@${u.username}</div>
-                        </div>
-                    </div>
-                    <button onclick="sendVideoToChatUser('${u.username}', '${videoId}', '${videoTitle}')" style="background:#00ffff; color:#000; border:none; padding:6px 12px; font-weight:bold; border-radius:6px; cursor:pointer; font-size:0.75rem;">Share</button>
-                </div>`;
-        });
-    }
-
-    modal.innerHTML = `
-        <div style="background:#111116; border:1px solid #222233; padding:20px; border-radius:14px; width:90%; max-width:400px; max-height:80vh; overflow-y:auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h3 style="color:#00ffff; margin:0; font-size:1rem;">📤 Share to Chat</h3>
-                <button onclick="document.getElementById('shareChatModal').remove()" style="background:none; border:none; color:#fff; font-size:1.1rem; cursor:pointer;">✕</button>
-            </div>
-            ${usersHtml || '<p style="color:#666; text-align:center;">User များ မရှိသေးပါ။</p>'}
-        </div>
-    `;
-    modal.classList.remove('hidden');
-}
-
-async function sendVideoToChatUser(receiverUsername, videoId, videoTitle) {
-    const currentUser = localStorage.getItem('flash_logged_user');
-    const shareMessage = `🎬 Shared Video: ${videoTitle} (ID: ${videoId})`;
-
-    const { error } = await supabaseClient.from('flash_chats').insert([{
-        sender: currentUser,
-        receiver: receiverUsername,
-        message: shareMessage,
-        created_at: new Date().toISOString()
-    }]);
-
-    if(!error) {
-        showToast('✅ ချတ်သို့ မျှဝေပြီးပါပြီ။', 'success');
-        document.getElementById('shareChatModal').remove();
-    } else {
-        showToast('❌ မျှဝေ၍မရပါ', 'error');
-    }
 }
 
 function escapeHtml(text) {
