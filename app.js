@@ -97,7 +97,7 @@ function compressImageFile(file, callback) {
         const img = new Image();
         img.onload = function() {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 200; // ပုံဆိုဒ် အလွန်ကြီးမသွားစေရန် အတိအကျ ကန့်သတ်သည်
+            const MAX_WIDTH = 200;
             const MAX_HEIGHT = 200;
             let width = img.width;
             let height = img.height;
@@ -215,6 +215,8 @@ function setupProfilePhotoListeners() {
             compressImageFile(file, async (base64) => {
                 const user = localStorage.getItem('flash_logged_user');
                 const { error } = await supabaseClient.from('flash_users').update({ photo_url: base64 }).eq('username', user);
+                await supabaseClient.from('flash_posts').update({ user_photo: base64 }).eq('username', user);
+
                 if(!error) {
                     loadUserProfile(user);
                     showToast('Profile ပုံ အောင်မြင်ပါသည်။', 'success');
