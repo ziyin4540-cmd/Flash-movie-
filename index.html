@@ -2,298 +2,260 @@
 <html lang="my">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flâsh Movie Pro - Cyber Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flâsh Movie Pro</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <!-- Intro Screen -->
+
+    <!-- Intro Loading Screen -->
     <div id="intro-screen" class="intro-container">
         <div class="intro-bg-overlay"></div>
         <div class="lightning-flash-effect"></div>
         <div class="intro-content-box">
             <div class="intro-bears-img-wrapper">
-                <video autoplay loop muted playsinline class="intro-cartoon-video">
-                    <source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-and-lights-31910-large.mp4" type="video/mp4">
-                </video>
-                <div class="speech-bubble">Welcome To Flâsh Movie!</div>
+                <div class="speech-bubble">⚡ Flâsh Movie Pro</div>
+                <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400" class="intro-cartoon-video" alt="Logo">
             </div>
-            <h2 id="typing-intro-text" class="typing-text-effect"></h2>
+            <div id="typing-intro-text" class="typing-text-effect"></div>
         </div>
     </div>
 
-    <!-- Auth Page -->
+    <!-- Auth Section (Login / Register) -->
     <div id="page-auth" class="full-page hidden">
         <div class="auth-card">
-            <h2 id="auth-title" style="color: #ff0033; margin-bottom: 15px;">🔑 Login</h2>
+            <h2 id="auth-title" style="color:#ff0033; margin-top:0;">🔑 Login</h2>
+            
+            <!-- Login View -->
             <div id="view-login" class="auth-form">
                 <input type="text" id="loginUser" placeholder="Username">
                 <input type="password" id="loginPass" placeholder="Password">
-                <button class="primary-btn" onclick="handleLogin()">Login ဝင်မည်</button>
-                <p class="nav-link-text" onclick="switchAuthView('register')">အကောင့်အသစ်ဖွင့်ရန်</p>
+                <button onclick="handleLogin()" style="background:#00ffff; color:#000; border:none; padding:10px; font-weight:bold; border-radius:8px; cursor:pointer;">Login</button>
+                <span class="nav-link-text" onclick="switchAuthView('register')">အကောင့်အသစ်ဖွင့်ရန် (Register)</span>
             </div>
+
+            <!-- Register View -->
             <div id="view-register" class="auth-form hidden">
-                <input type="text" id="regUser" placeholder="Username">
+                <input type="text" id="regUser" placeholder="Username အသစ်">
                 <input type="password" id="regPass" placeholder="Password">
-                <input type="text" id="regDisplayName" placeholder="Account Name">
-                <label style="font-size: 0.8rem; color: #aaa; text-align: left;">Profile ပုံ:</label>
-                <input type="file" id="regPhotoPicker" accept="image/*">
-                <button class="primary-btn" onclick="handleRegister()">Register ပြုလုပ်မည်</button>
-                <p class="nav-link-text" onclick="switchAuthView('login')">Login သို့ ပြန်သွားရန်</p>
+                <input type="text" id="regDisplayName" placeholder="ပြသမည့် နာမည် (Display Name)">
+                <div style="text-align:left; margin-top:5px;">
+                    <label style="font-size:0.75rem; color:#aaa;">Profile ပုံ ရွေးရန်:</label>
+                    <input type="file" id="regPhotoPicker" accept="image/*" style="font-size:0.75rem; color:#fff; margin-top:3px;">
+                </div>
+                <button onclick="handleRegister()" style="background:#ff0033; color:#fff; border:none; padding:10px; font-weight:bold; border-radius:8px; cursor:pointer; margin-top:5px;">Register</button>
+                <span class="nav-link-text" onclick="switchAuthView('login')">လော့ဂ်အင်ပြန်ဝင်ရန် (Login)</span>
             </div>
         </div>
     </div>
 
     <!-- Main App Container -->
     <div id="app-container" class="hidden">
+        
+        <!-- Header -->
         <header class="app-header">
-            <h2 class="logo-text">⚡ Flâsh Movie</h2>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <div id="account-timer" class="timer-box">0D / 0H / 0M / 0S</div>
-                <button onclick="switchMainPage('settings')" class="logout-btn" style="background:#181820; border:1px solid #333344;">⚙️ Settings</button>
+            <h1 class="logo-text">⚡ Flâsh Movie</h1>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div class="timer-box" id="global-timer-display">0D / 5H / 30M</div>
+                <button onclick="switchMainPage('settings')" class="logout-btn" style="background:#222233; color:#00ffff;">⚙️</button>
+                <button onclick="handleLogout()" class="logout-btn">Logout</button>
             </div>
         </header>
 
-        <main class="main-content">
-            <!-- 1. HOME PAGE -->
-            <section id="page-home" class="main-section">
-                <div style="margin-bottom: 15px;">
-                    <input type="text" id="movieSearchInput" placeholder="🔍 ရုပ်ရှင် သို့မဟုတ် ဗီဒီယို ရှာရန်..." oninput="filterHomeVideos()" style="width: 100%; background: #111116; border: 1px solid #333344; color: #fff; padding: 10px; border-radius: 8px; outline: none; box-sizing: border-box;">
+        <!-- 1. HOME SECTION (Video Feed) -->
+        <section id="page-home" class="main-section">
+            <div style="margin-bottom: 12px;">
+                <input type="text" id="movieSearchInput" placeholder="🔍 ဗီဒီယိုများ ရှာရန်..." oninput="filterHomeVideos()" class="fb-textarea" style="height:38px; border-radius:20px; padding:0 15px;">
+            </div>
+            <div id="homeVideoFeedContainer" class="video-feed-list">
+                <!-- Video cards will load here -->
+            </div>
+        </section>
+
+        <!-- 2. FEED SECTION (Posts & Media) -->
+        <section id="page-feed" class="main-section hidden">
+            <div class="fb-create-post-card">
+                <div class="fb-post-header">
+                    <img id="currentUserAvatarFeed" src="https://via.placeholder.com/35" class="contact-avatar">
+                    <span style="font-weight:bold; font-size:0.85rem; color:#00ffff;">Post တစ်ခု ဖန်တီးမည်...</span>
                 </div>
-                <div id="homeVideoFeedContainer" class="video-feed-list"></div>
-            </section>
-
-            <!-- 2. FEED PAGE -->
-            <section id="page-feed" class="main-section hidden">
-                <div class="fb-create-post-card">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                        <img id="currentUserAvatarFeed" src="https://via.placeholder.com/35" class="contact-avatar">
-                        <textarea id="fbPostTextInput" placeholder="ဘာတွေတွေးနေလဲ? ပို့စ်အသစ်တင်ရန်..." rows="2" class="fb-textarea"></textarea>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #222233; padding-top: 8px;">
-                        <div style="display: flex; gap: 10px;">
-                            <label class="fb-media-upload-label">
-                                📷 ပုံ/ဗီဒီယို (Max 5MB)
-                                <input type="file" id="fbMediaPicker" accept="image/*,video/*" style="display: none;">
-                            </label>
-                            <span id="selectedMediaName" style="font-size: 0.75rem; color: #00ffff; align-self: center;"></span>
-                        </div>
-                        <button class="primary-btn" style="width: auto; padding: 6px 16px;" onclick="handleCreateFbPost()">တင်မည်</button>
-                    </div>
+                <textarea id="fbPostTextInput" class="fb-textarea" placeholder="ဘာတွေ စဉ်းစားနေလဲ..." style="height:70px; margin-bottom:8px;"></textarea>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label class="fb-media-upload-label">
+                        📁 ပုံ/ဗီဒီယို ရွေးရန်
+                        <input type="file" id="fbMediaPicker" accept="image/*,video/*" style="display:none;">
+                    </label>
+                    <button onclick="handleCreateFbPost()" style="background:#ff0033; color:#fff; border:none; padding:6px 16px; font-weight:bold; border-radius:6px; cursor:pointer; font-size:0.8rem;">တင်မည်</button>
                 </div>
-                <div id="fbFeedContainer" class="fb-feed-list"></div>
-            </section>
+                <div id="selectedMediaName" style="font-size:0.75rem; color:#00ffff; margin-top:6px;"></div>
+            </div>
+            <div id="fbFeedContainer" class="fb-feed-list">
+                <!-- Posts load here -->
+            </div>
+        </section>
 
-            <!-- 3. UPLOAD PAGE (Custom Playlist Input) -->
-            <section id="page-upload" class="main-section hidden">
-                <div class="create-post-header">
-                    <span style="font-weight: bold; font-size: 1.1rem;">📤 Upload Video / Movie</span>
+        <!-- 3. UPLOAD SECTION -->
+        <section id="page-upload" class="main-section hidden">
+            <div class="create-post-body">
+                <h3 style="color:#00ffff; margin-top:0; font-size:1rem;">🎬 ဗီဒီယိုအသစ် တင်ရန် (Upload Video)</h3>
+                
+                <div style="margin-bottom:10px;">
+                    <label style="font-size:0.75rem; color:#aaa;">ဗီဒီယို ခေါင်းစဉ် (Title):</label>
+                    <input type="text" id="uploadVideoTitle" class="fb-textarea" placeholder="ဗီဒီယို ခေါင်းစဉ်..." style="height:38px; margin-top:4px;">
                 </div>
-                <div class="create-post-body">
-                    <input type="text" id="uploadVideoTitle" placeholder="ဗီဒီယို သို့မဟုတ် ရုပ်ရှင် ခေါင်းစဉ်..." class="fb-textarea" style="margin-bottom: 10px;">
-                    
-                    <div style="margin-bottom: 10px;">
-                        <label style="font-size: 0.8rem; color: #00ffff; display: block; margin-bottom: 4px;">📂 Playlist အမည် (ဥပမာ: Action, Series, etc.):</label>
-                        <input type="text" id="uploadPlaylistInput" placeholder="Playlist အမည် ရေးပါ..." class="fb-textarea" value="General">
-                    </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: #181820; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #333344;">
-                        <span style="font-size: 0.85rem; color: #fff;">Playlist Feature (Enable/Disable):</span>
-                        <input type="checkbox" id="playlistToggleSwitch" checked style="width: 20px; height: 20px; accent-color: #ff0033; cursor: pointer;">
-                    </div>
+                <div style="margin-bottom:10px;">
+                    <label style="font-size:0.75rem; color:#aaa;">ပလေးလစ် အမည် (Playlist Name):</label>
+                    <input type="text" id="uploadPlaylistInput" class="fb-textarea" placeholder="ဥပမာ - Action, Comedy, Anime" style="height:38px; margin-top:4px;" value="General">
+                </div>
 
-                    <div style="margin-bottom: 10px; background: #181820; padding: 10px; border-radius: 8px; border: 1px solid #333344;">
-                        <label style="font-size: 0.8rem; color: #00ffff; display: block; margin-bottom: 5px;">📱 Telegram Channel Link (1GB+ ဖိုင်များအတွက်):</label>
-                        <input type="text" id="telegramVideoLinkInput" placeholder="https://t.me/channel/123..." class="fb-textarea">
-                    </div>
+                <div style="margin-bottom:10px; display:flex; align-items:center; justify-content:between; background:#181820; padding:10px; border-radius:8px;">
+                    <span style="font-size:0.8rem; color:#fff;">Profile Playlists တွင် ပြသရန် (Active Playlist):</span>
+                    <input type="checkbox" id="playlistToggleSwitch" checked style="width:18px; height:18px; accent-color:#00ffff;">
+                </div>
 
-                    <div style="text-align: center; color: #888; font-size: 0.75rem; margin-bottom: 6px;">(သို့မဟုတ်) ဖိုင်ငယ်များအတွက် တိုက်ရိုက်တင်ရန်</div>
+                <div style="margin-bottom:10px;">
+                    <label style="font-size:0.75rem; color:#aaa;">Telegram ဗီဒီယို Link (Recommended):</label>
+                    <input type="text" id="telegramVideoLinkInput" class="fb-textarea" placeholder="https://t.me/..." style="height:38px; margin-top:4px;">
+                </div>
 
-                    <label class="fb-media-upload-label" style="display:block; text-align:center; padding: 10px; margin-bottom: 10px;">
-                        🎬 ဖိုင်ရွေးရန် (Max 5MB)
+                <div style="text-align:center; margin:10px 0; color:#888; font-size:0.75rem;">(သို့မဟုတ်) ဖိုင်တိုက်ရိုက်တင်ရန် (5MB အောက်)</div>
+
+                <div style="margin-bottom:12px; text-align:center;">
+                    <label class="fb-media-upload-label" style="width:100%; box-sizing:border-box; text-align:center;">
+                        📁 ဗီဒီယိုဖိုင် ရွေးမည် (< 5MB)
                         <input type="file" id="appVideoPicker" accept="video/*" style="display:none;">
                     </label>
-                    <div id="uploadVideoPreviewName" style="color:#00ffff; font-size:0.8rem; margin-bottom: 10px; text-align:center;"></div>
-                    
-                    <div id="uploadProgressBox" class="hidden" style="width: 100%; margin-bottom: 15px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #ff0033; margin-bottom: 4px;">
-                            <span>Uploading...</span>
-                            <span id="progressPercentText">0%</span>
-                        </div>
-                        <div class="lightning-progress-track">
-                            <div id="lightningProgressBar" class="lightning-progress-fill"></div>
-                        </div>
-                    </div>
-
-                    <button class="primary-btn" onclick="handleDirectVideoUpload()">တင်မည်</button>
+                    <div id="uploadVideoPreviewName" style="font-size:0.75rem; color:#00ffff; margin-top:4px;"></div>
                 </div>
-            </section>
 
-            <!-- 4. CHAT PAGE -->
-            <section id="page-chat" class="main-section hidden">
-                <div id="chatListView" class="messenger-container" style="display: flex; flex-direction: column;">
-                    <div class="chat-sidebar" style="width: 100%;">
-                        <div class="sidebar-header">💬 Conversations (စကားပြောရန် လူများ)</div>
-                        <div id="contactListContainer" class="contact-list"></div>
+                <div id="uploadProgressBox" class="hidden" style="margin-bottom:12px;">
+                    <div class="lightning-progress-track">
+                        <div id="lightningProgressBar" class="lightning-progress-fill"></div>
+                    </div>
+                    <div style="text-align:right; font-size:0.7rem; color:#00ffff; margin-top:3px;"><span id="progressPercentText">0%</span></div>
+                </div>
+
+                <button onclick="handleDirectVideoUpload()" style="width:100%; background:#00ffff; color:#000; border:none; padding:10px; font-weight:bold; border-radius:8px; cursor:pointer;">⚡ တင်မည် (Upload)</button>
+            </div>
+        </section>
+
+        <!-- 4. CHAT SECTION -->
+        <section id="page-chat" class="main-section hidden">
+            <div class="messenger-container">
+                <div id="chatSidebarView" class="chat-sidebar">
+                    <div class="sidebar-header">💬 ချတ်များ (Chats)</div>
+                    <div id="contactListContainer" class="contact-list">
+                        <!-- Contacts load here -->
                     </div>
                 </div>
                 <div id="chatRoomView" class="chat-room-screen hidden">
-                    <div class="chat-room-header">
-                        <button class="top-icon-btn" onclick="backToChatList()">⬅ Back</button>
-                        <span id="activeChatHeader" style="font-weight: bold;">Chat</span>
-                    </div>
-                    <div id="activeChatMessages" class="chat-messages-body"></div>
-                    <div class="chat-input-footer">
-                        <input type="text" id="chatMessageInput" placeholder="စကားလက်ဆုံပြောရန် ရေးပါ...">
-                        <button onclick="sendChatMessage()">ပို့မည်</button>
-                    </div>
+                    <!-- Chat room dynamic content -->
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- COMMENT PAGE -->
-            <section id="page-comment" class="main-section hidden">
-                <div class="create-post-header">
-                    <button class="top-icon-btn" onclick="switchMainPage('feed')">⬅ Back</button>
-                    <span style="font-weight: bold;">Comments</span>
-                    <span></span>
-                </div>
-                <div id="commentScreenContent" style="margin-top: 10px;"></div>
-                <div class="chat-input-footer" style="margin-top: 15px;">
-                    <input type="text" id="screenCommentInput" placeholder="မှတ်ချက် ရေးပါ...">
-                    <button onclick="submitScreenComment()">ပို့</button>
-                </div>
-            </section>
+        <!-- 5. PROFILE SECTION -->
+        <section id="page-profile" class="main-section hidden">
+            <input type="file" id="profilePhotoPicker" accept="image/*" style="display:none;">
+            <input type="file" id="bgPhotoPicker" accept="image/*" style="display:none;">
 
-            <!-- ADMIN PAGE -->
-            <section id="page-admin" class="main-section hidden">
-                <div id="admin-lock-screen" class="admin-lock-box">
-                    <h2>🔒 Admin Verification</h2>
-                    <input type="password" id="adminPassInput" placeholder="Password (295802)..." style="-webkit-text-security: disc;">
-                    <button class="primary-btn" onclick="verifyAdminPassword()" style="width: 100%;">ဝင်မည်</button>
+            <div class="profile-card-modern">
+                <div id="profileBannerBg" class="profile-banner"></div>
+                <div class="profile-avatar-wrapper">
+                    <img id="profileImgDisplay" src="https://via.placeholder.com/90" class="profile-img-preview-modern">
                 </div>
-                <div id="admin-content-box" class="hidden">
-                    <h2>🛠️ Admin Control Panel</h2>
-                    <div class="admin-card">
-                        <h3>📢 Send Notification</h3>
-                        <input type="text" id="notifTitle" placeholder="ခေါင်းစဉ်...">
-                        <textarea id="notifMessage" placeholder="အသိပေးစာ..."></textarea>
-                        <button class="primary-btn" onclick="sendNotification()">အသိပေးစာပို့မည်</button>
-                    </div>
-                    <div class="admin-card">
-                        <h3>👥 Manage Users & Reports</h3>
-                        <div id="adminUsersList" style="max-height: 200px; overflow-y: auto;"></div>
-                    </div>
-                    <div class="admin-card">
-                        <h3>🗑️ Manage Posts & Videos</h3>
-                        <div id="adminPostsList" style="max-height: 200px; overflow-y: auto;"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 5. PROFILE PAGE (With Playlist Button) -->
-            <section id="page-profile" class="main-section hidden">
-                <div id="adminNotifBanner" class="hidden" style="background: #ff0033; padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85rem;">
-                    <strong id="adminNotifTitle">Notification</strong>: <span id="adminNotifText"></span>
-                </div>
-
-                <div class="profile-top-bar">
-                    <div class="profile-top-actions">
-                        <button class="top-icon-btn admin-btn-top" onclick="switchMainPage('admin')">🛠️ Admin</button>
-                    </div>
-                </div>
-
-                <div class="profile-card-modern">
-                    <div id="profileBannerBg" class="profile-banner" style="position:relative; cursor:pointer;" title="ဖိထား၍ နောက်ခံပုံပြောင်းရန်">
-                        <input type="file" id="bgPhotoPicker" accept="image/*" style="display:none;">
-                    </div>
-                    
-                    <div class="profile-avatar-wrapper" style="cursor:pointer;" title="ဖိထား၍ Profile ပုံပြောင်းရန်">
-                        <img id="profileImgDisplay" src="" alt="Profile Photo" class="profile-img-preview-modern">
-                        <input type="file" id="profilePhotoPicker" accept="image/*" style="display:none;">
-                    </div>
-                    
-                    <h2 id="profileNameDisplay" class="profile-name">Account Name</h2>
-                    <p id="profileUserDisplay" class="profile-username">@username</p>
-                    
-                    <!-- Playlist Button on Profile -->
-                    <div style="margin: 10px 0;">
-                        <button class="primary-btn" style="width: 80%; margin: 0 auto; padding: 8px; font-size: 0.85rem;" onclick="openUserProfilePlaylists()">📂 View Playlists (ပလေးလစ်များ)</button>
-                    </div>
-
-                    <div class="profile-stats">
-                        <div class="stat-item"><span class="stat-num" id="statPosts">0</span><span class="stat-label">Posts</span></div>
-                        <div class="stat-item"><span class="stat-num" id="statVideos">0</span><span class="stat-label">Videos</span></div>
-                        <div class="stat-item"><span class="stat-num">0</span><span class="stat-label">Followers</span></div>
-                        <div class="stat-item"><span class="stat-num" id="statLikes">0</span><span class="stat-label">Likes</span></div>
-                    </div>
-                </div>
-
-                <div class="profile-tabs-bar">
-                    <button class="profile-tab-btn active" onclick="switchProfileTab('posts')">Posts</button>
-                    <button class="profile-tab-btn" onclick="switchProfileTab('videos')">Videos</button>
-                </div>
-
-                <div class="user-uploads-section">
-                    <div id="profileTabContent" class="uploads-grid"></div>
-                </div>
-            </section>
-
-            <!-- PROFILE PLAYLIST SCREEN -->
-            <section id="page-profile-playlists" class="main-section hidden">
-                <div class="create-post-header">
-                    <button class="top-icon-btn" onclick="switchMainPage('profile')">⬅ Back</button>
-                    <span style="font-weight: bold; color: #00ffff;">📂 My Playlists</span>
-                    <span></span>
-                </div>
-                <div id="profilePlaylistContainer"></div>
-            </section>
-
-            <!-- SETTINGS PAGE (Username/Name edit & Sign Out at the bottom) -->
-            <section id="page-settings" class="main-section hidden">
-                <div class="create-post-header">
-                    <button class="top-icon-btn" onclick="switchMainPage('profile')">⬅ Back</button>
-                    <span style="font-weight: bold;">⚙️ App Settings</span>
-                    <span></span>
-                </div>
-                <div class="admin-card">
-                    <h3>👤 Edit Account Info</h3>
-                    <label style="font-size: 0.75rem; color: #aaa;">Username:</label>
-                    <input type="text" id="settingsUsernameInput" placeholder="Username" style="-webkit-text-security: none; margin-bottom: 8px;">
-                    <label style="font-size: 0.75rem; color: #aaa;">Account Name:</label>
-                    <input type="text" id="settingsDisplayNameInput" placeholder="Account Name" style="-webkit-text-security: none; margin-bottom: 10px;">
-                    <button class="primary-btn" onclick="updateAccountInfo()">အချက်အလက် သိမ်းဆည်းမည်</button>
-                </div>
-                <div class="admin-card">
-                    <h3>🔒 Security</h3>
-                    <input type="password" id="currentPassInput" placeholder="Current Password" style="-webkit-text-security: disc; margin-bottom: 8px;">
-                    <input type="password" id="newPassInput" placeholder="New Password" style="-webkit-text-security: disc; margin-bottom: 10px;">
-                    <button class="primary-btn" onclick="changeUserPassword()">စကားဝှက်ပြောင်းမည်</button>
-                </div>
-                <div class="admin-card">
-                    <h3>💾 Storage</h3>
-                    <button class="btn-danger" onclick="clearAppCache()" style="width: 100%; margin-bottom: 15px;">Cache ရှင်းလင်းမည်</button>
-                </div>
+                <h2 id="profileNameDisplay" style="margin:8px 0 2px 0; font-size:1.1rem; color:#fff;">User Name</h2>
+                <p id="profileUserDisplay" style="margin:0; font-size:0.8rem; color:#888;">@username</p>
                 
-                <!-- Sign Out at the absolute bottom of Settings -->
-                <div style="margin-top: 20px; text-align: center;">
-                    <button onclick="handleLogout()" class="btn-danger" style="width: 100%; padding: 12px; font-size: 1rem; background: #ff0033;">🚪 Sign Out (အကောင့်ထွက်မည်)</button>
+                <!-- Profile Stats (ဘေးချင်းယှဉ် Horizontal layout) -->
+                <div class="profile-stats" style="margin-top:12px;">
+                    <div class="stat-item"><span class="stat-num" id="statPosts">0</span><span class="stat-label">Posts</span></div>
+                    <div class="stat-item"><span class="stat-num" id="statVideos">0</span><span class="stat-label">Videos</span></div>
+                    <div class="stat-item"><span class="stat-num" id="statFollowers">0</span><span class="stat-label">Followers</span></div>
+                    <div class="stat-item"><span class="stat-num" id="statFollowing">0</span><span class="stat-label">Following</span></div>
+                    <div class="stat-item"><span class="stat-num" id="statLikes">0</span><span class="stat-label">Likes</span></div>
                 </div>
-            </section>
-        </main>
+            </div>
 
+            <!-- Profile Tabs -->
+            <div style="display:flex; border-bottom:1px solid #222233; margin-bottom:12px;">
+                <button class="profile-tab-btn active" onclick="switchProfileTab('posts')" style="flex:1; background:none; border:none; padding:10px; color:#00ffff; font-weight:bold; cursor:pointer; font-size:0.85rem;">Posts</button>
+                <button class="profile-tab-btn" onclick="switchProfileTab('videos')" style="flex:1; background:none; border:none; padding:10px; color:#aaa; font-weight:bold; cursor:pointer; font-size:0.85rem;" onclick="openUserProfilePlaylists()">Playlists / Videos</button>
+            </div>
+
+            <div id="profileTabContent" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px;">
+                <!-- Profile items -->
+            </div>
+        </section>
+
+        <!-- SETTINGS SECTION -->
+        <section id="page-settings" class="main-section hidden">
+            <div class="create-post-body">
+                <h3 style="color:#00ffff; margin-top:0; font-size:1rem;">⚙️ အကောင့် ဆက်တင်များ (Settings)</h3>
+                
+                <div style="margin-bottom:10px;">
+                    <label style="font-size:0.75rem; color:#aaa;">Username အသစ်:</label>
+                    <input type="text" id="settingsUsernameInput" class="fb-textarea" style="height:38px; margin-top:4px;">
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <label style="font-size:0.75rem; color:#aaa;">ပြသမည့် နာမည် (Display Name):</label>
+                    <input type="text" id="settingsDisplayNameInput" class="fb-textarea" style="height:38px; margin-top:4px;">
+                </div>
+
+                <!-- Bio Input ထည့်သွင်းထားသောနေရာ -->
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:0.75rem; color:#aaa;">ကိုယ်ရေးအကျဉ်း (Bio):</label>
+                    <textarea id="settingsBioInput" class="fb-textarea" placeholder="သင့်အကြောင်း အတိုချုံးရေးရန်..." style="height:60px; margin-top:4px;"></textarea>
+                </div>
+
+                <button onclick="updateAccountInfo()" style="width:100%; background:#00ffff; color:#000; border:none; padding:10px; font-weight:bold; border-radius:8px; cursor:pointer;">သိမ်းဆည်းမည် (Save Changes)</button>
+            </div>
+        </section>
+
+        <!-- COMMENT PAGE SECTION -->
+        <section id="page-comment" class="main-section hidden">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                <button onclick="switchMainPage('feed')" style="background:none; border:none; color:#00ffff; font-weight:bold; cursor:pointer;">◄ နောက်သို့</button>
+                <h3 style="color:#fff; margin:0; font-size:0.95rem;">💬 Comments</h3>
+                <div></div>
+            </div>
+            <div id="commentScreenContent" style="margin-bottom:60px;">
+                <!-- Comments load here -->
+            </div>
+            <div style="position:fixed; bottom:65px; left:0; width:100%; background:#111116; padding:8px 15px; border-top:1px solid #222233; display:flex; gap:8px; box-sizing:border-box;">
+                <input type="text" id="screenCommentInput" placeholder="မှတ်ချက် ရေးရန်..." class="fb-textarea" style="height:38px; margin:0;">
+                <button onclick="submitScreenComment()" style="background:#00ffff; color:#000; border:none; padding:0 15px; font-weight:bold; border-radius:6px; cursor:pointer;">ပို့မည်</button>
+            </div>
+        </section>
+
+        <!-- Profile Playlists Section -->
+        <section id="page-profile-playlists" class="main-section hidden">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                <button onclick="switchMainPage('profile')" style="background:none; border:none; color:#00ffff; font-weight:bold; cursor:pointer;">◄ Profile သို့</button>
+                <h3 style="color:#fff; margin:0; font-size:0.95rem;">📂 My Playlists</h3>
+                <div></div>
+            </div>
+            <div id="profilePlaylistContainer"></div>
+        </section>
+
+        <!-- Bottom Navigation Bar (Strict 5-button) -->
         <nav class="bottom-nav">
-            <button onclick="switchMainPage('home')" id="nav-btn-home" class="nav-btn active">🏠 Home</button>
-            <button onclick="switchMainPage('feed')" id="nav-btn-feed" class="nav-btn">📰 Feed</button>
-            <button onclick="switchMainPage('upload')" id="nav-btn-upload" class="nav-btn" style="color:#00ffff;">➕ Upload</button>
-            <button onclick="switchMainPage('chat')" id="nav-btn-chat" class="nav-btn">💬 Chat</button>
-            <button onclick="switchMainPage('profile')" id="nav-btn-profile" class="nav-btn">👤 Profile</button>
+            <button id="nav-btn-home" class="active" onclick="switchMainPage('home')">🏠 Home</button>
+            <button id="nav-btn-feed" onclick="switchMainPage('feed')">📰 Feed</button>
+            <button id="nav-btn-upload" onclick="switchMainPage('upload')">➕ Upload</button>
+            <button id="nav-btn-chat" onclick="switchMainPage('chat')">💬 Chat</button>
+            <button id="nav-btn-profile" onclick="switchMainPage('profile')">👤 Profile</button>
         </nav>
+
     </div>
 
+    <!-- External & App Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase.js"></script>
-    <script src="feed.js"></script>
     <script src="chat.js"></script>
+    <script src="feed.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
