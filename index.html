@@ -8,12 +8,16 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <!-- Intro Screen -->
+    <!-- Intro Screen with Lightning & Cartoon Video Animation -->
     <div id="intro-screen" class="intro-container">
         <div class="intro-bg-overlay"></div>
+        <div class="lightning-flash-effect"></div>
         <div class="intro-content-box">
             <div class="intro-bears-img-wrapper">
-                <img src="1000126782.jpg" alt="Bears Intro" class="intro-bears-img" onerror="this.src='https://via.placeholder.com/200?text=Flâsh+Movie'">
+                <!-- Cartoon Video/Animation Container instead of broken image -->
+                <video autoplay loop muted playsinline class="intro-cartoon-video">
+                    <source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-and-lights-31910-large.mp4" type="video/mp4">
+                </video>
                 <div class="speech-bubble">Welcome To Flâsh Movie!</div>
             </div>
             <h2 id="typing-intro-text" class="typing-text-effect"></h2>
@@ -88,9 +92,17 @@
                     <span style="font-weight: bold; font-size: 1.1rem;">📤 Upload Video / Movie</span>
                 </div>
                 <div class="create-post-body">
-                    <input type="text" id="uploadVideoTitle" placeholder="ဗီဒီယို ခေါင်းစဉ်..." class="fb-textarea" style="margin-bottom: 10px;">
+                    <input type="text" id="uploadVideoTitle" placeholder="ဗီဒီယို သို့မဟုတ် ရုပ်ရှင် ခေါင်းစဉ်..." class="fb-textarea" style="margin-bottom: 10px;">
+                    
+                    <div style="margin-bottom: 12px; background: #181820; padding: 10px; border-radius: 8px; border: 1px solid #333344;">
+                        <label style="font-size: 0.8rem; color: #00ffff; font-weight: bold; display: block; margin-bottom: 5px;">📱 Telegram Channel Link (1GB+ ဖိုင်ကြီးများအတွက်):</label>
+                        <input type="text" id="telegramVideoLinkInput" placeholder="https://t.me/channel/123..." class="fb-textarea">
+                    </div>
+
+                    <div style="text-align: center; color: #888; font-size: 0.75rem; margin-bottom: 8px;">(သို့မဟုတ်) ဖိုင်ငယ်များအတွက် တိုက်ရိုက်တင်ရန်</div>
+
                     <label class="fb-media-upload-label" style="display:block; text-align:center; padding: 12px; margin-bottom: 10px;">
-                        🎬 ဗီဒီယိုဖိုင် ရွေးရန် (Max 5MB)
+                        🎬 ဖိုင်ရွေးရန် (Max 5MB)
                         <input type="file" id="appVideoPicker" accept="video/*" style="display:none;">
                     </label>
                     <div id="uploadVideoPreviewName" style="color:#00ffff; font-size:0.8rem; margin-bottom: 10px; text-align:center;"></div>
