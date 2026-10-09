@@ -1,85 +1,97 @@
-body { background-color: #0b0b0b; color: #f1f1f1; font-family: sans-serif; margin: 0; padding-bottom: 75px; }
+body { background-color: #070709; color: #f1f1f1; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding-bottom: 75px; }
 .hidden { display: none !important; }
 
+/* Intro Screen Styling */
 .intro-container {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: #000; display: flex; justify-content: center; align-items: center; z-index: 9999;
-    animation: fadeOutIntro 0.5s ease 1s forwards;
+    background: #070709; display: flex; justify-content: center; align-items: center; z-index: 9999;
+    flex-direction: column; text-align: center;
 }
-.lightning-text { color: #ff0033; font-size: 2rem; }
-@keyframes fadeOutIntro { to { opacity: 0; visibility: hidden; } }
+.intro-content-box { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+.intro-bears-img-wrapper { position: relative; width: 220px; height: 220px; }
+.intro-bears-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #ff0033; box-shadow: 0 0 25px rgba(255,0,51,0.5); }
+.speech-bubble {
+    position: absolute; top: -35px; left: 50%; transform: translateX(-50%);
+    background: #111116; border: 1px solid #ff0033; color: #ff0033; padding: 6px 12px;
+    border-radius: 12px; font-size: 0.8rem; font-weight: bold; white-space: nowrap;
+    box-shadow: 0 0 10px rgba(255,0,51,0.3);
+}
+.typing-text-effect { color: #00ffff; font-size: 1.1rem; min-height: 30px; text-shadow: 0 0 10px rgba(0,255,255,0.4); }
 
-.full-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0b0b0b; display: flex; justify-content: center; align-items: center; z-index: 8888; }
-.auth-card { background: #141414; padding: 25px; border-radius: 12px; width: 320px; border: 1px solid #222; text-align: center; }
+.full-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #070709; display: flex; justify-content: center; align-items: center; z-index: 8888; }
+.auth-card { background: #111116; padding: 25px; border-radius: 16px; width: 320px; border: 1px solid #222233; text-align: center; box-shadow: 0 0 20px rgba(255,0,51,0.1); }
 .auth-form { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-.auth-form input { background: #1f1f1f; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 6px; }
-.nav-link-text { color: #3ea6ff; font-size: 0.85rem; cursor: pointer; margin-top: 5px; }
+.auth-form input { background: #181820; border: 1px solid #333344; color: #fff; padding: 10px; border-radius: 8px; outline: none; }
+.nav-link-text { color: #00ffff; font-size: 0.85rem; cursor: pointer; margin-top: 5px; }
 
-.app-header { background: #141414; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
-.logo-text { color: #ff0033; margin: 0; font-size: 1.1rem; }
-.timer-box { background: #000; padding: 4px 8px; border: 1px solid #ff0033; border-radius: 15px; color: #ff0033; font-size: 0.65rem; }
-.logout-btn { background: #cc0000; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+.app-header { background: #111116; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222233; }
+.logo-text { color: #ff0033; margin: 0; font-size: 1.1rem; text-shadow: 0 0 10px rgba(255,0,51,0.5); }
+.timer-box { background: #000; padding: 4px 8px; border: 1px solid #ff0033; border-radius: 15px; color: #ff0033; font-size: 0.65rem; box-shadow: 0 0 8px rgba(255,0,51,0.3); }
+.logout-btn { background: #cc0000; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
 
-.main-section { padding: 15px; max-width: 800px; margin: 0 auto; }
-.top-upload-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.upload-trigger-btn { background: #28a745; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
-.video-feed-list { display: flex; flex-direction: column; gap: 15px; }
-.video-card-item { background: #141414; padding: 12px; border-radius: 10px; border: 1px solid #222; }
+.main-section { padding: 15px; max-width: 650px; margin: 0 auto; }
+
+/* Facebook Style Feed Styling */
+.fb-create-post-card { background: #111116; padding: 15px; border-radius: 12px; border: 1px solid #222233; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+.fb-textarea { width: 100%; background: #070709; border: 1px solid #333344; color: #fff; padding: 10px; border-radius: 8px; resize: none; box-sizing: border-box; outline: none; font-family: inherit; }
+.fb-media-upload-label { background: #181820; border: 1px dashed #00ffff; color: #00ffff; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: inline-block; font-weight: bold; }
+.fb-feed-list { display: flex; flex-direction: column; gap: 15px; }
+.fb-post-card { background: #111116; padding: 15px; border-radius: 12px; border: 1px solid #222233; }
+.fb-post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.fb-post-actions { display: flex; justify-content: space-around; border-top: 1px solid #222233; border-bottom: 1px solid #222233; padding: 6px 0; margin: 10px 0; }
+.fb-action-btn { background: none; border: none; color: #aaa; font-size: 0.85rem; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 5px; }
+.fb-action-btn.liked { color: #ff0033; }
 
 /* Messenger / Telegram Style Layout */
-.messenger-container { display: flex; height: 75vh; background: #141414; border-radius: 12px; border: 1px solid #222; overflow: hidden; }
-.chat-sidebar { width: 35%; border-right: 1px solid #222; display: flex; flex-direction: column; background: #101010; }
-.sidebar-header { padding: 12px; font-weight: bold; border-bottom: 1px solid #222; background: #181818; color: #3ea6ff; }
+.messenger-container { display: flex; height: 75vh; background: #111116; border-radius: 12px; border: 1px solid #222233; overflow: hidden; }
+.chat-sidebar { width: 35%; border-right: 1px solid #222233; display: flex; flex-direction: column; background: #0d0d12; }
+.sidebar-header { padding: 12px; font-weight: bold; border-bottom: 1px solid #222233; background: #14141c; color: #00ffff; }
 .contact-list { overflow-y: auto; flex: 1; }
-.contact-item { padding: 12px; border-bottom: 1px solid #1a1a1a; cursor: pointer; display: flex; align-items: center; gap: 10px; }
-.contact-item:hover, .contact-item.active { background: #1f1f1f; }
+.contact-item { padding: 12px; border-bottom: 1px solid #181820; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+.contact-item:hover, .contact-item.active { background: #1a1a24; }
 .contact-avatar { width: 35px; height: 35px; border-radius: 50%; background: #333; object-fit: cover; }
 
-.chat-room { flex: 1; display: flex; flex-direction: column; background: #141414; }
-.chat-room-header { padding: 12px; font-weight: bold; border-bottom: 1px solid #222; background: #181818; }
+.chat-room { flex: 1; display: flex; flex-direction: column; background: #111116; }
+.chat-room-header { padding: 12px; font-weight: bold; border-bottom: 1px solid #222233; background: #14141c; }
 .chat-messages-body { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
 .chat-msg-bubble { max-width: 70%; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; word-break: break-word; }
-.chat-msg-bubble.incoming { background: #222; align-self: flex-start; }
-.chat-msg-bubble.outgoing { background: #3ea6ff; color: #000; align-self: flex-end; font-weight: 500; }
-.chat-input-footer { padding: 10px; border-top: 1px solid #222; display: flex; gap: 8px; background: #181818; }
-.chat-input-footer input { flex: 1; background: #0b0b0b; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 6px; outline: none; }
-.chat-input-footer button { background: #3ea6ff; color: #000; border: none; padding: 10px 18px; font-weight: bold; border-radius: 6px; cursor: pointer; }
+.chat-msg-bubble.incoming { background: #1a1a24; align-self: flex-start; }
+.chat-msg-bubble.outgoing { background: #00ffff; color: #000; align-self: flex-end; font-weight: 500; }
+.chat-input-footer { padding: 10px; border-top: 1px solid #222233; display: flex; gap: 8px; background: #14141c; }
+.chat-input-footer input { flex: 1; background: #070709; border: 1px solid #333344; color: #fff; padding: 10px; border-radius: 8px; outline: none; }
+.chat-input-footer button { background: #00ffff; color: #000; border: none; padding: 10px 18px; font-weight: bold; border-radius: 8px; cursor: pointer; }
 
 /* Profile Layout */
 .profile-top-bar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
 .profile-top-actions { display: flex; gap: 8px; }
-.top-icon-btn { background: #212121; color: #fff; border: 1px solid #333; padding: 6px 12px; border-radius: 15px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
-.admin-btn-top { background: #ff0033; border: none; }
+.top-icon-btn { background: #181820; color: #fff; border: 1px solid #333344; padding: 6px 12px; border-radius: 15px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+.admin-btn-top { background: #ff0033; border: none; box-shadow: 0 0 8px rgba(255,0,51,0.4); }
 
-.profile-card-modern { background: #141414; border-radius: 12px; overflow: hidden; border: 1px solid #222; text-align: center; margin-bottom: 15px; padding-bottom: 15px; }
-.profile-banner { height: 80px; background: linear-gradient(135deg, #ff0033, #330011); }
+.profile-card-modern { background: #111116; border-radius: 16px; overflow: hidden; border: 1px solid #222233; text-align: center; margin-bottom: 15px; padding-bottom: 15px; }
+.profile-banner { height: 80px; background: linear-gradient(135deg, #ff0033, #00ffff); }
 .profile-avatar-wrapper { margin-top: -40px; display: flex; justify-content: center; }
-.profile-img-preview-modern { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #141414; background: #222; }
+.profile-img-preview-modern { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #111116; background: #222; }
 .profile-name { font-size: 1.2rem; font-weight: bold; margin: 8px 0 2px 0; }
 .profile-username { color: #888; font-size: 0.8rem; margin-bottom: 10px; }
 
-.edit-profile-box { background: #1a1a1a; padding: 10px; margin: 10px 15px; border-radius: 8px; display: flex; flex-direction: column; gap: 8px; border: 1px solid #333; }
-.edit-profile-box input { background: #0b0b0b; border: 1px solid #444; color: #fff; padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+.edit-profile-box { background: #181820; padding: 10px; margin: 10px 15px; border-radius: 8px; display: flex; flex-direction: column; gap: 8px; border: 1px solid #333344; }
+.edit-profile-box input { background: #070709; border: 1px solid #444; color: #fff; padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
 
-.profile-stats { display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #222; background: #181818; }
+.profile-stats { display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #222233; background: #14141c; }
 .stat-item { display: flex; flex-direction: column; }
 .stat-num { font-size: 1rem; font-weight: bold; }
 .stat-label { font-size: 0.7rem; color: #888; }
 
-.user-uploads-section { background: #141414; padding: 12px; border-radius: 10px; border: 1px solid #222; }
+.user-uploads-section { background: #111116; padding: 12px; border-radius: 12px; border: 1px solid #222233; }
 .uploads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-top: 8px; }
 
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-.modal-card { background: #141414; padding: 20px; border-radius: 12px; width: 320px; border: 1px solid #333; display: flex; flex-direction: column; gap: 10px; text-align: center; }
-.modal-card input { background: #0b0b0b; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; }
-
-.admin-lock-box, .admin-card { background: #141414; padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #222; }
+.admin-lock-box, .admin-card { background: #111116; padding: 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #222233; }
 .admin-lock-box { text-align: center; max-width: 320px; margin: 30px auto; display: flex; flex-direction: column; gap: 10px; align-items: center; }
-.admin-lock-box input, .admin-card input, .admin-card textarea { background: #0b0b0b; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+.admin-lock-box input, .admin-card input, .admin-card textarea { background: #070709; border: 1px solid #333344; color: #fff; padding: 8px; border-radius: 8px; width: 100%; box-sizing: border-box; outline: none; }
 
-.btn-danger { background: #dc3545; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-.primary-btn { background: #ff0033; color: #fff; border: none; padding: 10px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; }
+.btn-danger { background: #dc3545; color: #fff; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+.primary-btn { background: #ff0033; color: #fff; border: none; padding: 10px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; box-shadow: 0 0 10px rgba(255,0,51,0.3); }
 
-.bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #141414; display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #222; z-index: 1000; }
+.bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #111116; display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #222233; z-index: 1000; }
 .bottom-nav button { background: none; border: none; color: #888; font-size: 0.75rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; font-weight: bold; }
-.bottom-nav button.active { color: #ff0033; }
+.bottom-nav button.active { color: #ff0033; text-shadow: 0 0 8px rgba(255,0,51,0.5); }
