@@ -64,6 +64,7 @@ async function handleCreateFbPost() {
         media_type: tempMediaType,
         likes: [],
         comments: [],
+        reports: 0,
         is_video: false
     }]);
 
@@ -87,7 +88,7 @@ async function handleDirectVideoUpload() {
 
     let progress = 0;
     let interval = setInterval(async () => {
-        progress += 15;
+        progress += 20;
         if(progressBar) progressBar.style.width = progress + '%';
         if(progressText) progressText.innerText = progress + '%';
 
@@ -111,6 +112,7 @@ async function handleDirectVideoUpload() {
                 media_type: 'video',
                 likes: [],
                 comments: [],
+                reports: 0,
                 is_video: true
             }]);
 
@@ -153,6 +155,9 @@ async function loadHomeVideos(searchQuery = '') {
             </div>
             <h4 style="margin: 8px 0; font-size:0.95rem;">${escapeHtml(v.post_text)}</h4>
             <video src="${v.media_url}" controls width="100%" style="border-radius:8px; background:#000;"></video>
+            <div style="text-align:right; margin-top:6px;">
+                <button onclick="reportPost('${v.id}')" style="background:none; border:none; color:#ff0033; font-size:0.75rem; cursor:pointer;">🚩 Report</button>
+            </div>
         `;
         container.appendChild(div);
     });
@@ -201,10 +206,20 @@ async function loadFbFeed() {
             <div class="fb-post-actions">
                 <button class="fb-action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLikePost('${post.id}')">❤️ ${likesArr.length} Likes</button>
                 <button class="fb-action-btn" onclick="openCommentScreen('${post.id}')">💬 Comments (${commentsArr.length})</button>
+                <button class="fb-action-btn" onclick="reportPost('${post.id}')" style="color:#ff0033;">🚩 Report</button>
             </div>
         `;
         container.appendChild(div);
     });
+}
+
+async function reportPost(postId) {
+    const { data: post } = await supabaseClient.from('flash_posts').select('*').eq('id', postId).single();
+    if(post) {
+        let currentReports = post.reports || 0;
+        await supabaseClient.from('flash_posts').update({ reports: currentReports + 1 }).eq('id', postId);
+        alert('Report တင်ပြီးပါပြီ။ Admin စစ်ဆေးပေးပါမည်။');
+    }
 }
 
 async function toggleLikePost(postId) {
