@@ -3,14 +3,13 @@ let currentProfileTab = 'posts';
 window.addEventListener('load', () => {
     runIntroTypingEffect();
     startRealTimeTimer();
-    loadHomeVideos();
-    loadFbFeed();
+    checkUserSession();
     setupProfilePhotoListeners();
 });
 
 function runIntroTypingEffect() {
     const textElement = document.getElementById('typing-intro-text');
-    const message = "Welcome to Flâsh Movie Pro... Cinematic Experience Loading...";
+    const message = "Welcome To Flâsh Movie";
     let index = 0;
 
     textElement.innerText = "";
@@ -18,7 +17,7 @@ function runIntroTypingEffect() {
         if (index < message.length) {
             textElement.innerText += message.charAt(index);
             index++;
-            setTimeout(type, 40);
+            setTimeout(type, 50);
         } else {
             setTimeout(() => {
                 const introScreen = document.getElementById('intro-screen');
@@ -134,11 +133,15 @@ function setupProfilePhotoListeners() {
     const bgPicker = document.getElementById('bgPhotoPicker');
 
     let pressTimer;
-    avatarWrapper.addEventListener('touchstart', () => { pressTimer = setTimeout(() => profilePicker.click(), 700); });
+    avatarWrapper.addEventListener('touchstart', () => { pressTimer = setTimeout(() => profilePicker.click(), 600); });
     avatarWrapper.addEventListener('touchend', () => clearTimeout(pressTimer));
+    avatarWrapper.addEventListener('mousedown', () => { pressTimer = setTimeout(() => profilePicker.click(), 600); });
+    avatarWrapper.addEventListener('mouseup', () => clearTimeout(pressTimer));
 
-    bannerBg.addEventListener('touchstart', () => { pressTimer = setTimeout(() => bgPicker.click(), 700); });
+    bannerBg.addEventListener('touchstart', () => { pressTimer = setTimeout(() => bgPicker.click(), 600); });
     bannerBg.addEventListener('touchend', () => clearTimeout(pressTimer));
+    bannerBg.addEventListener('mousedown', () => { pressTimer = setTimeout(() => bgPicker.click(), 600); });
+    bannerBg.addEventListener('mouseup', () => clearTimeout(pressTimer));
 
     profilePicker.addEventListener('change', async function(e) {
         const file = e.target.files[0];
@@ -212,12 +215,51 @@ async function loadUserProfile(username) {
     });
 }
 
-function verifyAdminPassword() {
+async function verifyAdminPassword() {
     if(document.getElementById('adminPassInput').value.trim() === "295802") {
         sessionStorage.setItem('admin_verified', 'true');
         document.getElementById('admin-lock-screen').classList.add('hidden');
         document.getElementById('admin-content-box').classList.remove('hidden');
+        loadAdminData();
     } else alert('Password မှားယွင်းနေပါသည်။');
+}
+
+async function loadAdminData() {
+    const usersContainer = document.getElementById('adminUsersList');
+    const postsContainer = document.getElementById('adminPostsList');
+
+    const { data: users } = await supabaseClient.from('flash_users').select('*');
+    if(usersContainer) {
+        usersContainer.innerHTML = '';
+        users.forEach(u => {
+            usersContainer.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; background:#181820; padding:6px; border-radius:6px; margin-bottom:4px; font-size:0.8rem;"><span>@${u.username}</span> <button class="btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="adminDeleteUser('${u.username}')">Delete</button></div>`;
+        });
+    }
+
+    const { data: posts } = await supabaseClient.from('flash_posts').select('*').order('created_at', { ascending: false });
+    if(postsContainer) {
+        postsContainer.innerHTML = '';
+        posts.forEach(p => {
+            let reportTag = (p.reports && p.reports > 0) ? `<span style="color:#ff0033;">[Reports: ${p.reports}]</span>` : '';
+            postsContainer.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; background:#181820; padding:6px; border-radius:6px; margin-bottom:4px; font-size:0.8rem;"><span>@${p.username}: ${escapeHtml(p.post_text || 'Media')} ${reportTag}</span> <button class="btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="adminDeletePost('${p.id}')">Delete</button></div>`;
+        });
+    }
+}
+
+async function adminDeleteUser(username) {
+    if(confirm(`User @${username} ကို ဖျက်မည်မှာ သေချာပါသလား?`)) {
+        await supabaseClient.from('flash_users').delete().eq('username', username);
+        alert('ဖျက်ပြီးပါပြီ။');
+        loadAdminData();
+    }
+}
+
+async function adminDeletePost(postId) {
+    if(confirm('ဤပို့စ်/ဗီဒီယိုကို ဖျက်မည်မှာ သေချာပါသလား?')) {
+        await supabaseClient.from('flash_posts').delete().eq('id', postId);
+        alert('ဖျက်ပြီးပါပြီ။');
+        loadAdminData();
+    }
 }
 
 function sendNotification() {
@@ -258,6 +300,7 @@ function switchMainPage(pageName) {
         if(sessionStorage.getItem('admin_verified') === 'true') {
             document.getElementById('admin-lock-screen').classList.add('hidden');
             document.getElementById('admin-content-box').classList.remove('hidden');
+            loadAdminData();
         } else {
             document.getElementById('admin-lock-screen').classList.remove('hidden');
             document.getElementById('admin-content-box').classList.add('hidden');
@@ -274,7 +317,7 @@ function switchMainPage(pageName) {
             document.getElementById('adminNotifTitle').innerText = nTitle;
             document.getElementById('adminNotifText').innerText = nText;
         }
-    } else if(pageName === 'settings') {
+    } else if(pageName::external || pageName === 'settings') {
         document.getElementById('page-settings').classList.remove('hidden');
     }
 }
