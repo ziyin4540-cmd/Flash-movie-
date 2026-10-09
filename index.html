@@ -3,312 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flâsh Movie Pro</title>
+    <title>Flâsh Movie Pro - YouTube Style</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="animeToast">✨ <span id="toastMsg">Success!</span> ✨</div>
-
-    <div id="introScreen">
-        <div class="intro-city">⚡ Futuristic City Stream ⚡</div>
-        <div class="intro-title" id="introTitleContainer"></div>
+    <!-- Intro Animation -->
+    <div id="intro-screen" class="intro-container">
+        <h1 class="lightning-text">⚡ FLÂSH MOVIE PRO ⚡</h1>
+        <p>Loading YouTube Experience...</p>
     </div>
 
-    <div id="broadcastBanner"><span id="broadcastText"></span></div>
+    <!-- Main App Container -->
+    <div id="app-container" class="hidden">
+        <!-- YouTube Header -->
+        <header class="yt-header">
+            <div class="logo-area"><h2>▶ Flâsh Tube</h2></div>
+            <div id="account-timer" class="timer-box">0Y / 0M / 0D / 0H / 0M / 0S</div>
+        </header>
 
-    <header>
-        <div class="logo" onclick="switchPage('homePage')">▶ Flâsh Movie</div>
-        <div class="search-bar"><input type="text" id="search" placeholder="Search..." onkeyup="renderFeed()"></div>
-        <div style="display:flex; gap:10px; align-items:center;">
-            <div style="font-size:18px; cursor:pointer;" onclick="openInboxPage()" title="Messages">💬</div>
-            <div style="font-size:20px; cursor:pointer;" onclick="openAdminPage()" title="Admin">🛡️</div>
-        </div>
-    </header>
-    <div class="container page-section active-page" id="homePage">
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <button class="btn" style="width:auto; margin:0; background:#272727;" onclick="filterFeed('all')">All</button>
-            <button class="btn" style="width:auto; margin:0; background:#272727;" onclick="filterFeed('video')">Videos</button>
-            <button class="btn" style="width:auto; margin:0; background:#272727;" onclick="filterFeed('short')">Shorts</button>
-        </div>
-        <div class="grid" id="feedGrid"></div>
-    </div>
-
-    <div class="container page-section" id="shortsPage">
-        <h3>Shorts Feed</h3>
-        <div class="grid" id="shortsGrid"></div>
-    </div>
-
-    <div class="container page-section" id="postsPage">
-        <h3>Posts Feed</h3>
-        <div class="grid" id="postsGrid"></div>
-    </div>
-
-    <div class="container page-section" id="uploadPage">
-        <h2>⚡ Upload New Content</h2>
-        <div style="background:#1a1a1a; padding:20px; border-radius:12px; border:1px solid #333;">
-            <label style="font-size:12px; color:#aaa;">Content Type:</label>
-            <select id="upType"><option value="video">Video</option><option value="short">Short Video</option><option value="post">Post (Text/Media/Audio)</option></select>
-
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                <label style="font-size:12px; color:#aaa;">Playlist Mode:</label>
-                <input type="checkbox" id="playlistToggle" onchange="togglePlaylistInput()" style="width:20px; height:20px;">
-            </div>
-
-            <div id="playlistInputBox" style="display:none; margin-top:8px;">
-                <label style="font-size:12px; color:#38bdf8;">Playlist / Movie Series Name:</label>
-                <input type="text" id="upPlaylist" placeholder="e.g. Action Movie Part 1, Season 1">
-            </div>
-
-            <label style="font-size:12px; color:#aaa; margin-top:10px; display:block;">Title / Caption:</label>
-            <input type="text" id="upTitle" placeholder="Title / Episode name">
-
-            <label style="font-size:12px; color:#aaa; margin-top:10px; display:block;">Select File:</label>
-            <input type="file" id="upFile" accept="video/*,image/*,audio/*,.zip,.rar" style="border:none; padding:0; margin-top:5px;">
-
-            <div class="lightning-bar-container" id="uploadProgress">
-                <div class="lightning-bar" id="progressBar">0%</div>
-            </div>
-
-            <label style="font-size:12px; color:#aaa; margin-top:10px; display:block;">Privacy:</label>
-            <select id="upPrivacy"><option value="public">Public</option><option value="followers">Followers Only</option><option value="private">Only Me</option></select>
-
-            <label style="font-size:12px; color:#aaa; margin-top:10px; display:block;">Allow Download:</label>
-            <select id="upDownload"><option value="yes">Yes (Allowed)</option><option value="no">No (Restricted)</option></select>
-
-            <button class="btn" onclick="uploadContent()">Upload Now</button>
-            <button class="btn btn-sec" onclick="switchPage('homePage')">Cancel</button>
-        </div>
-    </div>
-    <div class="container page-section" id="inboxPage">
-        <h2>💬 Messages & Chats</h2>
-        <div id="inboxList" style="margin-top:10px;"></div>
-    </div>
-
-    <div class="container page-section" id="chatRoomPage">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:8px;">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <button class="btn" style="width:auto; padding:4px 10px; background:#333; margin:0;" onclick="appBack('inboxPage')">⬅</button>
-                <div id="chatAvatar" style="width:36px; height:36px; background:#3b82f6; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; font-weight:bold;">U</div>
-                <div>
-                    <b id="chatName" style="font-size:14px; display:block;">User</b>
-                    <span id="chatStatus" style="font-size:11px; color:#10b981;">Online</span>
+        <div class="yt-main-layout">
+            <!-- Video Player & Details Area -->
+            <section class="video-section">
+                <div class="video-container">
+                    <video id="mainVideoPlayer" controls width="100%"></video>
                 </div>
-            </div>
-        </div>
-
-        <div id="chatMessages" style="height:320px; overflow-y:auto; background:#121212; padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:8px;"></div>
-
-        <div id="stickerBox" style="display:none; background:#1a1a1a; padding:10px; border-radius:8px; margin-top:5px; border:1px solid #333; display:flex; gap:10px; flex-wrap:wrap;">
-            <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('🔥')">🔥</span>
-            <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('❤️')">❤️</span>
-            <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('😂')">😂</span>
-            <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('👍')">👍</span>
-            <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('😎')">😎</span>
-            <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('✨')">✨</span>
-            <span style="font-size:28px; cursor:pointer;" onclick="sendSticker('🚀')">🚀</span>
-        </div>
-
-        <div id="chatReplyBar" style="display:none; background:#1e293b; border-left:3px solid #38bdf8; padding:7px 10px; margin-top:8px; font-size:12px; justify-content:space-between; align-items:center;"><span id="chatReplyText"></span><button class="icon-btn" onclick="cancelChatReply()">✕</button></div>
-        <div style="display:flex; gap:5px; margin-top:10px; align-items:center;">
-            <button class="btn" style="width:auto; padding:8px 12px; background:#272727; margin:0;" onclick="toggleStickerBox()" title="Stickers">🎨</button>
-            <input type="file" id="chatMediaFile" accept="image/*,video/*,audio/*,.zip,.rar" style="display:none;" onchange="sendMediaFile(this)">
-            <button class="btn" style="width:auto; padding:8px 12px; background:#272727; margin:0;" onclick="document.getElementById('chatMediaFile').click()" title="Send Media/File">📎</button>
-            <input type="text" id="chatInput" placeholder="Type a message..." style="flex:1; background:#121212; border:1px solid #333; color:#fff; padding:10px; border-radius:6px; margin:0;" onkeypress="if(event.key === 'Enter') sendTextMessage()">
-            <button class="btn" style="width:auto; padding:8px 16px; margin:0;" onclick="sendTextMessage()">Send</button>
-        </div>
-        <div style="margin-top:5px; text-align:right;">
-            <input type="file" id="chatStickerFile" accept="image/*" style="display:none;" onchange="sendStickerFromFile(this)">
-            <button class="btn" style="width:auto; padding:4px 8px; font-size:11px; background:#8b5cf6; margin:0;" onclick="document.getElementById('chatStickerFile').click()">🖼️ Select Sticker from Gallery</button>
-        </div>
-    </div>
-
-    <div class="container page-section" id="settingsPage">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
-            <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="appBack('profilePage')">⬅ Back</button>
-            <h2>⚙️ App & Profile Settings</h2>
-        </div>
-        <div style="background:#1f1f1f; padding:15px; border-radius:8px; max-width:500px; margin:auto;">
-            <div style="background:#121212; padding:10px; border-radius:6px; margin-bottom:12px; border:1px solid #333;">
-                <label style="font-size:11px; color:#38bdf8; display:block;">Account Created Date & Duration:</label>
-                <b id="accCreatedDateDisplay" style="font-size:13px; display:block; margin-top:2px;">-</b>
-                <span id="accDurationLive" style="font-size:12px; color:#f59e0b; display:block; margin-top:4px; font-family:monospace;">0Y / 0M / 0D / 0H / 0M / 0S</span>
-            </div>
-
-            <label style="font-size:12px; color:#38bdf8;">Account Name (Display Name):</label>
-            <input type="text" id="setAccountName" placeholder="Your Display Name" style="background:#121212; border:1px solid #333; color:#fff; padding:8px; width:100%; margin-bottom:10px; box-sizing:border-box;">
-
-            <label style="font-size:12px; color:#38bdf8;">Profile Photo from Device:</label>
-            <input type="file" id="setAvatarFile" accept="image/*" style="border:none; padding:0; margin-bottom:10px; width:100%;">
-
-
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; margin:12px 0;">
-                <span>Follow View On/Off:</span> <input type="checkbox" id="setFollowView" onchange="saveAppSettings()" style="width:20px; height:20px;">
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; margin-bottom:12px;">
-                <span>Follower View On/Off:</span> <input type="checkbox" id="setFollowerView" onchange="saveAppSettings()" style="width:20px; height:20px;">
-            </div>
-
-            <button class="btn" onclick="saveProfileSettings()" style="margin-bottom:15px;">Save Profile Info</button>
-
-            <div style="background:#121212; padding:10px; border-radius:6px; margin-bottom:12px; border:1px solid #333;">
-                <h4>👁️ Profile Visitors History</h4>
-                <div id="visitorHistoryList" style="max-height:120px; overflow-y:auto; font-size:12px; color:#aaa;">No visitors yet.</div>
-            </div>
-
-            <button class="btn btn-sec" onclick="requestNotificationPermission()" style="margin-bottom:10px;">🔔 Enable Message Notifications</button>
-            <button class="btn" style="background:#f59e0b; margin-bottom:10px;" onclick="requestAccountLimit()">📥 Request Admin for Account Limit Increase</button>
-            <button class="btn" style="background:#ef4444;" onclick="signOut()">Sign Out</button>
-        </div>
-    </div>
-
-    <div class="container page-section" id="adminPage">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
-            <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="appBack('homePage')">⬅ Back to Home</button>
-            <h2>🛡️ Admin Panel</h2>
-        </div>
-        <div style="background:#1f1f1f; padding:15px; border-radius:8px; max-width:650px; margin:auto;">
-            <div id="admLoginBox">
-                <input type="password" id="admPass" placeholder="Enter Admin Password" style="width:100%; padding:10px; background:#121212; border:1px solid #333; color:#fff; border-radius:6px; margin-bottom:10px;">
-                <button class="btn" onclick="verifyAdmin()">Login Admin</button>
-            </div>
-            <div id="admDashBox" style="display:none;">
-                <div class="admin-tabs">
-                    <button class="admin-tab-btn active" onclick="switchAdminTab('users', this)">အသုံးပြုသူ စာရင်း & Device ID</button>
-                    <button class="admin-tab-btn" onclick="switchAdminTab('limits', this)">Limit တောင်းဆိုမှုများ</button>
-                    <button class="admin-tab-btn" onclick="switchAdminTab('content', this)">ဗီဒီယို/ပို့စ်များ</button>
-                    <button class="admin-tab-btn" onclick="switchAdminTab('broadcast', this)">အသိပေးစာ</button>
+                
+                <!-- Local File Picker (No URL / Direct from Phone) -->
+                <div class="file-picker-box">
+                    <label for="deviceFilePicker" class="upload-btn">📁 ဖုန်းထဲမှ ဗီဒီယိုရွေးမည်</label>
+                    <input type="file" id="deviceFilePicker" accept="video/*" style="display:none;">
+                    <span id="fileNameDisplay">ဖိုင်မရှိသေးပါ</span>
                 </div>
-                <div id="adminTabUsers"><div id="admUsersList" style="max-height:300px; overflow-y:auto;"></div></div>
-                <div id="adminTabLimits" style="display:none;"><div id="admLimitsList" style="max-height:300px; overflow-y:auto;"></div></div>
-                <div id="adminTabContent" style="display:none;"><div id="admContentList" style="max-height:300px; overflow-y:auto;"></div></div>
-                <div id="adminTabBroadcast" style="display:none;">
-                    <h4>User များထံ အသိပေးစာပို့ရန်</h4>
-                    <input type="text" id="bcTitle" placeholder="ခေါင်းစဉ်" style="width:100%; background:#121212; border:1px solid #333; color:#fff; padding:8px; border-radius:6px; margin-bottom:8px;">
-                    <textarea id="bcMsg" placeholder="အသိပေးလိုသောစာသား..." rows="3" style="width:100%; background:#121212; border:1px solid #333; color:#fff; padding:8px; border-radius:6px; box-sizing:border-box;"></textarea>
-                    <button class="btn" onclick="sendBroadcast()">📢 ပို့မည်</button>
-                    <button class="btn" style="background:#ef4444; margin-top:8px;" onclick="clearBroadcast()">🗑️ ဖျက်မည်</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="container page-section" id="userProfilePage">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
-            <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="appBack('homePage')">⬅ Back</button>
-            <button class="btn" style="width:auto; padding:5px 12px; background:#3b82f6; margin:0;" onclick="openChatRoom(selectedCreator)">💬 Message</button>
-        </div>
-        <div style="text-align:center; background:#1a1a1a; padding:20px; border-radius:12px; margin-bottom:15px;">
-            <div style="width:70px; height:70px; background:#3b82f6; border-radius:50%; margin:auto; display:flex; align-items:center; justify-content:center; overflow:hidden;" id="creatorAvatarBox"></div>
-            <h2 id="creatorName" style="margin:10px 0 2px 0;">Name</h2>
-            <p id="creatorUsername" style="color:#aaa; font-size:12px; margin:0 0 10px 0;">@username</p>
-            <div style="display:flex; justify-content:center; gap:20px; font-size:13px; color:#aaa; margin-bottom:10px;">
-                <span onclick="openUserFollowModal('followers', selectedCreator)" style="cursor:pointer;">Followers: <b id="creatorFollowerCount" style="color:#fff;">0</b></span>
-                <span onclick="openUserFollowModal('following', selectedCreator)" style="cursor:pointer;">Following: <b id="creatorFollowingCount" style="color:#fff;">0</b></span>
-                <span>Likes: <b id="creatorLikeCount" style="color:#fff;">0</b></span>
-            </div>
-            <button class="btn" style="width:auto; padding:6px 20px; margin:auto;" id="creatorFollowBtn" onclick="toggleCreatorFollow()">Follow</button>
-        </div>
-        <h3>Uploads</h3>
-        <div class="grid" id="creatorGrid"></div>
-    </div>
 
-    <div class="container page-section" id="detailPage">
-        <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-            <button class="btn" style="width:auto; padding:5px 12px; background:#333; margin:0;" onclick="appBack('homePage')">⬅ Back to Home</button>
-            <div id="playlistBadge" style="font-size:12px; color:#f59e0b; background:#1e293b; padding:4px 10px; border-radius:15px; border:1px solid #334155; display:none;">🎬 Playlist</div>
-            <div id="nextVideoBadge" style="font-size:12px; color:#38bdf8; background:#1e293b; padding:4px 10px; border-radius:15px; border:1px solid #334155;">⏭ Next: None</div>
-        </div>
-        <div class="player" id="detailMedia">
-            <button class="overlay-nav-btn" id="prevOverlayBtn" onclick="playPrevVideo()">⏮</button>
-            <button class="overlay-nav-btn" id="nextOverlayBtn" onclick="playNextVideo()">⏭</button>
-        </div>
-        <div style="padding:10px 0; border-bottom:1px solid #222;">
-            <h3 id="detTitle" style="margin:0 0 5px 0;"></h3>
-            <p id="detUploadTime" style="font-size:11px; color:#38bdf8; margin:0 0 5px 0;"></p>
-            <div style="display:flex; align-items:center; justify-content:space-between; margin:10px 0;">
-                <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openCreatorProfile(currItem.uploader)">
-                    <div id="detUploaderAvatar" style="width:36px; height:36px; background:#3b82f6; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; font-weight:bold;">U</div>
-                    <div>
-                        <b id="detUploaderName" style="font-size:14px; display:block;">Uploader Name</b>
-                        <span id="detUploaderId" style="font-size:11px; color:#aaa;">@username</span>
+                <div class="video-info">
+                    <h3>Flâsh Movie Pro - Live Stream & Video Player</h3>
+                    <p class="channel-name">Flâsh Official • 1M Views</p>
+                </div>
+
+                <!-- Comments & Conversations Section -->
+                <div class="comments-section">
+                    <h3>မှတ်ချက်များနှင့် Conversation များ</h3>
+                    <div class="comment-input-box">
+                        <input type="text" id="commentInput" placeholder="အများနဲ့ ဆွေးနွေးရန် မှတ်ချက်ရေးပါ...">
+                        <button id="sendCommentBtn">တင်မည်</button>
                     </div>
+                    <div id="commentsList" class="comments-list"></div>
                 </div>
-                <button class="btn" style="width:auto; padding:4px 12px; background:#3b82f6; margin:0;" onclick="openChatRoom(currItem.uploader)">💬 Message</button>
-            </div>
-            <div class="actions">
-                <div class="btn-action" onclick="toggleLike()" id="likeBtn">👍 Like (0)</div>
-                <div class="btn-action comment-open-btn" onclick="openCommentsPage()" id="commentBtn">💬 Comments</div>
-                <div class="btn-action" onclick="toggleBgPlay()" id="bgPlayBtn" style="background:#3b82f6;">🎵 Background Play: OFF</div>
-                <div class="btn-action" onclick="downloadContent()" id="downloadBtn" style="background:#10b981; display:none;">📥 Download</div>
-                <div class="btn-action" onclick="blockUser()" style="color:#ef4444;">⛔ Block</div>
-                <div class="btn-action" onclick="reportItem('Content')" style="color:#ef4444;">⚠️ Report</div>
-            </div>
-        </div>
-        <div id="nextUpPanel" class="next-up-panel"></div>
-    </div>
+            </section>
 
-    <div class="container page-section" id="commentsPage">
-        <div class="subpage-header">
-            <button class="btn back-btn" onclick="appBack('detailPage')">⬅ Back to Video</button>
-            <h2>💬 Comments</h2>
-        </div>
-        <div class="comment-compose">
-            <input type="text" id="commText" placeholder="Write a comment...">
-            <input type="file" id="commFile" accept="image/*,video/*,audio/*,.pdf,.zip,.rar">
-            <button class="btn" onclick="addComment()">Post Comment</button>
-        </div>
-        <div id="commList" class="comments-list"></div>
-    </div>
-
-    <div class="container page-section" id="profilePage">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <div style="background:#1e293b; padding:8px 12px; border-radius:8px; font-size:12px; color:#38bdf8;">📱 Device Accounts: <b id="deviceCount">0</b> / <b id="deviceLimitMax">2</b></div>
-            <div onclick="openSettingsPage()" style="background:#272727; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:16px;" title="Settings">⚙️</div>
-        </div>
-        <div style="text-align:center; border-bottom:1px solid #222; padding-bottom:15px;">
-            <div style="width:70px; height:70px; background:#3b82f6; border-radius:50%; margin:auto; display:flex; align-items:center; justify-content:center; overflow:hidden;" id="profAvatarBox">U</div>
-            <h2 id="profName" style="margin:10px 0 2px 0;">Name</h2>
-            <p id="profUsername" style="color:#aaa; font-size:12px; margin:0 0 10px 0;">@User</p>
-            <div style="display:flex; justify-content:center; gap:20px; font-size:13px; color:#aaa; margin-bottom:10px;">
-                <span onclick="openUserFollowModal('followers', currUser.username)" style="cursor:pointer;">Followers: <b id="followerCount" style="color:#fff;">0</b></span>
-                <span onclick="openUserFollowModal('following', currUser.username)" style="cursor:pointer;">Following: <b id="followingCount" style="color:#fff;">0</b></span>
-                <span>Likes: <b id="profLikeCount" style="color:#fff;">0</b></span>
-            </div>
-        </div>
-        <div style="display:flex; justify-content:space-around; margin:15px 0; border-bottom:1px solid #333; padding-bottom:5px; font-size:14px; font-weight:bold; color:#aaa; cursor:pointer;">
-            <span onclick="switchTab('video')" style="color:#fff;" id="pTabVid">Videos</span>
-            <span onclick="switchTab('short')">Shorts</span>
-            <span onclick="switchTab('post')">Posts</span>
-        </div>
-        <div class="grid" id="profGrid"></div>
-    </div>
-
-    <div class="modal" id="loginModal">
-        <div class="modal-content" style="text-align:center;">
-            <h3>Login / Register</h3>
-            <p style="font-size:11px; color:#38bdf8;">Max <span id="modalLimitText">2</span> accounts allowed per device.</p>
-            <input type="text" id="authU" placeholder="Username">
-            <input type="password" id="authP" placeholder="Password">
-            <button class="btn" onclick="handleAuth()">Sign In / Register</button>
-            <button class="btn btn-sec" onclick="closeModal('loginModal')">Close</button>
+            <!-- Sidebar Chat Room -->
+            <aside class="chat-sidebar">
+                <h3>💬 Live Chat & Conversation</h3>
+                <div id="chatRoom" class="chat-room"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="စာတိုပို့ရန်...">
+                    <button id="sendChatBtn">ပို့</button>
+                </div>
+            </aside>
         </div>
     </div>
 
-    <div class="modal" id="followListModal">
-        <div class="modal-content">
-            <h3 id="followModalTitle">Follow List</h3>
-            <div id="followModalContent" style="max-height:250px; overflow-y:auto; margin-bottom:10px;"></div>
-            <button class="btn btn-sec" onclick="closeModal('followListModal')">Close</button>
-        </div>
-    </div>
-
-    <nav>
-        <div class="active" onclick="switchNav(0); switchPage('homePage')"><span>🏠</span>Home</div>
-        <div onclick="switchNav(1); openShortsPage()"><span>🩳</span>Shorts</div>
-        <div onclick="switchNav(2); openPostsPage()"><span>📝</span>Posts</div>
-        <div onclick="switchNav(3); checkUpload()"><span>➕</span>Upload</div>
-        <div onclick="switchNav(4); openProfile()"><span>👤</span>Profile</div>
-    </nav>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
 </body>
 </html>
