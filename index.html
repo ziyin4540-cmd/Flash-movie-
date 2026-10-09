@@ -54,6 +54,7 @@
             <h1 class="logo-text">⚡ Flâsh Movie</h1>
             <div style="display:flex; align-items:center; gap:6px;">
                 <div class="timer-box" id="global-timer-display">0D / 5H / 30M</div>
+                <button id="adminPanelBtn" onclick="switchMainPage('admin')" class="logout-btn hidden" style="background:#ff0033; color:#fff; font-weight:bold;">👑 Admin</button>
                 <button onclick="switchMainPage('settings')" class="logout-btn" style="background:#222233; color:#00ffff;">⚙️</button>
                 <button onclick="handleLogout()" class="logout-btn">Logout</button>
             </div>
@@ -150,12 +151,15 @@
             <input type="file" id="bgPhotoPicker" accept="image/*" style="display:none;">
 
             <div class="profile-card-modern">
-                <div id="profileBannerBg" class="profile-banner"></div>
+                <div id="profileBannerBg" class="profile-banner">
+                    <button onclick="document.getElementById('bgPhotoPicker').click()" style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.6); color:#fff; border:1px solid #00ffff; border-radius:4px; font-size:0.65rem; padding:4px 8px; cursor:pointer;">📷 Cover</button>
+                </div>
                 <div class="profile-avatar-wrapper">
-                    <img id="profileImgDisplay" src="https://via.placeholder.com/90" class="profile-img-preview-modern">
+                    <img id="profileImgDisplay" src="https://via.placeholder.com/90" class="profile-img-preview-modern" onclick="document.getElementById('profilePhotoPicker').click()" style="cursor:pointer;" title="Click to Change Photo">
                 </div>
                 <h2 id="profileNameDisplay" style="margin:8px 0 2px 0; font-size:1.1rem; color:#fff;">User Name</h2>
                 <p id="profileUserDisplay" style="margin:0; font-size:0.8rem; color:#888;">@username</p>
+                <div id="profileBioDisplay" style="font-size:0.8rem; color:#aaa; margin:5px 15px 10px 15px;"></div>
                 
                 <div class="profile-stats" style="margin-top:12px;">
                     <div class="stat-item"><span class="stat-num" id="statPosts">0</span><span class="stat-label">Posts</span></div>
@@ -172,6 +176,14 @@
             </div>
 
             <div id="profileTabContent" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px;"></div>
+        </section>
+
+        <!-- ADMIN PANEL SECTION -->
+        <section id="page-admin" class="main-section hidden">
+            <div class="create-post-body">
+                <h3 style="color:#ff0033; margin-top:0; font-size:1rem;">👑 Admin Dashboard</h3>
+                <div id="adminUserList" style="margin-top:10px;"></div>
+            </div>
         </section>
 
         <!-- SETTINGS SECTION -->
@@ -198,20 +210,6 @@
             </div>
         </section>
 
-        <!-- COMMENT PAGE SECTION -->
-        <section id="page-comment" class="main-section hidden">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-                <button onclick="switchMainPage('feed')" style="background:none; border:none; color:#00ffff; font-weight:bold; cursor:pointer;">◄ နောက်သို့</button>
-                <h3 style="color:#fff; margin:0; font-size:0.95rem;">💬 Comments</h3>
-                <div></div>
-            </div>
-            <div id="commentScreenContent" style="margin-bottom:60px;"></div>
-            <div style="position:fixed; bottom:65px; left:0; width:100%; background:#111116; padding:8px 15px; border-top:1px solid #222233; display:flex; gap:8px; box-sizing:border-box; z-index:100;">
-                <input type="text" id="screenCommentInput" placeholder="မှတ်ချက် ရေးရန်..." class="fb-textarea" style="height:38px; margin:0;">
-                <button onclick="submitScreenComment()" style="background:#00ffff; color:#000; border:none; padding:0 15px; font-weight:bold; border-radius:6px; cursor:pointer;">ပို့မည်</button>
-            </div>
-        </section>
-
         <!-- Bottom Navigation Bar -->
         <nav class="bottom-nav">
             <button id="nav-btn-home" class="active" onclick="switchMainPage('home')">🏠 Home</button>
@@ -223,10 +221,9 @@
 
     </div>
 
-    <!-- External & App Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase.js"></script>
-    <script src="navigation.js"></script> <!-- ခွဲထုတ်ထားသော Navigation Script -->
+    <script src="navigation.js"></script>
     <script src="chat.js"></script>
     <script src="feed.js"></script>
     <script src="app.js"></script>
