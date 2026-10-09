@@ -8,7 +8,6 @@ body { background-color: #070709; color: #f1f1f1; font-family: 'Segoe UI', Tahom
 }
 .intro-bg-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: radial-gradient(circle, #11111c 0%, #070709 90%); z-index: 1; }
 
-/* Lightning Flash Animation Effect */
 .lightning-flash-effect {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 255, 255, 0.15);
@@ -23,7 +22,6 @@ body { background-color: #070709; color: #f1f1f1; font-family: 'Segoe UI', Tahom
 .intro-content-box { position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 20px; }
 .intro-bears-img-wrapper { position: relative; width: 220px; height: 220px; }
 
-/* Cartoon Video inside the circle with glowing border */
 .intro-cartoon-video {
     width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
     border: 4px solid #ff0033; box-shadow: 0 0 30px rgba(255,0,51,0.7), 0 0 60px rgba(0,255,255,0.4);
@@ -55,19 +53,6 @@ body { background-color: #070709; color: #f1f1f1; font-family: 'Segoe UI', Tahom
 .logout-btn { background: #cc0000; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
 
 .main-section { padding: 15px; max-width: 600px; margin: 0 auto; box-sizing: border-box; }
-
-.playlist-filter-bar {
-    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px;
-    scrollbar-width: none;
-}
-.playlist-filter-bar::-webkit-scrollbar { display: none; }
-.playlist-filter-btn {
-    background: #111116; border: 1px solid #333344; color: #aaa; padding: 6px 14px;
-    border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; white-space: nowrap;
-}
-.playlist-filter-btn.active {
-    background: #ff0033; border-color: #ff0033; color: #fff; box-shadow: 0 0 10px rgba(255,0,51,0.5);
-}
 
 .create-post-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222233; padding-bottom: 10px; margin-bottom: 15px; }
 .create-post-body { background: #111116; padding: 15px; border-radius: 12px; border: 1px solid #222233; }
