@@ -12,29 +12,44 @@ function runIntroTypingEffect() {
     const message = "Welcome To Flâsh Movie";
     let index = 0;
 
-    textElement.innerText = "";
-    function type() {
-        if (index < message.length) {
-            textElement.innerText += message.charAt(index);
-            index++;
-            setTimeout(type, 50);
-        } else {
-            setTimeout(() => {
-                const introScreen = document.getElementById('intro-screen');
-                introScreen.style.transition = 'opacity 0.6s ease';
-                introScreen.style.opacity = '0';
+    if(textElement) {
+        textElement.innerText = "";
+        function type() {
+            if (index < message.length) {
+                textElement.innerText += message.charAt(index);
+                index++;
+                setTimeout(type, 40);
+            } else {
+                // Intro ပြီးသွားရင် 1 စက္ကန့်အတွင်း အလိုအလျောက် ပျောက်ပြီး Home/Auth ကို ဝင်မယ်
                 setTimeout(() => {
-                    introScreen.classList.add('hidden');
-                    checkUserSession();
-                }, 600);
-            }, 800);
+                    const introScreen = document.getElementById('intro-screen');
+                    if(introScreen) {
+                        introScreen.style.transition = 'opacity 0.5s ease';
+                        introScreen.style.opacity = '0';
+                        setTimeout(() => {
+                            introScreen.classList.add('hidden');
+                            checkUserSession();
+                        }, 500);
+                    }
+                }, 800);
+            }
         }
+        type();
+    } else {
+        // Fallback in case element missing
+        setTimeout(() => {
+            const introScreen = document.getElementById('intro-screen');
+            if(introScreen) introScreen.classList.add('hidden');
+            checkUserSession();
+        }, 1500);
     }
-    type();
 }
 
 function checkUserSession() {
     const loggedUser = localStorage.getItem('flash_logged_user');
+    const introScreen = document.getElementById('intro-screen');
+    if(introScreen && !introScreen.classList.contains('hidden')) return; // Intro ပြီးမှ စစ်မယ်
+
     if (!loggedUser) {
         document.getElementById('page-auth').classList.remove('hidden');
         document.getElementById('app-container').classList.add('hidden');
@@ -317,7 +332,7 @@ function switchMainPage(pageName) {
             document.getElementById('adminNotifTitle').innerText = nTitle;
             document.getElementById('adminNotifText').innerText = nText;
         }
-    } else if(pageName::external || pageName === 'settings') {
+    } else if(pageName === 'settings') {
         document.getElementById('page-settings').classList.remove('hidden');
     }
 }
