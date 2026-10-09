@@ -126,8 +126,53 @@ async function handleCreateFbPost() {
     tempMediaType = "";
     
     showToast('✅ ပို့စ်တင်ခြင်း အောင်မြင်ပါသည်။', 'success');
-    switchMainPage('feed');
     loadFbFeed();
+}
+
+async function loadFbFeed() {
+    const container = document.getElementById('fbFeedContainer');
+    if(!container) return;
+
+    const { data: posts, error } = await supabaseClient.from('flash_posts').select('*').order('created_at', { ascending: false });
+    if(error || !posts) {
+        container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ပို့စ်များ မရှိသေးပါ။</p>';
+        return;
+    }
+
+    let feedPosts = posts.filter(p => p.is_video !== true && p.media_type !== 'telegram_video');
+    if(feedPosts.length === 0) {
+        container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ပို့စ်များ မရှိသေးပါ။</p>';
+        return;
+    }
+
+    const currentUser = localStorage.getItem('flash_logged_user');
+    container.innerHTML = '';
+
+    feedPosts.forEach(post => {
+        const likesArr = post.likes || [];
+        const isLiked = likesArr.includes(currentUser);
+        const commentsArr = post.comments || [];
+        const div = document.createElement('div');
+        div.className = 'fb-post-card';
+
+        let mediaHtml = '';
+        if(post.media_url) {
+            mediaHtml = post.media_type === 'image' ? `<img src="${post.media_url}" width="100%" style="border-radius:8px; margin-top:8px; max-height:350px; object-fit:cover;">` : `<video src="${post.media_url}" controls width="100%" style="border-radius:8px; margin-top:8px; background:#000;"></video>`;
+        }
+
+        div.innerHTML = `
+            <div class="fb-post-header">
+                <img src="${post.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar">
+                <div>
+                    <div style="font-weight:bold; font-size:0.9rem;">${escapeHtml(post.display_name || post.username)}</div>
+                    <div style="color:#888; font-size:0.7rem;">@${post.username} • ${timeAgo(post.created_at)}</div>
+                </div>
+            </div>
+            <p style="font-size:0.9rem; margin:8px 0; word-break:break-word;">${escapeHtml(post.post_text || '')}</p>
+            ${mediaHtml}
+        `;
+        container.appendChild(div);
+    });
 }
 
 async function handleDirectVideoUpload() {
@@ -201,7 +246,6 @@ async function handleDirectVideoUpload() {
 
             showToast('✅ ဗီဒီယို တင်ခြင်း အောင်မြင်ပါသည်။', 'success');
             switchMainPage('home');
-            loadHomeVideos();
         }
     }, 80);
 }
@@ -232,11 +276,6 @@ async function loadHomeVideos(searchQuery = '') {
     });
 
     container.innerHTML = '';
-    if(filtered.length === 0) {
-        container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ရှာမတွေ့ပါ။</p>';
-        return;
-    }
-
     filtered.forEach(v => {
         const div = document.createElement('div');
         div.className = 'video-card-item';
@@ -246,7 +285,7 @@ async function loadHomeVideos(searchQuery = '') {
             mediaPreviewHtml = `
                 <div style="width:100%; height:100%; background:#181820; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#00ffff;">
                     <span style="font-size:1.8rem;">🎬</span>
-                    <span style="font-size:0.75rem; font-weight:bold; margin-top:4px;">Telegram Video</span>
+                    <span style="font-size:0.75rem; font-weight:bold; margin-top:4px;">Telegram Video Player</span>
                 </div>`;
         } else {
             mediaPreviewHtml = `<video src="${v.media_url}#t=0.5" preload="metadata" muted></video>`;
@@ -294,11 +333,10 @@ async function openWatchVideoScreen(videoId) {
     const currentUser = localStorage.getItem('flash_logged_user');
     const likesArr = v.likes || [];
     const isLiked = likesArr.includes(currentUser);
-    const commentsArr = v.comments || [];
 
     let mediaContent = '';
     if(v.media_type === 'telegram_video' || (v.media_url && v.media_url.includes('t.me'))) {
-        // Correct Telegram Embed URL formatting
+        // Direct Telegram Embed Player Fix
         let cleanUrl = v.media_url.replace('https://t.me/', '');
         let embedUrl = `https://t.me/${cleanUrl}?embed=1&dark=1`;
         mediaContent = `
@@ -308,22 +346,6 @@ async function openWatchVideoScreen(videoId) {
     } else {
         mediaContent = `<video src="${v.media_url}" controls autoplay width="100%" style="background:#000; max-height:300px;"></video>`;
     }
-
-    let nextVideosHtml = '';
-    videoList.slice(0, 6).forEach(nv => {
-        if(nv.id !== videoId) {
-            nextVideosHtml += `
-                <div onclick="openWatchVideoScreen('${nv.id}')" style="display:flex; gap:10px; background:#111116; padding:8px; border-radius:8px; cursor:pointer; margin-bottom:8px; border:1px solid #222233;">
-                    <div style="width:100px; height:60px; background:#000; border-radius:6px; overflow:hidden; flex-shrink:0;">
-                        ${nv.media_type === 'telegram_video' || (nv.media_url && nv.media_url.includes('t.me')) ? '<div style="color:#00ffff; text-align:center; padding-top:15px; font-size:0.7rem;">🎬 Telegram</div>' : `<video src="${nv.media_url}" width="100%" height="100%" style="object-fit:cover;"></video>`}
-                    </div>
-                    <div>
-                        <h5 style="margin:0 0 4px 0; font-size:0.85rem; color:#fff; line-height:1.2;">${escapeHtml(nv.post_text)}</h5>
-                        <p style="margin:0; font-size:0.7rem; color:#888;">${escapeHtml(nv.display_name || nv.username)}</p>
-                    </div>
-                </div>`;
-        }
-    });
 
     watchPage.innerHTML = `
         <div style="background:#111116; padding:12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233; position:sticky; top:0; z-index:100;">
@@ -340,23 +362,13 @@ async function openWatchVideoScreen(videoId) {
 
         <div style="padding:15px;">
             <h3 style="color:#fff; font-size:1rem; margin-bottom:8px;">${escapeHtml(v.post_text)}</h3>
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; cursor:pointer;" onclick="openCreatorProfile('${v.username}')">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
                 <img src="${v.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar">
                 <div>
                     <div style="font-weight:bold; font-size:0.9rem;">${escapeHtml(v.display_name || v.username)}</div>
                     <div style="color:#888; font-size:0.75rem;">@${v.username} • <span style="color:#00ffff;">တင်ခဲ့ချိန်: ${timeAgo(v.created_at)}</span></div>
                 </div>
             </div>
-
-            <div style="display:flex; justify-content:space-around; background:#111116; border:1px solid #222233; padding:10px; border-radius:12px; margin-bottom:15px;">
-                <button class="fb-action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLikeWatchVideo('${v.id}')">❤️ ${likesArr.length}</button>
-                <button class="fb-action-btn" onclick="openCommentPage('${v.id}')">💬 Comments (${commentsArr.length})</button>
-                <button class="fb-action-btn" onclick="openShareToChatModal('${v.id}', '${escapeHtml(v.post_text)}')">↗ Share to Chat</button>
-                <button class="fb-action-btn" onclick="reportPost('${v.id}')" style="color:#ff0033;">🚩 Report</button>
-            </div>
-
-            <h4 style="color:#00ffff; font-size:0.9rem; margin-bottom:10px;">⏭ နောက်လာမည့် ဗီဒီယိုများ (Next Videos)</h4>
-            ${nextVideosHtml || '<p style="color:#666; font-size:0.8rem;">ဗီဒီယို အခြားမရှိသေးပါ။</p>'}
         </div>
     `;
 }
@@ -364,4 +376,4 @@ async function openWatchVideoScreen(videoId) {
 function escapeHtml(text) {
     if(!text) return '';
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
+                                                                                    }
