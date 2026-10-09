@@ -3,41 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flâsh Movie Pro - Real-time</title>
+    <title>Flâsh Movie Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Cinematic Intro Screen -->
+    <!-- Cinematic Intro -->
     <div id="intro-screen" class="intro-container">
-        <div class="intro-content">
-            <h1 class="lightning-text">⚡ FLÂSH MOVIE PRO ⚡</h1>
-            <p class="intro-sub">Real-time Cinematic Experience</p>
-        </div>
+        <h1 class="lightning-text">⚡ FLÂSH MOVIE PRO ⚡</h1>
     </div>
 
-    <!-- Auth Page (Login / Register) -->
+    <!-- Auth Page -->
     <div id="page-auth" class="full-page">
         <div class="auth-card">
-            <h2 id="auth-title" style="color: #ff0033; margin-bottom: 5px;">🔑 Login</h2>
-            <p style="color: #888; font-size: 0.85rem; margin-bottom: 20px;">Flâsh Movie Pro သို့ ဝင်ရောက်ပါ</p>
-            
-            <!-- Login View -->
+            <h2 id="auth-title" style="color: #ff0033; margin-bottom: 15px;">🔑 Login</h2>
             <div id="view-login" class="auth-form">
                 <input type="text" id="loginUser" placeholder="Username">
                 <input type="password" id="loginPass" placeholder="Password">
                 <button class="primary-btn" onclick="handleLogin()">Login ဝင်မည်</button>
-                <p class="nav-link-text" onclick="switchAuthView('register')">အကောင့်အသစ်ဖွင့်ရန် (Register)</p>
+                <p class="nav-link-text" onclick="switchAuthView('register')">အကောင့်အသစ်ဖွင့်ရန်</p>
             </div>
-
-            <!-- Register View -->
             <div id="view-register" class="auth-form hidden">
                 <input type="text" id="regUser" placeholder="Username">
                 <input type="password" id="regPass" placeholder="Password">
-                <input type="text" id="regDisplayName" placeholder="Account Name (ပြသရန်နာမည်)">
-                <label style="font-size: 0.85rem; color: #aaa; text-align: left; margin-top: 5px;">Profile Photo တင်ရန်:</label>
+                <input type="text" id="regDisplayName" placeholder="Account Name">
+                <label style="font-size: 0.8rem; color: #aaa; text-align: left;">Profile ပုံ:</label>
                 <input type="file" id="regPhotoPicker" accept="image/*">
                 <button class="primary-btn" onclick="handleRegister()">Register ပြုလုပ်မည်</button>
-                <p class="nav-link-text" onclick="switchAuthView('login')">အကောင့်ရှိပြီးသားလား? Login သို့သွားရန်</p>
+                <p class="nav-link-text" onclick="switchAuthView('login')">Login သို့ ပြန်သွားရန်</p>
             </div>
         </div>
     </div>
@@ -53,63 +45,54 @@
         </header>
 
         <main class="main-content">
-            <!-- 1. HOME PAGE -->
+            <!-- 1. HOME PAGE (Videos & Shorts Feed + Upload Button) -->
             <section id="page-home" class="main-section">
-                <div class="video-container">
-                    <video id="mainVideoPlayer" controls width="100%"></video>
-                </div>
-                
-                <div class="video-info-box">
-                    <h3 id="displayTitle">Flâsh Movie Pro - Stream</h3>
-                    <p style="color: #aaa; font-size: 0.85rem;">HD Stream</p>
+                <div class="top-upload-bar">
+                    <h3>🎬 Movie & Shorts Feed</h3>
+                    <button class="upload-trigger-btn" onclick="openUploadModal()">➕ ဗီဒီယို/Shorts တင်မည်</button>
                 </div>
 
-                <div class="telegram-chat-box">
-                    <div class="chat-header-title">💬 Real-time Community Chat</div>
-                    <div id="tgChatContainer" class="tg-messages-list"></div>
-                    <div class="tg-input-area">
-                        <input type="text" id="tgMessageInput" placeholder="စာတို ရေးရန်...">
-                        <button onclick="sendTgMessage()">ပို့မည်</button>
-                    </div>
+                <!-- Video Feed Container -->
+                <div id="videoFeedContainer" class="video-feed-list">
+                    <!-- Dynamic Videos will load here -->
                 </div>
             </section>
 
-            <!-- 2. ADMIN PAGE -->
+            <!-- 2. CHAT PAGE (Dedicated Chat Section) -->
+            <section id="page-chat" class="main-section hidden">
+                <h3 style="color: #3ea6ff; margin-bottom: 10px;">💬 Messages & Conversations</h3>
+                <div id="tgChatContainer" class="tg-messages-list-full"></div>
+                <div class="tg-input-area" style="margin-top: 15px;">
+                    <input type="text" id="tgMessageInput" placeholder="စာတို ရေးရန်...">
+                    <button onclick="sendTgMessage()">ပို့မည်</button>
+                </div>
+            </section>
+
+            <!-- 3. ADMIN PAGE -->
             <section id="page-admin" class="main-section hidden">
                 <div id="admin-lock-screen" class="admin-lock-box">
                     <h2>🔒 Admin Verification</h2>
-                    <p style="color: #aaa; font-size: 0.9rem;">Admin Panel ဝင်ရန် Password ထည့်ပါ</p>
-                    <input type="password" id="adminPassInput" placeholder="Password...">
-                    <button class="primary-btn" onclick="verifyAdminPassword()" style="margin-top: 10px; width: 100%;">ဝင်မည်</button>
+                    <input type="password" id="adminPassInput" placeholder="Password (295802)...">
+                    <button class="primary-btn" onclick="verifyAdminPassword()" style="width: 100%;">ဝင်မည်</button>
                 </div>
-
                 <div id="admin-content-box" class="hidden">
                     <h2>🛠️ Admin Control Panel</h2>
                     <div class="admin-card">
-                        <h3>👥 User Account Approvals</h3>
-                        <div id="pendingAccountsList"></div>
-                    </div>
-
-                    <div class="admin-card">
-                        <h3>📹 Video Management</h3>
-                        <input type="text" id="videoSearchInput" placeholder="ဗီဒီယိုအမည်ဖြင့် ရှာရန်...">
-                        <div id="adminVideoList" style="margin-top: 10px;"></div>
-                    </div>
-
-                    <div class="admin-card">
                         <h3>📢 Send Notification</h3>
                         <input type="text" id="notifTitle" placeholder="ခေါင်းစဉ်...">
-                        <textarea id="notifMessage" placeholder="အသိပေးစာ အကြောင်းအရာ..."></textarea>
-                        <button class="primary-btn" onclick="sendNotification()">အသိပေးစာ ပို့မည်</button>
+                        <textarea id="notifMessage" placeholder="အသိပေးစာ..."></textarea>
+                        <button class="primary-btn" onclick="sendNotification()">ပို့မည်</button>
                     </div>
                 </div>
             </section>
 
-            <!-- 3. PROFILE PAGE -->
+            <!-- 4. PROFILE PAGE (With Edit Profile & Photo Change) -->
             <section id="page-profile" class="main-section hidden">
-                <div class="profile-top-actions">
-                    <button class="top-icon-btn" onclick="switchMainPage('settings')">⚙️ Settings</button>
-                    <button class="top-icon-btn admin-btn-top" onclick="switchMainPage('admin')">🛠️ Admin</button>
+                <div class="profile-top-bar">
+                    <div class="profile-top-actions">
+                        <button class="top-icon-btn" onclick="switchMainPage('settings')">⚙️ Settings</button>
+                        <button class="top-icon-btn admin-btn-top" onclick="switchMainPage('admin')">🛠️ Admin</button>
+                    </div>
                 </div>
 
                 <div class="profile-card-modern">
@@ -120,69 +103,61 @@
                     <h2 id="profileNameDisplay" class="profile-name">Account Name</h2>
                     <p id="profileUserDisplay" class="profile-username">@username</p>
                     
+                    <!-- Edit Profile Photo & Name Section -->
+                    <div class="edit-profile-box">
+                        <input type="text" id="editDisplayNameInput" placeholder="နာမည်အသစ်ပြောင်းရန်...">
+                        <input type="file" id="editPhotoPicker" accept="image/*" style="font-size: 0.75rem; color: #aaa;">
+                        <button class="primary-btn" style="padding: 6px; font-size: 0.8rem;" onclick="updateProfileInfo()">Profile ပြင်ဆင်မည်</button>
+                    </div>
+
                     <div class="profile-stats">
-                        <div class="stat-item">
-                            <span class="stat-num" id="statVideos">0</span>
-                            <span class="stat-label">Videos</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-num">0</span>
-                            <span class="stat-label">Followers</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-num">0</span>
-                            <span class="stat-label">Following</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-num">0</span>
-                            <span class="stat-label">Likes</span>
-                        </div>
+                        <div class="stat-item"><span class="stat-num" id="statVideos">0</span><span class="stat-label">Videos</span></div>
+                        <div class="stat-item"><span class="stat-num">0</span><span class="stat-label">Followers</span></div>
+                        <div class="stat-item"><span class="stat-num">0</span><span class="stat-label">Following</span></div>
+                        <div class="stat-item"><span class="stat-num">0</span><span class="stat-label">Likes</span></div>
                     </div>
                 </div>
 
                 <div class="user-uploads-section">
-                    <h3>📂 ကိုယ်တိုင်တင်ထားသော ဗီဒီယိုများနှင့် ပို့စ်များ</h3>
+                    <h3>📂 တင်ထားသော ဗီဒီယိုများနှင့် ပို့စ်များ</h3>
                     <div id="userUploadsFeed" class="uploads-grid"></div>
                 </div>
             </section>
 
-            <!-- 4. SETTINGS PAGE -->
+            <!-- 5. SETTINGS PAGE -->
             <section id="page-settings" class="main-section hidden">
-                <h2>⚙️ App Settings & Preferences</h2>
-                
+                <h2>⚙️ App Settings</h2>
                 <div class="admin-card">
-                    <h3>🎨 Appearance & Playback</h3>
-                    <label class="setting-toggle">
-                        <span>Dark Theme / Night Mode</span>
-                        <input type="checkbox" id="settingDarkMode" checked>
-                    </label>
-                    <label class="setting-toggle">
-                        <span>Auto Resume Videos</span>
-                        <input type="checkbox" checked>
-                    </label>
-                    <label class="setting-toggle">
-                        <span>Background Play Default</span>
-                        <input type="checkbox" checked>
-                    </label>
-                </div>
-
-                <div class="admin-card">
-                    <h3>🔒 Security & Account</h3>
+                    <h3>🔒 Security</h3>
                     <input type="password" id="currentPassInput" placeholder="Current Password">
                     <input type="password" id="newPassInput" placeholder="New Password">
                     <button class="primary-btn" onclick="changeUserPassword()">စကားဝှက်ပြောင်းမည်</button>
                 </div>
-
                 <div class="admin-card">
-                    <h3>💾 Storage & Cache</h3>
-                    <button class="btn-danger" onclick="clearAppCache()">Clear Cache & Data</button>
+                    <h3>💾 Storage</h3>
+                    <button class="btn-danger" onclick="clearAppCache()">Cache ရှင်းလင်းမည်</button>
                 </div>
             </section>
         </main>
 
-        <!-- Bottom Navigation Bar -->
+        <!-- Upload Modal Popup -->
+        <div id="uploadModal" class="modal-overlay hidden">
+            <div class="modal-card">
+                <h3>📤 Upload Video / Shorts</h3>
+                <input type="text" id="uploadTitleInput" placeholder="ဗီဒီယို ခေါင်းစဉ်...">
+                <label style="font-size: 0.8rem; color: #aaa; text-align: left;">ဗီဒီယိုဖိုင် ရွေးရန်:</label>
+                <input type="file" id="videoFilePicker" accept="video/*">
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="primary-btn" onclick="handleVideoUpload()">တင်မည်</button>
+                    <button class="btn-danger" onclick="closeUploadModal()">ပိတ်မည်</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation (Home, Chat, Profile) -->
         <nav class="bottom-nav">
             <button onclick="switchMainPage('home')" id="nav-btn-home" class="nav-btn active">🏠 Home</button>
+            <button onclick="switchMainPage('chat')" id="nav-btn-chat" class="nav-btn">💬 Chat</button>
             <button onclick="switchMainPage('profile')" id="nav-btn-profile" class="nav-btn">👤 Profile</button>
         </nav>
     </div>
