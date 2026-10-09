@@ -36,8 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 document.getElementById('uploadVideoPreviewName').innerText = `ရွေးပြီး: ${file.name} (${fileSizeMB}MB)`;
-                
-                // ဗီဒီယိုဖိုင်ကို Base64 သို့ ပြောင်းလဲခြင်း
                 const reader = new FileReader();
                 reader.onload = (ev) => { tempAppVideoData = ev.target.result; };
                 reader.readAsDataURL(file);
@@ -225,29 +223,74 @@ async function loadHomeVideos(searchQuery = '') {
         const div = document.createElement('div');
         div.className = 'video-card-item';
         
-        let mediaHtml = '';
+        let mediaPreviewHtml = '';
         if(v.media_type === 'telegram_video') {
-            mediaHtml = `<a href="${v.media_url}" target="_blank" style="display:block; background:#181820; border:1px solid #00ffff; color:#00ffff; text-align:center; padding:15px; border-radius:8px; text-decoration:none; font-weight:bold; margin-top:8px;">🎬 Telegram ဖြင့် ကြည့်ရန် (Watch on Telegram)</a>`;
+            mediaPreviewHtml = `
+                <div style="width:100%; height:100%; background:#181820; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#00ffff;">
+                    <span style="font-size:1.8rem;">🎬</span>
+                    <span style="font-size:0.75rem; font-weight:bold; margin-top:4px;">Telegram Video</span>
+                </div>`;
         } else {
-            mediaHtml = `<video src="${v.media_url}" controls width="100%" style="border-radius:8px; background:#000; margin-top:8px;"></video>`;
+            mediaPreviewHtml = `<video src="${v.media_url}#t=0.5" preload="metadata" muted></video>`;
         }
 
         div.innerHTML = `
-            <div class="fb-post-header">
-                <img src="${v.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar">
-                <div>
-                    <div style="font-weight:bold; font-size:0.9rem;">${escapeHtml(v.display_name || v.username)}</div>
-                    <div style="color:#888; font-size:0.7rem;">@${v.username} • <span style="color:#00ffff;">${escapeHtml(v.playlist || 'General')}</span></div>
-                </div>
+            <div class="video-thumbnail-wrapper" onclick="openWatchVideoScreen('${v.id}')">
+                ${mediaPreviewHtml}
+                <div class="video-duration-badge">HD</div>
             </div>
-            <h4 style="margin: 8px 0; font-size:0.95rem;">${escapeHtml(v.post_text)}</h4>
-            ${mediaHtml}
-            <div style="text-align:right; margin-top:6px;">
-                <button onclick="reportPost('${v.id}')" style="background:none; border:none; color:#ff0033; font-size:0.75rem; cursor:pointer;">🚩 Report</button>
+            <div class="video-card-info" onclick="openWatchVideoScreen('${v.id}')">
+                <img src="${v.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar" style="width:36px; height:36px;">
+                <div class="video-details-text">
+                    <h4>${escapeHtml(v.post_text)}</h4>
+                    <p>${escapeHtml(v.display_name || v.username)} • <span style="color:#00ffff;">${escapeHtml(v.playlist || 'General')}</span></p>
+                </div>
             </div>
         `;
         container.appendChild(div);
     });
+}
+
+async function openWatchVideoScreen(videoId) {
+    const { data: v } = await supabaseClient.from('flash_posts').select('*').eq('id', videoId).single();
+    if(!v) return;
+
+    let modal = document.getElementById('watchVideoModal');
+    if(!modal) {
+        modal = document.createElement('div');
+        modal.id = 'watchVideoModal';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#070709; z-index:99999; display:flex; flex-direction:column; overflow-y:auto;';
+        document.body.appendChild(modal);
+    }
+
+    let mediaContent = '';
+    if(v.media_type === 'telegram_video') {
+        mediaContent = `<a href="${v.media_url}" target="_blank" style="display:block; background:#181820; border:1px solid #00ffff; color:#00ffff; text-align:center; padding:20px; border-radius:8px; text-decoration:none; font-weight:bold; margin:15px;">🎬 Telegram ဖြင့် ကြည့်ရန် (Watch on Telegram)</a>`;
+    } else {
+        mediaContent = `<video src="${v.media_url}" controls autoplay width="100%" style="background:#000; max-height:350px;"></video>`;
+    }
+
+    modal.innerHTML = `
+        <div style="background:#111116; padding:12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233;">
+            <button onclick="document.getElementById('watchVideoModal').remove()" style="background:none; border:none; color:#fff; font-size:1.1rem; cursor:pointer;">✕ ပိတ်ရန်</button>
+            <span style="color:#ff0033; font-weight:bold; font-size:0.9rem;">Flâsh Movie Player</span>
+        </div>
+        ${mediaContent}
+        <div style="padding:15px;">
+            <h3 style="color:#fff; font-size:1.05rem; margin-bottom:8px;">${escapeHtml(v.post_text)}</h3>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+                <img src="${v.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar">
+                <div>
+                    <div style="font-weight:bold; font-size:0.9rem;">${escapeHtml(v.display_name || v.username)}</div>
+                    <div style="color:#888; font-size:0.75rem;">@${v.username}</div>
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <button onclick="reportPost('${v.id}')" style="background:none; border:none; color:#ff0033; font-size:0.8rem; cursor:pointer;">🚩 Report Video</button>
+            </div>
+        </div>
+    `;
+    modal.classList.remove('hidden');
 }
 
 function filterHomeVideos() {
@@ -376,4 +419,9 @@ function setupLongPressDelete(element, postId) {
         }, 800);
     });
     element.addEventListener('touchend', () => clearTimeout(pressTimer));
+}
+
+function escapeHtml(text) {
+    if(!text) return '';
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
