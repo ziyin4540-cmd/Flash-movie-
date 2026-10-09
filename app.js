@@ -97,8 +97,8 @@ function compressImageFile(file, callback) {
         const img = new Image();
         img.onload = function() {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 250;
-            const MAX_HEIGHT = 250;
+            const MAX_WIDTH = 200; // ပုံဆိုဒ် အလွန်ကြီးမသွားစေရန် အတိအကျ ကန့်သတ်သည်
+            const MAX_HEIGHT = 200;
             let width = img.width;
             let height = img.height;
             if (width > height) {
