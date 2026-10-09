@@ -3,13 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flâsh Movie Pro</title>
+    <title>Flâsh Movie Pro - Cyber Edition</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Cinematic Intro -->
+    <!-- Cute Intro Screen with Bears & Typing Text -->
     <div id="intro-screen" class="intro-container">
-        <h1 class="lightning-text">⚡ FLÂSH MOVIE PRO ⚡</h1>
+        <div class="intro-content-box">
+            <div class="intro-bears-img-wrapper">
+                <!-- Panda & Bear Image from user source -->
+                <img src="1000126782.jpg" alt="Bears Intro" class="intro-bears-img">
+                <div class="speech-bubble">Welcome To Flâsh Movie!</div>
+            </div>
+            <h2 id="typing-intro-text" class="typing-text-effect"></h2>
+        </div>
     </div>
 
     <!-- Auth Page -->
@@ -45,13 +52,28 @@
         </header>
 
         <main class="main-content">
-            <!-- HOME PAGE -->
+            <!-- HOME PAGE (Facebook Style Feed & Posts) -->
             <section id="page-home" class="main-section">
-                <div class="top-upload-bar">
-                    <h3>🎬 Movie & Shorts Feed</h3>
-                    <button class="upload-trigger-btn" onclick="openUploadModal()">➕ ဗီဒီယိုတင်မည်</button>
+                <!-- Facebook Style Create Post Box -->
+                <div class="fb-create-post-card">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <img id="currentUserAvatarFeed" src="https://via.placeholder.com/35" class="contact-avatar">
+                        <textarea id="fbPostTextInput" placeholder="ဘာတွေတွေးနေလဲ? ပို့စ်အသစ်တင်ရန်..." rows="2" class="fb-textarea"></textarea>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #222233; padding-top: 8px;">
+                        <div style="display: flex; gap: 10px;">
+                            <label class="fb-media-upload-label">
+                                📷 ပုံ/ဗီဒီယို (Max 5MB)
+                                <input type="file" id="fbMediaPicker" accept="image/*,video/*" style="display: none;">
+                            </label>
+                            <span id="selectedMediaName" style="font-size: 0.75rem; color: #00ffff; align-self: center;"></span>
+                        </div>
+                        <button class="primary-btn" style="width: auto; padding: 6px 16px;" onclick="handleCreateFbPost()">တင်မည်</button>
+                    </div>
                 </div>
-                <div id="videoFeedContainer" class="video-feed-list"></div>
+
+                <!-- Facebook Feed Container -->
+                <div id="fbFeedContainer" class="fb-feed-list"></div>
             </section>
 
             <!-- CHAT PAGE -->
@@ -118,7 +140,7 @@
                     </div>
 
                     <div class="profile-stats">
-                        <div class="stat-item"><span class="stat-num" id="statVideos">0</span><span class="stat-label">Videos</span></div>
+                        <div class="stat-item"><span class="stat-num" id="statVideos">0</span><span class="stat-label">Posts</span></div>
                         <div class="stat-item"><span class="stat-num">0</span><span class="stat-label">Followers</span></div>
                         <div class="stat-item"><span class="stat-num">0</span><span class="stat-label">Following</span></div>
                         <div class="stat-item"><span class="stat-num">0</span><span class="stat-label">Likes</span></div>
@@ -126,7 +148,7 @@
                 </div>
 
                 <div class="user-uploads-section">
-                    <h3>📂 တင်ထားသော ဗီဒီယိုများနှင့် ပို့စ်များ</h3>
+                    <h3>📂 တင်ထားသော ပို့စ်များနှင့် ဗီဒီယိုများ</h3>
                     <div id="userUploadsFeed" class="uploads-grid"></div>
                 </div>
             </section>
@@ -147,20 +169,6 @@
             </section>
         </main>
 
-        <!-- Upload Modal -->
-        <div id="uploadModal" class="modal-overlay hidden">
-            <div class="modal-card">
-                <h3>📤 Upload Video / Shorts</h3>
-                <input type="text" id="uploadTitleInput" placeholder="ဗီဒီယို ခေါင်းစဉ်...">
-                <label style="font-size: 0.8rem; color: #aaa; text-align: left;">ဗီဒီယိုဖိုင် ရွေးရန်:</label>
-                <input type="file" id="videoFilePicker" accept="video/*">
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button class="primary-btn" onclick="handleVideoUpload()">တင်မည်</button>
-                    <button class="btn-danger" onclick="closeUploadModal()">ပိတ်မည်</button>
-                </div>
-            </div>
-        </div>
-
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
             <button onclick="switchMainPage('home')" id="nav-btn-home" class="nav-btn active">🏠 Home</button>
@@ -169,6 +177,8 @@
         </nav>
     </div>
 
+    <!-- Modular Script Files -->
+    <script src="feed.js"></script>
     <script src="chat.js"></script>
     <script src="app.js"></script>
 </body>
