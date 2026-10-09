@@ -8,13 +8,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <!-- Intro Screen with Lightning & Cartoon Video Animation -->
+    <!-- Intro Screen -->
     <div id="intro-screen" class="intro-container">
         <div class="intro-bg-overlay"></div>
         <div class="lightning-flash-effect"></div>
         <div class="intro-content-box">
             <div class="intro-bears-img-wrapper">
-                <!-- Cartoon Video/Animation Container instead of broken image -->
                 <video autoplay loop muted playsinline class="intro-cartoon-video">
                     <source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-and-lights-31910-large.mp4" type="video/mp4">
                 </video>
@@ -57,11 +56,21 @@
         </header>
 
         <main class="main-content">
-            <!-- 1. HOME PAGE -->
+            <!-- 1. HOME PAGE (With Playlist Filters & On/Off Toggle) -->
             <section id="page-home" class="main-section">
                 <div style="margin-bottom: 15px;">
                     <input type="text" id="movieSearchInput" placeholder="🔍 ရုပ်ရှင် သို့မဟုတ် ဗီဒီယို ရှာရန်..." oninput="filterHomeVideos()" style="width: 100%; background: #111116; border: 1px solid #333344; color: #fff; padding: 10px; border-radius: 8px; outline: none; box-sizing: border-box;">
                 </div>
+                
+                <!-- Playlist Selector Bar -->
+                <div class="playlist-filter-bar">
+                    <button class="playlist-filter-btn active" onclick="filterPlaylist('all')">All</button>
+                    <button class="playlist-filter-btn" onclick="filterPlaylist('Action')">Action</button>
+                    <button class="playlist-filter-btn" onclick="filterPlaylist('Comedy')">Comedy</button>
+                    <button class="playlist-filter-btn" onclick="filterPlaylist('Romance')">Romance</button>
+                    <button class="playlist-filter-btn" onclick="filterPlaylist('Series')">Series</button>
+                </div>
+
                 <div id="homeVideoFeedContainer" class="video-feed-list"></div>
             </section>
 
@@ -86,7 +95,7 @@
                 <div id="fbFeedContainer" class="fb-feed-list"></div>
             </section>
 
-            <!-- 3. UPLOAD PAGE -->
+            <!-- 3. UPLOAD PAGE (With Playlist Category & On/Off Feature) -->
             <section id="page-upload" class="main-section hidden">
                 <div class="create-post-header">
                     <span style="font-weight: bold; font-size: 1.1rem;">📤 Upload Video / Movie</span>
@@ -94,14 +103,31 @@
                 <div class="create-post-body">
                     <input type="text" id="uploadVideoTitle" placeholder="ဗီဒီယို သို့မဟုတ် ရုပ်ရှင် ခေါင်းစဉ်..." class="fb-textarea" style="margin-bottom: 10px;">
                     
-                    <div style="margin-bottom: 12px; background: #181820; padding: 10px; border-radius: 8px; border: 1px solid #333344;">
-                        <label style="font-size: 0.8rem; color: #00ffff; font-weight: bold; display: block; margin-bottom: 5px;">📱 Telegram Channel Link (1GB+ ဖိုင်ကြီးများအတွက်):</label>
+                    <!-- Playlist Category Selection -->
+                    <div style="margin-bottom: 10px;">
+                        <label style="font-size: 0.8rem; color: #00ffff; display: block; margin-bottom: 4px;">📂 Playlist Category:</label>
+                        <select id="uploadPlaylistCategory" class="fb-textarea" style="background: #181820;">
+                            <option value="Action">Action</option>
+                            <option value="Comedy">Comedy</option>
+                            <option value="Romance">Romance</option>
+                            <option value="Series">Series</option>
+                        </select>
+                    </div>
+
+                    <!-- Playlist Feature ON/OFF Toggle -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #181820; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #333344;">
+                        <span style="font-size: 0.85rem; color: #fff;">Playlist Feature (Enable/Disable):</span>
+                        <input type="checkbox" id="playlistToggleSwitch" checked style="width: 20px; height: 20px; accent-color: #ff0033; cursor: pointer;">
+                    </div>
+
+                    <div style="margin-bottom: 10px; background: #181820; padding: 10px; border-radius: 8px; border: 1px solid #333344;">
+                        <label style="font-size: 0.8rem; color: #00ffff; display: block; margin-bottom: 5px;">📱 Telegram Channel Link (1GB+ ဖိုင်များအတွက်):</label>
                         <input type="text" id="telegramVideoLinkInput" placeholder="https://t.me/channel/123..." class="fb-textarea">
                     </div>
 
-                    <div style="text-align: center; color: #888; font-size: 0.75rem; margin-bottom: 8px;">(သို့မဟုတ်) ဖိုင်ငယ်များအတွက် တိုက်ရိုက်တင်ရန်</div>
+                    <div style="text-align: center; color: #888; font-size: 0.75rem; margin-bottom: 6px;">(သို့မဟုတ်) ဖိုင်ငယ်များအတွက် တိုက်ရိုက်တင်ရန်</div>
 
-                    <label class="fb-media-upload-label" style="display:block; text-align:center; padding: 12px; margin-bottom: 10px;">
+                    <label class="fb-media-upload-label" style="display:block; text-align:center; padding: 10px; margin-bottom: 10px;">
                         🎬 ဖိုင်ရွေးရန် (Max 5MB)
                         <input type="file" id="appVideoPicker" accept="video/*" style="display:none;">
                     </label>
