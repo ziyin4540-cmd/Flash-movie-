@@ -20,7 +20,6 @@ function runIntroTypingEffect() {
                 index++;
                 setTimeout(type, 40);
             } else {
-                // Intro ပြီးသွားရင် 1 စက္ကန့်အတွင်း အလိုအလျောက် ပျောက်ပြီး Home/Auth ကို ဝင်မယ်
                 setTimeout(() => {
                     const introScreen = document.getElementById('intro-screen');
                     if(introScreen) {
@@ -36,7 +35,6 @@ function runIntroTypingEffect() {
         }
         type();
     } else {
-        // Fallback in case element missing
         setTimeout(() => {
             const introScreen = document.getElementById('intro-screen');
             if(introScreen) introScreen.classList.add('hidden');
@@ -48,7 +46,7 @@ function runIntroTypingEffect() {
 function checkUserSession() {
     const loggedUser = localStorage.getItem('flash_logged_user');
     const introScreen = document.getElementById('intro-screen');
-    if(introScreen && !introScreen.classList.contains('hidden')) return; // Intro ပြီးမှ စစ်မယ်
+    if(introScreen && !introScreen.classList.contains('hidden')) return;
 
     if (!loggedUser) {
         document.getElementById('page-auth').classList.remove('hidden');
@@ -83,18 +81,42 @@ let tempRegPhotoData = "https://via.placeholder.com/90";
 document.getElementById('regPhotoPicker').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
-        const reader = new FileReader();
-        reader.onload = (ev) => { tempRegPhotoData = ev.target.result; };
-        reader.readAsDataURL(file);
+        compressImageFile(file, (base64) => { tempRegPhotoData = base64; });
     }
 });
+
+function compressImageFile(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 300;
+            const MAX_HEIGHT = 300;
+            let width = img.width;
+            let height = img.height;
+            if (width > height) {
+                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+            } else {
+                if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            callback(canvas.toDataURL('image/jpeg', 0.5));
+        };
+        img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+}
 
 async function handleRegister() {
     const user = document.getElementById('regUser').value.trim();
     const pass = document.getElementById('regPass').value.trim();
     const displayName = document.getElementById('regDisplayName').value.trim();
     
-    if(!user || !pass || !displayName) return alert('အချက်အလက် အပြည့်အစုံ ဖြည့်ပါ။');
+    if(!user || !pass || !displayName) return showToast('အချက်အလက် အပြည့်အစုံ ဖြည့်ပါ။', 'error');
 
     const { error } = await supabaseClient.from('flash_users').insert([{
         username: user,
@@ -104,8 +126,8 @@ async function handleRegister() {
         created_at: new Date().toISOString()
     }]);
 
-    if(error) return alert('အကောင့်ဖွင့်၍မရပါ: ' + error.message);
-    alert('အကောင့်ဖွင့်ခြင်း အောင်မြင်ပါသည်။');
+    if(error) return showToast('အကောင့်ဖွင့်၍မရပါ: ' + error.message, 'error');
+    showToast('အကောင့်ဖွင့်ခြင်း အောင်မြင်ပါသည်။', 'success');
     switchAuthView('login');
 }
 
@@ -121,7 +143,7 @@ async function handleLogin() {
 
     const { data, error } = await supabaseClient.from('flash_users').select('*').eq('username', user).single();
     if(error || !data || data.password !== pass) {
-        alert('Username သို့မဟုတ် Password မှားယွင်းနေပါသည်။');
+        showToast('Username သို့မဟုတ် Password မှားယွင်းနေပါသည်။', 'error');
     } else {
         localStorage.setItem('flash_logged_user', user);
         checkUserSession();
@@ -161,28 +183,32 @@ function setupProfilePhotoListeners() {
     profilePicker.addEventListener('change', async function(e) {
         const file = e.target.files[0];
         if(file) {
-            const reader = new FileReader();
-            reader.onload = async function(ev) {
+            compressImageFile(file, async (base64) => {
                 const user = localStorage.getItem('flash_logged_user');
-                await supabaseClient.from('flash_users').update({ photo_url: ev.target.result }).eq('username', user);
-                loadUserProfile(user);
-                alert('Profile ပုံ အောင်မြင်ပါသည်။');
-            };
-            reader.readAsDataURL(file);
+                const { error } = await supabaseClient.from('flash_users').update({ photo_url: base64 }).eq('username', user);
+                if(!error) {
+                    loadUserProfile(user);
+                    showToast('Profile ပုံ အောင်မြင်ပါသည်။', 'success');
+                } else {
+                    showToast('ပုံတင်၍မရပါ: ' + error.message, 'error');
+                }
+            });
         }
     });
 
     bgPicker.addEventListener('change', async function(e) {
         const file = e.target.files[0];
         if(file) {
-            const reader = new FileReader();
-            reader.onload = async function(ev) {
+            compressImageFile(file, async (base64) => {
                 const user = localStorage.getItem('flash_logged_user');
-                await supabaseClient.from('flash_users').update({ banner_url: ev.target.result }).eq('username', user);
-                loadUserProfile(user);
-                alert('Background ပုံ အောင်မြင်ပါသည်။');
-            };
-            reader.readAsDataURL(file);
+                const { error } = await supabaseClient.from('flash_users').update({ banner_url: base64 }).eq('username', user);
+                if(!error) {
+                    loadUserProfile(user);
+                    showToast('Background ပုံ အောင်မြင်ပါသည်။', 'success');
+                } else {
+                    showToast('ပုံတင်၍မရပါ: ' + error.message, 'error');
+                }
+            });
         }
     });
 }
@@ -236,7 +262,7 @@ async function verifyAdminPassword() {
         document.getElementById('admin-lock-screen').classList.add('hidden');
         document.getElementById('admin-content-box').classList.remove('hidden');
         loadAdminData();
-    } else alert('Password မှားယွင်းနေပါသည်။');
+    } else showToast('Password မှားယွင်းနေပါသည်။', 'error');
 }
 
 async function loadAdminData() {
@@ -264,7 +290,7 @@ async function loadAdminData() {
 async function adminDeleteUser(username) {
     if(confirm(`User @${username} ကို ဖျက်မည်မှာ သေချာပါသလား?`)) {
         await supabaseClient.from('flash_users').delete().eq('username', username);
-        alert('ဖျက်ပြီးပါပြီ။');
+        showToast('ဖျက်ပြီးပါပြီ။', 'success');
         loadAdminData();
     }
 }
@@ -272,7 +298,7 @@ async function adminDeleteUser(username) {
 async function adminDeletePost(postId) {
     if(confirm('ဤပို့စ်/ဗီဒီယိုကို ဖျက်မည်မှာ သေချာပါသလား?')) {
         await supabaseClient.from('flash_posts').delete().eq('id', postId);
-        alert('ဖျက်ပြီးပါပြီ။');
+        showToast('ဖျက်ပြီးပါပြီ။', 'success');
         loadAdminData();
     }
 }
@@ -283,7 +309,7 @@ function sendNotification() {
     if(title && msg) {
         localStorage.setItem('flash_admin_notif_title', title);
         localStorage.setItem('flash_admin_notif_text', msg);
-        alert('အသိပေးစာ ပို့ပြီးပါပြီ။');
+        showToast('အသိပေးစာ ပို့ပြီးပါပြီ။', 'success');
     }
 }
 
@@ -357,8 +383,37 @@ function startRealTimeTimer() {
     }, 1000);
 }
 
-function changeUserPassword() { alert('စကားဝှက် ပြောင်းလဲပြီးပါပြီ။'); }
-function clearAppCache() { localStorage.clear(); alert('Cache ရှင်းလင်းပြီးပါပြီ။'); checkUserSession(); }
+function showToast(message, type = 'success') {
+    let oldToast = document.getElementById('custom-toast-box');
+    if(oldToast) oldToast.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'custom-toast-box';
+    toast.style.position = 'fixed';
+    toast.style.top = '20px';
+    toast.style.left = '50%';
+    toast.style.transform = 'translateX(-50%)';
+    toast.style.background = type === 'success' ? '#111116' : '#220709';
+    toast.style.color = type === 'success' ? '#00ffff' : '#ff0033';
+    toast.style.border = `1px solid ${type === 'success' ? '#00ffff' : '#ff0033'}`;
+    toast.style.padding = '10px 20px';
+    toast.style.borderRadius = '25px';
+    toast.style.fontSize = '0.85rem';
+    toast.style.fontWeight = 'bold';
+    toast.style.zIndex = '99999';
+    toast.style.boxShadow = `0 0 15px ${type === 'success' ? 'rgba(0,255,255,0.3)' : 'rgba(255,0,51,0.3)'}`;
+    toast.innerText = message;
+
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.transition = 'opacity 0.5s ease';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 500);
+    }, 2500);
+}
+
+function changeUserPassword() { showToast('စကားဝှက် ပြောင်းလဲပြီးပါပြီ။', 'success'); }
+function clearAppCache() { localStorage.clear(); showToast('Cache ရှင်းလင်းပြီးပါပြီ။', 'success'); checkUserSession(); }
 
 function escapeHtml(text) {
     if(!text) return '';
