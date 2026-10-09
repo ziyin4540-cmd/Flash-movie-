@@ -36,6 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 document.getElementById('uploadVideoPreviewName').innerText = `ရွေးပြီး: ${file.name} (${fileSizeMB}MB)`;
+                
+                // ဗီဒီယိုဖိုင်ကို Base64 သို့ ပြောင်းလဲခြင်း
                 const reader = new FileReader();
                 reader.onload = (ev) => { tempAppVideoData = ev.target.result; };
                 reader.readAsDataURL(file);
@@ -77,7 +79,7 @@ async function handleCreateFbPost() {
 
     let userPhoto = 'https://via.placeholder.com/35';
     let displayName = currentUser;
-    const { data: uData, error: uError } = await supabaseClient.from('flash_users').select('*').eq('username', currentUser).single();
+    const { data: uData } = await supabaseClient.from('flash_users').select('*').eq('username', currentUser).single();
     if(uData) {
         if(uData.photo_url) userPhoto = uData.photo_url;
         if(uData.display_name) displayName = uData.display_name;
@@ -375,4 +377,3 @@ function setupLongPressDelete(element, postId) {
     });
     element.addEventListener('touchend', () => clearTimeout(pressTimer));
 }
-    
