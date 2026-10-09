@@ -1,6 +1,7 @@
 let tempFbMediaData = "";
 let tempMediaType = "";
 let activeCommentPostId = null;
+let activeWatchVideoId = null;
 let tempAppVideoData = "";
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -192,14 +193,12 @@ async function loadHomeVideos(searchQuery = '') {
     if(!container) return;
 
     const { data: posts, error } = await supabaseClient.from('flash_posts').select('*').order('created_at', { ascending: false });
-    
     if(error || !posts) {
         container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ဗီဒီယိုများ ရယူရာတွင် အမှားရှိနေပါသည်။</p>';
         return;
     }
 
     let videoPosts = posts.filter(p => p.is_video === true);
-
     if(videoPosts.length === 0) {
         container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ဗီဒီယိုများ မရှိသေးပါ။</p>';
         return;
@@ -228,7 +227,7 @@ async function loadHomeVideos(searchQuery = '') {
             mediaPreviewHtml = `
                 <div style="width:100%; height:100%; background:#181820; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#00ffff;">
                     <span style="font-size:1.8rem;">🎬</span>
-                    <span style="font-size:0.75rem; font-weight:bold; margin-top:4px;">Telegram Video</span>
+                    <span style="font-size:0.75rem; font-weight:bold; margin-top:4px;">Telegram Video Player</span>
                 </div>`;
         } else {
             mediaPreviewHtml = `<video src="${v.media_url}#t=0.5" preload="metadata" muted></video>`;
@@ -251,177 +250,167 @@ async function loadHomeVideos(searchQuery = '') {
     });
 }
 
+// Watch Video Screen (Full Page Screen with Like, Comments, Report, Share & Next Videos)
 async function openWatchVideoScreen(videoId) {
+    activeWatchVideoId = videoId;
     const { data: v } = await supabaseClient.from('flash_posts').select('*').eq('id', videoId).single();
     if(!v) return;
 
-    let modal = document.getElementById('watchVideoModal');
-    if(!modal) {
-        modal = document.createElement('div');
-        modal.id = 'watchVideoModal';
-        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#070709; z-index:99999; display:flex; flex-direction:column; overflow-y:auto;';
-        document.body.appendChild(modal);
+    let watchPage = document.getElementById('page-watch-video');
+    if(!watchPage) {
+        watchPage = document.createElement('div');
+        watchPage.id = 'page-watch-video';
+        watchPage.className = 'main-section hidden';
+        watchPage.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#070709; z-index:99999; overflow-y:auto; box-sizing:border-box; padding:0;';
+        document.body.appendChild(watchPage);
     }
+
+    const currentUser = localStorage.getItem('flash_logged_user');
+    const likesArr = v.likes || [];
+    const isLiked = likesArr.includes(currentUser);
+    const commentsArr = v.comments || [];
 
     let mediaContent = '';
     if(v.media_type === 'telegram_video') {
-        mediaContent = `<a href="${v.media_url}" target="_blank" style="display:block; background:#181820; border:1px solid #00ffff; color:#00ffff; text-align:center; padding:20px; border-radius:8px; text-decoration:none; font-weight:bold; margin:15px;">🎬 Telegram ဖြင့် ကြည့်ရန် (Watch on Telegram)</a>`;
+        // Telegram Web Embed Player သို့မဟုတ် Direct iframe player ချိတ်ဆက်ခြင်း
+        let embedUrl = v.media_url.includes('t.me/') ? v.media_url.replace('t.me/', 't.me/s/') : v.media_url;
+        mediaContent = `
+            <div style="width:100%; height:250px; background:#000; position:relative;">
+                <iframe src="${embedUrl}" width="100%" height="100%" frameborder="0" allowfullscreen style="border:none;"></iframe>
+            </div>`;
     } else {
-        mediaContent = `<video src="${v.media_url}" controls autoplay width="100%" style="background:#000; max-height:350px;"></video>`;
+        mediaContent = `<video src="${v.media_url}" controls autoplay width="100%" style="background:#000; max-height:300px;"></video>`;
     }
 
-    modal.innerHTML = `
-        <div style="background:#111116; padding:12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233;">
-            <button onclick="document.getElementById('watchVideoModal').remove()" style="background:none; border:none; color:#fff; font-size:1.1rem; cursor:pointer;">✕ ပိတ်ရန်</button>
-            <span style="color:#ff0033; font-weight:bold; font-size:0.9rem;">Flâsh Movie Player</span>
+    // ဆက်လက်ကြည့်ရှုရန် Next Videos များကို ဆွဲထုတ်ခြင်း
+    const { data: allPosts } = await supabaseClient.from('flash_posts').select('*').eq('is_video', true).order('created_at', { ascending: false });
+    let nextVideosHtml = '';
+    if(allPosts) {
+        let otherVideos = allPosts.filter(item => item.id !== videoId);
+        otherVideos.slice(0, 5).forEach(nv => {
+            nextVideosHtml += `
+                <div onclick="openWatchVideoScreen('${nv.id}')" style="display:flex; gap:10px; background:#111116; padding:8px; border-radius:8px; cursor:pointer; margin-bottom:8px; border:1px solid #222233;">
+                    <div style="width:100px; height:60px; background:#000; border-radius:6px; overflow:hidden; flex-shrink:0;">
+                        ${nv.media_type === 'telegram_video' ? '<div style="color:#00ffff; text-align:center; padding-top:15px; font-size:0.7rem;">🎬 Telegram</div>' : `<video src="${nv.media_url}" width="100%" height="100%" style="object-fit:cover;"></video>`}
+                    </div>
+                    <div>
+                        <h5 style="margin:0 0 4px 0; font-size:0.85rem; color:#fff; line-height:1.2;">${escapeHtml(nv.post_text)}</h5>
+                        <p style="margin:0; font-size:0.7rem; color:#888;">${escapeHtml(nv.display_name || nv.username)}</p>
+                    </div>
+                </div>`;
+        });
+    }
+
+    watchPage.innerHTML = `
+        <div style="background:#111116; padding:12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233; position:sticky; top:0; z-index:10;">
+            <button onclick="closeWatchVideoScreen()" style="background:none; border:none; color:#00ffff; font-weight:bold; font-size:0.9rem; cursor:pointer;">◄ နောက်သို့ (Back)</button>
+            <span style="color:#ff0033; font-weight:bold; font-size:0.9rem;">Flâsh Watch</span>
         </div>
         ${mediaContent}
         <div style="padding:15px;">
-            <h3 style="color:#fff; font-size:1.05rem; margin-bottom:8px;">${escapeHtml(v.post_text)}</h3>
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
-                <img src="${v.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar">
-                <div>
-                    <div style="font-weight:bold; font-size:0.9rem;">${escapeHtml(v.display_name || v.username)}</div>
-                    <div style="color:#888; font-size:0.75rem;">@${v.username}</div>
+            <h3 style="color:#fff; font-size:1rem; margin-bottom:8px;">${escapeHtml(v.post_text)}</h3>
+            <div style="display:flex; align-items:center; justify-content:between; margin-bottom:12px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="${v.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar">
+                    <div>
+                        <div style="font-weight:bold; font-size:0.9rem;">${escapeHtml(v.display_name || v.username)}</div>
+                        <div style="color:#888; font-size:0.75rem;">@${v.username}</div>
+                    </div>
                 </div>
             </div>
-            <div style="text-align:right;">
-                <button onclick="reportPost('${v.id}')" style="background:none; border:none; color:#ff0033; font-size:0.8rem; cursor:pointer;">🚩 Report Video</button>
+
+            <!-- Action Buttons: Like, Comment, Share to Chat, Report -->
+            <div style="display:flex; justify-content:space-around; background:#111116; border:1px solid #222233; padding:10px; border-radius:12px; margin-bottom:15px;">
+                <button class="fb-action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLikeWatchVideo('${v.id}')">❤️ ${likesArr.length}</button>
+                <button class="fb-action-btn" onclick="openCommentPage('${v.id}')">💬 Comments (${commentsArr.length})</button>
+                <button class="fb-action-btn" onclick="openShareToChatModal('${v.id}', '${escapeHtml(v.post_text)}')">↗ Share to Chat</button>
+                <button class="fb-action-btn" onclick="reportPost('${v.id}')" style="color:#ff0033;">🚩 Report</button>
             </div>
+
+            <h4 style="color:#00ffff; font-size:0.9rem; margin-bottom:10px;">⏭ နောက်လာမည့် ဗီဒီယိုများ (Next Videos)</h4>
+            ${nextVideosHtml || '<p style="color:#666; font-size:0.8rem;">ဗီဒီယို အခြားမရှိသေးပါ။</p>'}
         </div>
     `;
-    modal.classList.remove('hidden');
+
+    document.querySelectorAll('.main-section').forEach(sec => sec.classList.add('hidden'));
+    watchPage.classList.remove('hidden');
 }
 
-function filterHomeVideos() {
-    const q = document.getElementById('movieSearchInput').value;
-    loadHomeVideos(q);
+function closeWatchVideoScreen() {
+    const watchPage = document.getElementById('page-watch-video');
+    if(watchPage) watchPage.classList.add('hidden');
+    switchMainPage('home');
 }
 
-async function loadFbFeed() {
-    const container = document.getElementById('fbFeedContainer');
-    if(!container) return;
-
-    const { data: posts, error } = await supabaseClient.from('flash_posts').select('*').order('created_at', { ascending: false });
-    if(error || !posts) {
-        container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ပို့စ်များ မရှိသေးပါ။</p>';
-        return;
-    }
-
-    let feedPosts = posts.filter(p => p.is_video !== true);
-    if(feedPosts.length === 0) {
-        container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ပို့စ်များ မရှိသေးပါ။</p>';
-        return;
-    }
-
-    const currentUser = localStorage.getItem('flash_logged_user');
-    container.innerHTML = '';
-
-    feedPosts.forEach(post => {
-        const likesArr = post.likes || [];
-        const isLiked = likesArr.includes(currentUser);
-        const commentsArr = post.comments || [];
-        const div = document.createElement('div');
-        div.className = 'fb-post-card';
-
-        let mediaHtml = '';
-        if(post.media_url) {
-            mediaHtml = post.media_type === 'image' ? `<img src="${post.media_url}" width="100%" style="border-radius:8px; margin-top:8px; max-height:350px; object-fit:cover;">` : `<video src="${post.media_url}" controls width="100%" style="border-radius:8px; margin-top:8px; background:#000;"></video>`;
-        }
-
-        div.innerHTML = `
-            <div class="fb-post-header">
-                <img src="${post.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar">
-                <div>
-                    <div style="font-weight:bold; font-size:0.9rem;">${escapeHtml(post.display_name || post.username)}</div>
-                    <div style="color:#888; font-size:0.7rem;">@${post.username}</div>
-                </div>
-            </div>
-            <p style="font-size:0.9rem; margin:8px 0; word-break:break-word;">${escapeHtml(post.post_text || '')}</p>
-            ${mediaHtml}
-            <div class="fb-post-actions">
-                <button class="fb-action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLikePost('${post.id}')">❤️ ${likesArr.length} Likes</button>
-                <button class="fb-action-btn" onclick="openCommentScreen('${post.id}')">💬 Comments (${commentsArr.length})</button>
-                <button class="fb-action-btn" onclick="reportPost('${post.id}')" style="color:#ff0033;">🚩 Report</button>
-            </div>
-        `;
-        container.appendChild(div);
-    });
+async function toggleLikeWatchVideo(videoId) {
+    await toggleLikePost(videoId);
+    openWatchVideoScreen(videoId);
 }
 
-async function reportPost(postId) {
-    const { data: post } = await supabaseClient.from('flash_posts').select('*').eq('id', postId).single();
-    if(post) {
-        let currentReports = post.reports || 0;
-        await supabaseClient.from('flash_posts').update({ reports: currentReports + 1 }).eq('id', postId);
-        showToast('Report တင်ပြီးပါပြီ။', 'success');
-    }
-}
-
-async function toggleLikePost(postId) {
-    const currentUser = localStorage.getItem('flash_logged_user');
-    const { data: post } = await supabaseClient.from('flash_posts').select('*').eq('id', postId).single();
-    if(!post) return;
-    let likesArr = post.likes || [];
-    const idx = likesArr.indexOf(currentUser);
-    if(idx > -1) likesArr.splice(idx, 1); else likesArr.push(currentUser);
-    await supabaseClient.from('flash_posts').update({ likes: likesArr }).eq('id', postId);
-    loadFbFeed();
-}
-
-function openCommentScreen(postId) {
+// Comment စာမျက်နှာအသစ်သို့ ပြောင်းလဲပြသခြင်း
+function openCommentPage(postId) {
     activeCommentPostId = postId;
     switchMainPage('comment');
     loadCommentScreenContent();
 }
 
-async function loadCommentScreenContent() {
-    const container = document.getElementById('commentScreenContent');
-    if(!activeCommentPostId) return;
-    const { data: post } = await supabaseClient.from('flash_posts').select('*').eq('id', activeCommentPostId).single();
-    if(!post) return;
-
-    let commentsArr = post.comments || [];
-    let html = `<div style="background:#111116; padding:12px; border-radius:8px; margin-bottom:12px;"><strong style="color:#00ffff;">${escapeHtml(post.display_name || post.username)}:</strong> ${escapeHtml(post.post_text || '')}</div>`;
-    html += `<h4 style="color:#aaa; font-size:0.85rem; margin-bottom:8px;">Comments (${commentsArr.length})</h4>`;
-    commentsArr.forEach(c => {
-        html += `<div style="background:#181820; padding:8px 12px; border-radius:8px; margin-bottom:6px; font-size:0.85rem;"><strong style="color:#00ffff;">@${c.user}:</strong> ${escapeHtml(c.text)}</div>`;
-    });
-    container.innerHTML = html;
-}
-
-async function submitScreenComment() {
-    const input = document.getElementById('screenCommentInput');
-    const text = input.value.trim();
+// Share to Chat စာမျက်နှာအသစ်သို့ ပြောင်းလဲပြသခြင်း (သို့မဟုတ် Modal ဖြင့်ပြခြင်း)
+async function openShareToChatModal(videoId, videoTitle) {
     const currentUser = localStorage.getItem('flash_logged_user');
-    if(!text || !activeCommentPostId) return;
+    const { data: users } = await supabaseClient.from('flash_users').select('*').neq('username', currentUser);
+    
+    let modal = document.getElementById('shareChatModal');
+    if(!modal) {
+        modal = document.createElement('div');
+        modal.id = 'shareChatModal';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:999999; display:flex; justify-content:center; align-items:center;';
+        document.body.appendChild(modal);
+    }
 
-    const { data: post } = await supabaseClient.from('flash_posts').select('*').eq('id', activeCommentPostId).single();
-    if(!post) return;
-    let commentsArr = post.comments || [];
-    commentsArr.push({ user: currentUser, text: text });
-    await supabaseClient.from('flash_posts').update({ comments: commentsArr }).eq('id', activeCommentPostId);
-    input.value = '';
-    loadCommentScreenContent();
+    let usersHtml = '';
+    if(users) {
+        users.forEach(u => {
+            usersHtml += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#181820; padding:10px; border-radius:8px; margin-bottom:8px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img src="${u.photo_url || 'https://via.placeholder.com/35'}" class="contact-avatar">
+                        <div>
+                            <div style="font-weight:bold; font-size:0.85rem; color:#fff;">${escapeHtml(u.display_name || u.username)}</div>
+                            <div style="color:#888; font-size:0.7rem;">@${u.username}</div>
+                        </div>
+                    </div>
+                    <button onclick="sendVideoToChatUser('${u.username}', '${videoId}', '${videoTitle}')" style="background:#00ffff; color:#000; border:none; padding:6px 12px; font-weight:bold; border-radius:6px; cursor:pointer; font-size:0.75rem;">Share</button>
+                </div>`;
+        });
+    }
+
+    modal.innerHTML = `
+        <div style="background:#111116; border:1px solid #222233; padding:20px; border-radius:14px; width:90%; max-width:400px; max-height:80vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="color:#00ffff; margin:0; font-size:1rem;">📤 Share to Chat</h3>
+                <button onclick="document.getElementById('shareChatModal').remove()" style="background:none; border:none; color:#fff; font-size:1.1rem; cursor:pointer;">✕</button>
+            </div>
+            ${usersHtml || '<p style="color:#666; text-align:center;">User များ မရှိသေးပါ။</p>'}
+        </div>
+    `;
+    modal.classList.remove('hidden');
 }
 
-let pressTimer;
-function setupLongPressDelete(element, postId) {
-    element.addEventListener('touchstart', () => {
-        pressTimer = setTimeout(async () => {
-            if(confirm('ဤအချက်အလက်ကို ဖျက်မည်မှာ သေချာပါသလား?')) {
-                await supabaseClient.from('flash_posts').delete().eq('id', postId);
-                showToast('ဖျက်ပြီးပါပြီ။', 'success');
-                loadUserProfile(localStorage.getItem('flash_logged_user'));
-                loadHomeVideos();
-                loadFbFeed();
-            }
-        }, 800);
-    });
-    element.addEventListener('touchend', () => clearTimeout(pressTimer));
-}
+async function sendVideoToChatUser(receiverUsername, videoId, videoTitle) {
+    const currentUser = localStorage.getItem('flash_logged_user');
+    const shareMessage = `🎬 Shared Video: ${videoTitle} (ID: ${videoId})`;
 
-function escapeHtml(text) {
-    if(!text) return '';
-    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const { error } = await supabaseClient.from('flash_chats').insert([{
+        sender: currentUser,
+        receiver: receiverUsername,
+        message: shareMessage,
+        created_at: new Date().toISOString()
+    }]);
+
+    if(!error) {
+        showToast('✅ ချတ်သို့ မျှဝေပြီးပါပြီ။', 'success');
+        document.getElementById('shareChatModal').remove();
+    } else {
+        showToast('❌ မျှဝေ၍မရပါ', 'error');
+    }
 }
