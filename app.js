@@ -115,7 +115,6 @@ function verifyAdminPassword() {
     }
 }
 
-// Settings: Change Password
 function changeUserPassword() {
     const currentUser = localStorage.getItem('flash_logged_user');
     const currentPass = document.getElementById('currentPassInput').value.trim();
@@ -141,7 +140,6 @@ function changeUserPassword() {
     }
 }
 
-// Settings: Clear Cache
 function clearAppCache() {
     if(confirm('App ဒေတာများနှင့် Cache များကို ရှင်းလင်းလိုသည်မှာ သေချာပါသလား?')) {
         localStorage.removeItem('flash_tg_messages');
@@ -150,7 +148,6 @@ function clearAppCache() {
     }
 }
 
-// Telegram Style Chat
 function sendTgMessage() {
     const input = document.getElementById('tgMessageInput');
     const text = input.value.trim();
@@ -203,7 +200,6 @@ function deleteTgMessage(id) {
     loadTgMessages();
 }
 
-// Bottom Navigation Switcher
 function switchMainPage(pageName) {
     document.querySelectorAll('.main-section').forEach(sec => sec.classList.add('hidden'));
     document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.remove('active'));
@@ -215,7 +211,6 @@ function switchMainPage(pageName) {
         document.getElementById('page-admin').classList.remove('hidden');
         document.getElementById('nav-btn-admin').classList.add('active');
         
-        // Check if admin was already verified in this session
         if(sessionStorage.getItem('admin_verified') === 'true') {
             document.getElementById('admin-lock-screen').classList.add('hidden');
             document.getElementById('admin-content-box').classList.remove('hidden');
