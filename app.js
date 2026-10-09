@@ -60,7 +60,13 @@ function checkUserSession() {
         loadFbFeed();
         
         supabaseClient.from('flash_users').select('*').eq('username', loggedUser).single().then(({ data }) => {
-            if(data && data.photo_url) document.getElementById('currentUserAvatarFeed').src = data.photo_url;
+            if(data) {
+                if(data.photo_url) document.getElementById('currentUserAvatarFeed').src = data.photo_url;
+                if(document.getElementById('settingsUsernameInput')) {
+                    document.getElementById('settingsUsernameInput').value = data.username || '';
+                    document.getElementById('settingsDisplayNameInput').value = data.display_name || '';
+                }
+            }
         });
     }
 }
@@ -150,10 +156,32 @@ async function handleLogin() {
     }
 }
 
+async function updateAccountInfo() {
+    const oldUser = localStorage.getItem('flash_logged_user');
+    const newUser = document.getElementById('settingsUsernameInput').value.trim();
+    const newName = document.getElementById('settingsDisplayNameInput').value.trim();
+
+    if(!newUser || !newName) return showToast('အချက်အလက် ဖြည့်ပါ။', 'error');
+
+    const { error } = await supabaseClient.from('flash_users').update({
+        username: newUser,
+        display_name: newName
+    }).eq('username', oldUser);
+
+    if(error) {
+        showToast('ပြင်ဆင်၍မရပါ: ' + error.message, 'error');
+    } else {
+        localStorage.setItem('flash_logged_user', newUser);
+        showToast('အကောင့်အချက်အလက် ပြင်ဆင်ပြီးပါပြီ။', 'success');
+        checkUserSession();
+    }
+}
+
 function handleLogout() {
     localStorage.removeItem('flash_logged_user');
     sessionStorage.removeItem('admin_verified');
     checkUserSession();
+    showToast('အကောင့်ထွက်ပြီးပါပြီ။', 'success');
 }
 
 function switchProfileTab(tabName) {
@@ -254,6 +282,41 @@ async function loadUserProfile(username) {
         setupLongPressDelete(div, item.id);
         contentGrid.appendChild(div);
     });
+}
+
+async function openUserProfilePlaylists() {
+    switchMainPage('profile-playlists');
+    const container = document.getElementById('profilePlaylistContainer');
+    const currentUser = localStorage.getItem('flash_logged_user');
+    
+    const { data: posts } = await supabaseClient.from('flash_posts').select('*').eq('username', currentUser).eq('is_video', true);
+    if(!posts || posts.length === 0) {
+        container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ပလေးလစ်များ မရှိသေးပါ။</p>';
+        return;
+    }
+
+    let playlists = {};
+    posts.forEach(p => {
+        let pl = p.playlist || 'General';
+        if(!playlists[pl]) playlists[pl] = [];
+        playlists[pl].push(p);
+    });
+
+    let html = '';
+    for(let plName in playlists) {
+        html += `<div class="admin-card" style="margin-bottom:15px;">
+            <h3 style="color:#00ffff; margin-bottom:10px;">📂 ${escapeHtml(plName)} (${playlists[plName].length})</h3>
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:8px;">`;
+        
+        playlists[plName].forEach(v => {
+            html += `<div class="upload-item-card">
+                <video src="${v.media_url}" width="100%" style="border-radius:4px; height:80px; object-fit:cover; background:#000;"></video>
+                <p style="font-size:0.75rem; margin:4px 0 0 0; color:#ccc;">${escapeHtml(v.post_text)}</p>
+            </div>`;
+        });
+        html += `</div></div>`;
+    }
+    container.innerHTML = html;
 }
 
 async function verifyAdminPassword() {
@@ -358,6 +421,8 @@ function switchMainPage(pageName) {
             document.getElementById('adminNotifTitle').innerText = nTitle;
             document.getElementById('adminNotifText').innerText = nText;
         }
+    } else if(pageName === 'profile-playlists') {
+        document.getElementById('page-profile-playlists').classList.remove('hidden');
     } else if(pageName === 'settings') {
         document.getElementById('page-settings').classList.remove('hidden');
     }
