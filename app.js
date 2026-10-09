@@ -97,8 +97,8 @@ function compressImageFile(file, callback) {
         const img = new Image();
         img.onload = function() {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 300;
-            const MAX_HEIGHT = 300;
+            const MAX_WIDTH = 250;
+            const MAX_HEIGHT = 250;
             let width = img.width;
             let height = img.height;
             if (width > height) {
@@ -153,6 +153,7 @@ async function handleLogin() {
     } else {
         localStorage.setItem('flash_logged_user', user);
         checkUserSession();
+        showToast('Login ဝင်ခြင်း အောင်မြင်ပါသည်။', 'success');
     }
 }
 
