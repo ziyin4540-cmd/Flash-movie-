@@ -46,8 +46,8 @@ function compressImageOrFile(file, callback) {
         const img = new Image();
         img.onload = function() {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 500;
-            const MAX_HEIGHT = 500;
+            const MAX_WIDTH = 400;
+            const MAX_HEIGHT = 400;
             let width = img.width;
             let height = img.height;
             if (width > height) {
@@ -59,7 +59,7 @@ function compressImageOrFile(file, callback) {
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            callback(canvas.toDataURL('image/jpeg', 0.7));
+            callback(canvas.toDataURL('image/jpeg', 0.6));
         };
         img.src = event.target.result;
     };
@@ -127,7 +127,7 @@ async function handleDirectVideoUpload() {
 
     let progress = 0;
     let interval = setInterval(async () => {
-        progress += 30;
+        progress += 35;
         if(progressBar) progressBar.style.width = progress + '%';
         if(progressText) progressText.innerText = progress + '%';
 
@@ -168,7 +168,7 @@ async function handleDirectVideoUpload() {
             switchMainPage('home');
             loadHomeVideos();
         }
-    }, 100);
+    }, 80);
 }
 
 async function loadHomeVideos(searchQuery = '') {
@@ -209,7 +209,7 @@ async function loadHomeVideos(searchQuery = '') {
                 <img src="${v.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar">
                 <div>
                     <div style="font-weight:bold; font-size:0.9rem;">${escapeHtml(v.display_name || v.username)}</div>
-                    <div style="color:#888; font-size:0.7rem;">@${v.username} • <span style="color:#00ffff;">${v.playlist || 'General'}</span></div>
+                    <div style="color:#888; font-size:0.7rem;">@${v.username} • <span style="color:#00ffff;">${escapeHtml(v.playlist || 'General')}</span></div>
                 </div>
             </div>
             <h4 style="margin: 8px 0; font-size:0.95rem;">${escapeHtml(v.post_text)}</h4>
