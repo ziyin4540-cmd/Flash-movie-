@@ -2,6 +2,7 @@ let tempFbMediaData = "";
 let tempMediaType = "";
 let activeCommentPostId = null;
 let tempAppVideoData = "";
+let currentSelectedPlaylist = 'all';
 
 document.addEventListener('DOMContentLoaded', () => {
     const mediaPicker = document.getElementById('fbMediaPicker');
@@ -50,13 +51,11 @@ function compressImageOrFile(file, callback) {
             const MAX_HEIGHT = 500;
             let width = img.width;
             let height = img.height;
-
             if (width > height) {
                 if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
             } else {
                 if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
             }
-
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
@@ -106,6 +105,8 @@ async function handleCreateFbPost() {
 async function handleDirectVideoUpload() {
     const title = document.getElementById('uploadVideoTitle').value.trim();
     const telegramLink = document.getElementById('telegramVideoLinkInput').value.trim();
+    const playlistCategory = document.getElementById('uploadPlaylistCategory').value;
+    const isPlaylistEnabled = document.getElementById('playlistToggleSwitch').checked;
     const currentUser = localStorage.getItem('flash_logged_user');
 
     if(!title) return showToast('ခေါင်းစဉ် ထည့်ပါ။', 'error');
@@ -113,7 +114,6 @@ async function handleDirectVideoUpload() {
     let finalMediaUrl = tempAppVideoData;
     let finalMediaType = 'video';
 
-    // Telegram link ထည့်ထားရင် Telegram link ကိုသုံးမည်
     if(telegramLink) {
         finalMediaUrl = telegramLink;
         finalMediaType = 'telegram_video';
@@ -128,7 +128,7 @@ async function handleDirectVideoUpload() {
 
     let progress = 0;
     let interval = setInterval(async () => {
-        progress += 25;
+        progress += 30;
         if(progressBar) progressBar.style.width = progress + '%';
         if(progressText) progressText.innerText = progress + '%';
 
@@ -150,6 +150,8 @@ async function handleDirectVideoUpload() {
                 post_text: title,
                 media_url: finalMediaUrl,
                 media_type: finalMediaType,
+                playlist: playlistCategory,
+                playlist_active: isPlaylistEnabled,
                 likes: [],
                 comments: [],
                 reports: 0,
@@ -167,7 +169,14 @@ async function handleDirectVideoUpload() {
             switchMainPage('home');
             loadHomeVideos();
         }
-    }, 120);
+    }, 100);
+}
+
+function filterPlaylist(category) {
+    currentSelectedPlaylist = category;
+    document.querySelectorAll('.playlist-filter-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    loadHomeVideos();
 }
 
 async function loadHomeVideos(searchQuery = '') {
@@ -180,8 +189,17 @@ async function loadHomeVideos(searchQuery = '') {
         return;
     }
 
-    const filtered = posts.filter(p => (p.post_text || '').toLowerCase().includes(searchQuery.toLowerCase()));
+    let filtered = posts.filter(p => {
+        const matchSearch = (p.post_text || '').toLowerCase().includes(searchQuery.toLowerCase());
+        const matchPlaylist = (currentSelectedPlaylist === 'all') || (p.playlist === currentSelectedPlaylist && p.playlist_active !== false);
+        return matchSearch && matchPlaylist;
+    });
+
     container.innerHTML = '';
+    if(filtered.length === 0) {
+        container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ဤ Playlist ထဲတွင် ဗီဒီယို မရှိသေးပါ။</p>';
+        return;
+    }
 
     filtered.forEach(v => {
         const div = document.createElement('div');
@@ -199,7 +217,7 @@ async function loadHomeVideos(searchQuery = '') {
                 <img src="${v.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar">
                 <div>
                     <div style="font-weight:bold; font-size:0.9rem;">${escapeHtml(v.display_name || v.username)}</div>
-                    <div style="color:#888; font-size:0.7rem;">@${v.username}</div>
+                    <div style="color:#888; font-size:0.7rem;">@${v.username} • <span style="color:#00ffff;">${v.playlist || 'General'}</span></div>
                 </div>
             </div>
             <h4 style="margin: 8px 0; font-size:0.95rem;">${escapeHtml(v.post_text)}</h4>
