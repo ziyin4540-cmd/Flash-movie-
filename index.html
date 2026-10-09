@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flâsh Movie Pro</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Telegram Widget Script for Telegram Video Embedding -->
-    <script async src="https://telegram.org/js/telegram-widget.js?22"></script>
 </head>
 <body>
 
@@ -23,7 +21,7 @@
         </div>
     </div>
 
-    <!-- Auth Section (Login / Register) -->
+    <!-- Auth Section -->
     <div id="page-auth" class="full-page hidden">
         <div class="auth-card">
             <h2 id="auth-title" style="color:#ff0033; margin-top:0;">🔑 Login</h2>
@@ -61,7 +59,7 @@
             </div>
         </header>
 
-        <!-- 1. HOME SECTION (Video Feed) -->
+        <!-- 1. HOME SECTION -->
         <section id="page-home" class="main-section">
             <div style="margin-bottom: 12px;">
                 <input type="text" id="movieSearchInput" placeholder="🔍 ဗီဒီယိုများ ရှာရန်..." oninput="filterHomeVideos()" class="fb-textarea" style="height:38px; border-radius:20px; padding:0 15px;">
@@ -69,7 +67,7 @@
             <div id="homeVideoFeedContainer" class="video-feed-list"></div>
         </section>
 
-        <!-- 2. FEED SECTION (Posts & Media) -->
+        <!-- 2. FEED SECTION -->
         <section id="page-feed" class="main-section hidden">
             <div class="fb-create-post-card">
                 <div class="fb-post-header">
@@ -110,7 +108,7 @@
                 </div>
 
                 <div style="margin-bottom:10px;">
-                    <label style="font-size:0.75rem; color:#aaa;">Telegram Post Link (ဥပမာ: https://t.me/channel/123):</label>
+                    <label style="font-size:0.75rem; color:#aaa;">Telegram Link (ဥပမာ: https://t.me/channel/123):</label>
                     <input type="text" id="telegramVideoLinkInput" class="fb-textarea" placeholder="https://t.me/..." style="height:38px; margin-top:4px;">
                 </div>
 
@@ -170,7 +168,7 @@
 
             <div style="display:flex; border-bottom:1px solid #222233; margin-bottom:12px;">
                 <button class="profile-tab-btn active" onclick="switchProfileTab('posts')" style="flex:1; background:none; border:none; padding:10px; color:#00ffff; font-weight:bold; cursor:pointer; font-size:0.85rem;">Posts</button>
-                <button class="profile-tab-btn" onclick="switchProfileTab('videos')" style="flex:1; background:none; border:none; padding:10px; color:#aaa; font-weight:bold; cursor:pointer; font-size:0.85rem;" onclick="openUserProfilePlaylists()">Playlists / Videos</button>
+                <button class="profile-tab-btn" onclick="switchProfileTab('videos')" style="flex:1; background:none; border:none; padding:10px; color:#aaa; font-weight:bold; cursor:pointer; font-size:0.85rem;">Playlists / Videos</button>
             </div>
 
             <div id="profileTabContent" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px;"></div>
@@ -214,16 +212,7 @@
             </div>
         </section>
 
-        <!-- Profile Playlists Section -->
-        <section id="page-profile-playlists" class="main-section hidden">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-                <button onclick="switchMainPage('profile')" style="background:none; border:none; color:#00ffff; font-weight:bold; cursor:pointer;">◄ Profile သို့</button>
-                <h3 style="color:#fff; margin:0; font-size:0.95rem;">📂 My Playlists</h3>
-                <div></div>
-            </div>
-            <div id="profilePlaylistContainer"></div>
-        </section>
-
+        <!-- Bottom Navigation Bar -->
         <nav class="bottom-nav">
             <button id="nav-btn-home" class="active" onclick="switchMainPage('home')">🏠 Home</button>
             <button id="nav-btn-feed" onclick="switchMainPage('feed')">📰 Feed</button>
@@ -234,8 +223,10 @@
 
     </div>
 
+    <!-- External & App Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase.js"></script>
+    <script src="navigation.js"></script> <!-- ခွဲထုတ်ထားသော Navigation Script -->
     <script src="chat.js"></script>
     <script src="feed.js"></script>
     <script src="app.js"></script>
