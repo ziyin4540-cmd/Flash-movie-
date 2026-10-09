@@ -1,14 +1,36 @@
 let tempProfilePhotoData = "https://via.placeholder.com/90";
-let tempUploadVideoData = "";
 
 window.addEventListener('load', () => {
-    setTimeout(() => {
-        document.getElementById('intro-screen').classList.add('hidden');
-        checkUserSession();
-    }, 1000);
+    runIntroTypingEffect();
     startLiveTimer();
-    loadVideoFeed();
+    loadFbFeed();
 });
+
+function runIntroTypingEffect() {
+    const textElement = document.getElementById('typing-intro-text');
+    const message = "Welcome to Flâsh Movie Pro... Cinematic Experience Loading...";
+    let index = 0;
+
+    textElement.innerText = "";
+    function type() {
+        if (index < message.length) {
+            textElement.innerText += message.charAt(index);
+            index++;
+            setTimeout(type, 45);
+        } else {
+            setTimeout(() => {
+                const introScreen = document.getElementById('intro-screen');
+                introScreen.style.transition = 'opacity 0.6s ease';
+                introScreen.style.opacity = '0';
+                setTimeout(() => {
+                    introScreen.classList.add('hidden');
+                    checkUserSession();
+                }, 600);
+            }, 1000);
+        }
+    }
+    type();
+}
 
 function checkUserSession() {
     const loggedUser = localStorage.getItem('flash_logged_user');
@@ -20,6 +42,14 @@ function checkUserSession() {
         document.getElementById('app-container').classList.remove('hidden');
         loadUserProfile(loggedUser);
         loadContactList();
+        loadFbFeed();
+        
+        // Load current user avatar for post box
+        const userDataStr = localStorage.getItem('flash_user_data_' + loggedUser);
+        if(userDataStr) {
+            const uData = JSON.parse(userDataStr);
+            if(uData.photo) document.getElementById('currentUserAvatarFeed').src = uData.photo;
+        }
     }
 }
 
@@ -91,15 +121,16 @@ function loadUserProfile(username) {
             data.uploads.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'upload-item-card';
+                let mediaPrev = item.mediaUrl ? `<img src="${item.mediaUrl}" width="100%" style="border-radius:4px; max-height:100px; object-fit:cover;">` : '';
                 div.innerHTML = `
-                    <video src="${item.url}" width="100%" controls style="border-radius: 4px;"></video>
-                    <p style="font-size: 0.75rem; margin: 3px 0;">${escapeHtml(item.title)}</p>
+                    ${mediaPrev}
+                    <p style="font-size: 0.75rem; margin: 3px 0;">${escapeHtml(item.text || item.title || 'Post')}</p>
                 `;
                 uploadsFeed.appendChild(div);
             });
         } else {
             document.getElementById('statVideos').innerText = '0';
-            uploadsFeed.innerHTML = '<p style="color: #666; font-size: 0.8rem; text-align: center;">ဗီဒီယို မရှိသေးပါ။</p>';
+            uploadsFeed.innerHTML = '<p style="color: #666; font-size: 0.8rem; text-align: center;">ပို့စ်များ မရှိသေးပါ။</p>';
         }
     }
 }
@@ -132,68 +163,6 @@ function updateProfileInfo() {
 function viewOtherProfile(username) {
     loadUserProfile(username);
     switchMainPage('profile');
-}
-
-function openUploadModal() { document.getElementById('uploadModal').classList.remove('hidden'); }
-function closeUploadModal() { document.getElementById('uploadModal').classList.add('hidden'); }
-
-document.getElementById('videoFilePicker').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) { tempUploadVideoData = event.target.result; };
-        reader.readAsDataURL(file);
-    }
-});
-
-function handleVideoUpload() {
-    const title = document.getElementById('uploadTitleInput').value.trim();
-    const currentUser = localStorage.getItem('flash_logged_user');
-    
-    if(!title || !tempUploadVideoData) {
-        alert('ခေါင်းစဉ်နှင့် ဗီဒီယိုဖိုင်ကို ရွေးချယ်ပါ။');
-        return;
-    }
-
-    let allVideos = JSON.parse(localStorage.getItem('flash_all_videos') || '[]');
-    const newVideo = { id: Date.now(), user: currentUser, title: title, url: tempUploadVideoData };
-    allVideos.unshift(newVideo);
-    localStorage.setItem('flash_all_videos', JSON.stringify(allVideos));
-
-    const dataStr = localStorage.getItem('flash_user_data_' + currentUser);
-    if(dataStr) {
-        let data = JSON.parse(dataStr);
-        if(!data.uploads) data.uploads = [];
-        data.uploads.unshift(newVideo);
-        localStorage.setItem('flash_user_data_' + currentUser, JSON.stringify(data));
-    }
-
-    alert('ဗီဒီယို အောင်မြင်စွာ တင်ပြီးပါပြီ!');
-    closeUploadModal();
-    document.getElementById('uploadTitleInput').value = '';
-    loadVideoFeed();
-}
-
-function loadVideoFeed() {
-    const container = document.getElementById('videoFeedContainer');
-    let allVideos = JSON.parse(localStorage.getItem('flash_all_videos') || '[]');
-    container.innerHTML = '';
-
-    if(allVideos.length === 0) {
-        container.innerHTML = '<p style="color: #666; font-size: 0.85rem; text-align: center; margin-top: 30px;">တင်ထားသော ဗီဒီယိုများ မရှိသေးပါ။</p>';
-        return;
-    }
-
-    allVideos.forEach(v => {
-        const div = document.createElement('div');
-        div.className = 'video-card-item';
-        div.innerHTML = `
-            <video src="${v.url}" controls width="100%" style="border-radius: 8px; background:#000;"></video>
-            <h4 style="margin: 8px 0 4px 0; font-size: 0.95rem;">${escapeHtml(v.title)}</h4>
-            <p style="color: #3ea6ff; font-size: 0.8rem; cursor: pointer;" onclick="viewOtherProfile('${v.user}')">Uploaded by @${v.user}</p>
-        `;
-        container.appendChild(div);
-    });
 }
 
 function verifyAdminPassword() {
@@ -235,7 +204,7 @@ function switchMainPage(pageName) {
     if(pageName === 'home') {
         document.getElementById('page-home').classList.remove('hidden');
         document.getElementById('nav-btn-home').classList.add('active');
-        loadVideoFeed();
+        loadFbFeed();
     } else if(pageName === 'chat') {
         document.getElementById('page-chat').classList.remove('hidden');
         document.getElementById('nav-btn-chat').classList.add('active');
