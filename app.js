@@ -1,4 +1,3 @@
-// Intro & App Startup
 window.addEventListener('load', () => {
     setTimeout(() => {
         document.getElementById('intro-screen').classList.add('hidden');
@@ -7,10 +6,10 @@ window.addEventListener('load', () => {
     startLiveTimer();
 });
 
-// Live Timer (Y / M / D / H / M / S)
+// Live Account Duration Timer (Y / M / D / H / M / S)
 function startLiveTimer() {
     const timerBox = document.getElementById('account-timer');
-    let totalSeconds = 31536000;
+    let totalSeconds = 31536000; // 1 Year example
     setInterval(() => {
         totalSeconds--;
         const y = Math.floor(totalSeconds / 31536000);
@@ -23,58 +22,60 @@ function startLiveTimer() {
     }, 1000);
 }
 
-// Local Device Video Picker (Direct from Phone Storage)
+// Bottom Navigation Page Switcher
+function switchPage(pageName) {
+    document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
+    document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.remove('active'));
+    
+    if(pageName === 'home') {
+        document.getElementById('page-home').classList.remove('hidden');
+    } else if(pageName === 'shorts') {
+        document.getElementById('page-shorts').classList.remove('hidden');
+    } else if(pageName === 'posts') {
+        document.getElementById('page-posts').classList.remove('hidden');
+    } else if(pageName === 'upload') {
+        document.getElementById('page-upload').classList.remove('hidden');
+    } else if(pageName === 'profile') {
+        document.getElementById('page-profile').classList.remove('hidden');
+    }
+}
+
+// Local Device File Picker & Video Player Integration
 document.getElementById('deviceFilePicker').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
-        document.getElementById('fileNameDisplay').innerText = file.name;
         const videoURL = URL.createObjectURL(file);
         const videoPlayer = document.getElementById('mainVideoPlayer');
         videoPlayer.src = videoURL;
-        videoPlayer.play();
+        document.getElementById('displayTitle').innerText = file.name;
     }
 });
 
-// Comment & Conversation System (YouTube Style)
+// Upload Action
+document.getElementById('uploadNowBtn').addEventListener('click', function() {
+    const title = document.getElementById('videoTitleInput').value;
+    const file = document.getElementById('deviceFilePicker').files[0];
+    if(title && file) {
+        alert(`အောင်မြင်စွာ တင်ပြီးပါပြီ: ${title}`);
+        switchPage('home');
+    } else {
+        alert('ကျေးဇူးပြု၍ ခေါင်းစဉ်နှင့် ဖိုင်ကို ထည့်သွင်းပါ။');
+    }
+});
+
+// Comment & Conversation System
 document.getElementById('sendCommentBtn').addEventListener('click', function() {
     const input = document.getElementById('commentInput');
     const list = document.getElementById('commentsList');
     if (input.value.trim() !== '') {
         const div = document.createElement('div');
         div.className = 'comment-item';
-        div.innerHTML = `<strong>User:</strong> ${escapeHtml(input.value)} <br><small style="color: #3ea6ff; cursor:pointer;" onclick="replyComment(this)">Reply</small>`;
+        div.innerHTML = `<strong>User:</strong> ${escapeHtml(input.value)}`;
         list.appendChild(div);
         input.value = '';
         list.scrollTop = list.scrollHeight;
     }
 });
-
-// Live Chat System
-document.getElementById('sendChatBtn').addEventListener('click', function() {
-    const input = document.getElementById('chatInput');
-    const room = document.getElementById('chatRoom');
-    if (input.value.trim() !== '') {
-        const div = document.createElement('div');
-        div.className = 'chat-msg';
-        div.innerHTML = `<strong>Guest:</strong> ${escapeHtml(input.value)}`;
-        room.appendChild(div);
-        input.value = '';
-        room.scrollTop = room.scrollHeight;
-    }
-});
-
-function replyComment(element) {
-    const replyText = prompt("Reply ရေးပါ:");
-    if(replyText) {
-        const replyDiv = document.createElement('div');
-        replyDiv.style.marginLeft = "20px";
-        replyDiv.style.marginTop = "5px";
-        replyDiv.style.fontSize = "0.85rem";
-        replyDiv.style.color = "#aaa";
-        replyDiv.innerHTML = `↳ <strong>Admin:</strong> ${escapeHtml(replyText)}`;
-        element.parentElement.appendChild(replyDiv);
-    }
-}
 
 function escapeHtml(text) {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
