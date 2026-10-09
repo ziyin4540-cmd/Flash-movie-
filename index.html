@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flâsh Movie Pro - Login Required</title>
+    <title>Flâsh Movie Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,34 +12,37 @@
         <h1 class="lightning-text">⚡ FLÂSH MOVIE PRO ⚡</h1>
     </div>
 
-    <!-- Auth Overlay (Login / Register Modal - Required before viewing anything) -->
-    <div id="auth-overlay" class="auth-overlay hidden">
-        <div class="auth-box">
+    <!-- Auth Page (Login / Register - Full Page, No Popups) -->
+    <div id="page-auth" class="full-page">
+        <div class="auth-card">
             <h2 id="auth-title" style="color: #ff0033;">🔑 Login to Flâsh Movie</h2>
             
-            <!-- Login Form -->
-            <div id="login-form" class="form-panel">
+            <!-- Login View -->
+            <div id="view-login" class="auth-form">
                 <input type="text" id="loginUser" placeholder="Username">
                 <input type="password" id="loginPass" placeholder="Password">
-                <button class="primary-btn" onclick="handleLogin()">Login</button>
-                <p class="switch-auth-text" onclick="toggleAuthMode('register')">အကောင့်မရှိသေးဘူးလား? Register လုပ်ရန်</p>
+                <button class="primary-btn" onclick="handleLogin()">Login ဝင်မည်</button>
+                <p class="nav-link-text" onclick="switchAuthView('register')">အကောင့်အသစ်ဖွင့်ရန် (Register)</p>
             </div>
 
-            <!-- Register Form -->
-            <div id="register-form" class="form-panel hidden">
-                <input type="text" id="regUser" placeholder="Choose Username">
-                <input type="password" id="regPass" placeholder="Choose Password">
-                <button class="primary-btn" onclick="handleRegister()">Register</button>
-                <p class="switch-auth-text" onclick="toggleAuthMode('login')">အကောင့်ရှိပြီးသားလား? Login ဝင်ရန်</p>
+            <!-- Register View (With Profile Photo & Account Name) -->
+            <div id="view-register" class="auth-form hidden">
+                <input type="text" id="regUser" placeholder="Username">
+                <input type="password" id="regPass" placeholder="Password">
+                <input type="text" id="regDisplayName" placeholder="Account Name (ပြသရန်နာမည်)">
+                <label style="font-size: 0.85rem; color: #aaa; text-align: left;">Profile Photo တင်ရန်:</label>
+                <input type="file" id="regPhotoPicker" accept="image/*">
+                <button class="primary-btn" onclick="handleRegister()">Register ပြုလုပ်မည်</button>
+                <p class="nav-link-text" onclick="switchAuthView('login')">အကောင့်ရှိပြီးသားလား? Login သို့သွားရန်</p>
             </div>
         </div>
     </div>
 
-    <!-- Main App Container (Hidden until logged in) -->
+    <!-- Main App Container (Full Pages) -->
     <div id="app-container" class="hidden">
         <header class="app-header">
             <h2 class="logo-text">▶ Flâsh Movie</h2>
-            <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
                 <div id="account-timer" class="timer-box">0Y / 0M / 0D / 0H / 0M / 0S</div>
                 <button onclick="handleLogout()" class="logout-btn">Logout</button>
             </div>
@@ -47,17 +50,17 @@
 
         <main class="main-content">
             <!-- Home Page -->
-            <section id="page-home" class="page-section">
-                <h3>🎬 Video Feed & Movies</h3>
+            <section id="page-home" class="main-section">
+                <h3>🎬 Video Feed</h3>
                 <div class="search-box">
                     <input type="text" id="videoSearchInput" placeholder="ဗီဒီယိုအမည်ဖြင့် ရှာရန်...">
                     <button onclick="searchVideos()">ရှာမည်</button>
                 </div>
-                <div id="adminVideoList" class="admin-list"></div>
+                <div id="adminVideoList" class="admin-list" style="margin-top: 15px;"></div>
             </section>
 
             <!-- Admin Panel Page -->
-            <section id="page-admin" class="page-section hidden">
+            <section id="page-admin" class="main-section hidden">
                 <h2>🛠️ Admin Control Panel</h2>
                 <div class="admin-card">
                     <h3>👥 User Account Approvals</h3>
@@ -65,8 +68,8 @@
                         <div class="approval-item">
                             <span>User: @ziyin_new (Pending)</span>
                             <div>
-                                <button class="btn-success" onclick="acceptAccount(this)">Accept</button>
-                                <button class="btn-danger" onclick="declineAccount(this)">Decline</button>
+                                <button class="btn-success" onclick="adminAction('အကောင့်လက်ခံလိုက်ပါပြီ')">Accept</button>
+                                <button class="btn-danger" onclick="adminAction('အကောင့်ငြင်းပယ်လိုက်ပါပြီ')">Decline</button>
                             </div>
                         </div>
                     </div>
@@ -78,36 +81,37 @@
                         <div class="report-item">
                             <span>Report #102: Copyright violation</span>
                             <div>
-                                <button class="btn-success" onclick="resolveReport(this, 'Accepted')">Accept</button>
-                                <button class="btn-danger" onclick="resolveReport(this, 'Rejected')">Reject</button>
+                                <button class="btn-success" onclick="adminAction('Report ကိုလက်ခံပြီးပါပြီ')">Accept</button>
+                                <button class="btn-danger" onclick="adminAction('Report ကိုငြင်းပယ်လိုက်ပါပြီ')">Reject</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="admin-card">
-                    <h3>📢 Send Notification / Alert</h3>
-                    <input type="text" id="notifTitle" placeholder="အကြောင်းအရာ ခေါင်းစဉ်...">
-                    <textarea id="notifMessage" placeholder="အသိပေးစာ အကြောင်းအရာရေးရန်..."></textarea>
+                    <h3>📢 Send Notification</h3>
+                    <input type="text" id="notifTitle" placeholder="ခေါင်းစဉ်...">
+                    <textarea id="notifMessage" placeholder="အသိပေးစာ အကြောင်းအရာ..."></textarea>
                     <button class="primary-btn" onclick="sendNotification()">အသိပေးစာ ပို့မည်</button>
                 </div>
             </section>
 
             <!-- Profile Page -->
-            <section id="page-profile" class="page-section hidden">
-                <div class="profile-box" style="text-align: center; padding: 20px;">
-                    <div class="profile-avatar" id="profileAvatarDisplay">U</div>
-                    <h3 id="profileUsernameDisplay">@username</h3>
-                    <p style="color: #aaa;">Status: Logged In (Username & Password)</p>
+            <section id="page-profile" class="main-section hidden">
+                <div class="profile-page-box">
+                    <img id="profileImgDisplay" src="" alt="Profile Photo" class="profile-img-preview">
+                    <h2 id="profileNameDisplay">Account Name</h2>
+                    <p id="profileUserDisplay" style="color: #aaa;">@username</p>
+                    <div class="timer-box" style="display: inline-block; margin-top: 10px;">Status: Active User</div>
                 </div>
             </section>
         </main>
 
         <!-- Bottom Navigation Bar -->
         <nav class="bottom-nav">
-            <button onclick="switchPage('home')" class="nav-btn active">🏠 Home</button>
-            <button onclick="switchPage('admin')" class="nav-btn">🛠️ Admin</button>
-            <button onclick="switchPage('profile')" class="nav-btn">👤 Profile</button>
+            <button onclick="switchMainPage('home')" id="nav-btn-home" class="nav-btn active">🏠 Home</button>
+            <button onclick="switchMainPage('admin')" id="nav-btn-admin" class="nav-btn">🛠️ Admin</button>
+            <button onclick="switchMainPage('profile')" id="nav-btn-profile" class="nav-btn">👤 Profile</button>
         </nav>
     </div>
 
