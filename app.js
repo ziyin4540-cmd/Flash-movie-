@@ -6,11 +6,9 @@ window.addEventListener('load', () => {
         checkUserSession();
     }, 1500);
     startLiveTimer();
-    loadAdminVideos();
     loadTgMessages();
 });
 
-// Check Session
 function checkUserSession() {
     const loggedUser = localStorage.getItem('flash_logged_user');
     if (!loggedUser) {
@@ -23,7 +21,6 @@ function checkUserSession() {
     }
 }
 
-// Switch Auth View
 function switchAuthView(viewName) {
     if(viewName === 'register') {
         document.getElementById('view-login').classList.add('hidden');
@@ -36,7 +33,6 @@ function switchAuthView(viewName) {
     }
 }
 
-// Profile Photo Selection
 document.getElementById('regPhotoPicker').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
@@ -48,19 +44,13 @@ document.getElementById('regPhotoPicker').addEventListener('change', function(e)
     }
 });
 
-// Register Action
 function handleRegister() {
     const user = document.getElementById('regUser').value.trim();
     const pass = document.getElementById('regPass').value.trim();
     const displayName = document.getElementById('regDisplayName').value.trim();
     
     if(!user || !pass || !displayName) {
-        alert('ကျေးဇူးပြု၍ အချက်အလက်များကို အပြည့်အစုံ ဖြည့်ပါ။');
-        return;
-    }
-
-    if(localStorage.getItem('flash_user_data_' + user)) {
-        alert('ဤ Username မှာ ရှိနှင့်ပြီးသား ဖြစ်ပါသည်။');
+        alert('အချက်အလက်များကို အပြည့်အစုံ ဖြည့်ပါ။');
         return;
     }
 
@@ -70,7 +60,6 @@ function handleRegister() {
     switchAuthView('login');
 }
 
-// Login Action
 function handleLogin() {
     const user = document.getElementById('loginUser').value.trim();
     const pass = document.getElementById('loginPass').value.trim();
@@ -92,27 +81,76 @@ function handleLogin() {
     }
 }
 
-// Logout Action
 function handleLogout() {
     localStorage.removeItem('flash_logged_user');
+    sessionStorage.removeItem('admin_verified');
     checkUserSession();
 }
 
-// Load Profile
 function loadUserProfile(username) {
     const dataStr = localStorage.getItem('flash_user_data_' + username);
     if(dataStr) {
         const data = JSON.parse(dataStr);
         document.getElementById('profileNameDisplay').innerText = data.displayName || username;
         document.getElementById('profileUserDisplay').innerText = `@${username}`;
-        if(data.photo) document.getElementById('profileImgDisplay').src = data.photo;
+        if(data.photo) {
+            document.getElementById('profileImgDisplay').src = data.photo;
+        }
     } else {
         document.getElementById('profileNameDisplay').innerText = username;
         document.getElementById('profileUserDisplay').innerText = `@${username}`;
     }
 }
 
-// Telegram Style Chat (Send, Edit, Delete, Reply)
+// Admin Password Verification (295802)
+function verifyAdminPassword() {
+    const enteredPass = document.getElementById('adminPassInput').value.trim();
+    if(enteredPass === "295802") {
+        sessionStorage.setItem('admin_verified', 'true');
+        document.getElementById('admin-lock-screen').classList.add('hidden');
+        document.getElementById('admin-content-box').classList.remove('hidden');
+    } else {
+        alert('Admin Password မှားယွင်းနေပါသည်။');
+        document.getElementById('adminPassInput').value = '';
+    }
+}
+
+// Settings: Change Password
+function changeUserPassword() {
+    const currentUser = localStorage.getItem('flash_logged_user');
+    const currentPass = document.getElementById('currentPassInput').value.trim();
+    const newPass = document.getElementById('newPassInput').value.trim();
+
+    if(!currentPass || !newPass) {
+        alert('စကားဝှက်ဟောင်းနှင့် အသစ်ကို အပြည့်အစုံ ရေးပါ။');
+        return;
+    }
+
+    const dataStr = localStorage.getItem('flash_user_data_' + currentUser);
+    if(dataStr) {
+        let data = JSON.parse(dataStr);
+        if(data.pass === currentPass) {
+            data.pass = newPass;
+            localStorage.setItem('flash_user_data_' + currentUser, JSON.stringify(data));
+            alert('စကားဝှက်ကို အောင်မြင်စွာ ပြောင်းလဲပြီးပါပြီ။');
+            document.getElementById('currentPassInput').value = '';
+            document.getElementById('newPassInput').value = '';
+        } else {
+            alert('စကားဝှက်ဟောင်း မှားယွင်းနေပါသည်။');
+        }
+    }
+}
+
+// Settings: Clear Cache
+function clearAppCache() {
+    if(confirm('App ဒေတာများနှင့် Cache များကို ရှင်းလင်းလိုသည်မှာ သေချာပါသလား?')) {
+        localStorage.removeItem('flash_tg_messages');
+        alert('Cache များကို အောင်မြင်စွာ ရှင်းလင်းပြီးပါပြီ။');
+        loadTgMessages();
+    }
+}
+
+// Telegram Style Chat
 function sendTgMessage() {
     const input = document.getElementById('tgMessageInput');
     const text = input.value.trim();
@@ -176,13 +214,24 @@ function switchMainPage(pageName) {
     } else if(pageName === 'admin') {
         document.getElementById('page-admin').classList.remove('hidden');
         document.getElementById('nav-btn-admin').classList.add('active');
+        
+        // Check if admin was already verified in this session
+        if(sessionStorage.getItem('admin_verified') === 'true') {
+            document.getElementById('admin-lock-screen').classList.add('hidden');
+            document.getElementById('admin-content-box').classList.remove('hidden');
+        } else {
+            document.getElementById('admin-lock-screen').classList.remove('hidden');
+            document.getElementById('admin-content-box').classList.add('hidden');
+        }
     } else if(pageName === 'profile') {
         document.getElementById('page-profile').classList.remove('hidden');
         document.getElementById('nav-btn-profile').classList.add('active');
+    } else if(pageName === 'settings') {
+        document.getElementById('page-settings').classList.remove('hidden');
+        document.getElementById('nav-btn-settings').classList.add('active');
     }
 }
 
-// Live Timer
 function startLiveTimer() {
     const timerBox = document.getElementById('account-timer');
     let totalSeconds = 31536000;
@@ -198,25 +247,21 @@ function startLiveTimer() {
     }, 1000);
 }
 
-// Admin Helpers
-function adminAction(msg) { alert(msg); }
-function loadAdminVideos() {
-    document.getElementById('adminVideoList').innerHTML = `
-        <div class="approval-item">
-            <span>📹 Action Movie Trailer.mp4 (@user1)</span>
-            <button class="btn-danger" onclick="this.parentElement.remove()">ဖျက်မည်</button>
-        </div>
-    `;
+function adminAction(btn, status) {
+    alert(`အကောင့်ကို ${status} လုပ်ပြီးပါပြီ။`);
+    btn.parentElement.parentElement.remove();
 }
+
 function sendNotification() {
     if(document.getElementById('notifTitle').value && document.getElementById('notifMessage').value) {
         alert('အသိပေးစာ အောင်မြင်စွာ ပို့ပြီးပါပြီ!');
         document.getElementById('notifTitle').value = '';
         document.getElementById('notifMessage').value = '';
     } else {
-        alert('အချက်အလက် ဖြည့်ပါ။');
+        alert('ခေါင်းစဉ်နှင့် အကြောင်းအရာကို အပြည့်အစုံ ဖြည့်ပါ။');
     }
 }
+
 function escapeHtml(text) {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
