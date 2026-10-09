@@ -1,4 +1,4 @@
-let tempProfilePhotoData = "";
+let tempProfilePhotoData = "https://via.placeholder.com/90";
 
 window.addEventListener('load', () => {
     setTimeout(() => {
@@ -7,9 +7,10 @@ window.addEventListener('load', () => {
     }, 1500);
     startLiveTimer();
     loadAdminVideos();
+    loadTgMessages();
 });
 
-// Check Session (No Popups, Full Page Switching)
+// Check Session
 function checkUserSession() {
     const loggedUser = localStorage.getItem('flash_logged_user');
     if (!loggedUser) {
@@ -22,7 +23,7 @@ function checkUserSession() {
     }
 }
 
-// Switch between Login and Register full pages
+// Switch Auth View
 function switchAuthView(viewName) {
     if(viewName === 'register') {
         document.getElementById('view-login').classList.add('hidden');
@@ -35,7 +36,7 @@ function switchAuthView(viewName) {
     }
 }
 
-// Handle Profile Photo Selection in Register
+// Profile Photo Selection
 document.getElementById('regPhotoPicker').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
@@ -47,27 +48,29 @@ document.getElementById('regPhotoPicker').addEventListener('change', function(e)
     }
 });
 
-// Handle Register with Name & Photo
+// Register Action
 function handleRegister() {
     const user = document.getElementById('regUser').value.trim();
     const pass = document.getElementById('regPass').value.trim();
     const displayName = document.getElementById('regDisplayName').value.trim();
     
-    if(user && pass && displayName) {
-        const userData = {
-            pass: pass,
-            displayName: displayName,
-            photo: tempProfilePhotoData || 'https://via.placeholder.com/90'
-        };
-        localStorage.setItem('flash_user_data_' + user, JSON.stringify(userData));
-        alert('အကောင့်ဖွင့်ခြင်း အောင်မြင်ပါသည်။ Login ဝင်ပါ။');
-        switchAuthView('login');
-    } else {
-        alert('အချက်အလက်များကို အပြည့်အစုံ ဖြည့်သွင်းပါ။');
+    if(!user || !pass || !displayName) {
+        alert('ကျေးဇူးပြု၍ အချက်အလက်များကို အပြည့်အစုံ ဖြည့်ပါ။');
+        return;
     }
+
+    if(localStorage.getItem('flash_user_data_' + user)) {
+        alert('ဤ Username မှာ ရှိနှင့်ပြီးသား ဖြစ်ပါသည်။');
+        return;
+    }
+
+    const userData = { pass, displayName, photo: tempProfilePhotoData };
+    localStorage.setItem('flash_user_data_' + user, JSON.stringify(userData));
+    alert('အကောင့်ဖွင့်ခြင်း အောင်မြင်ပါသည်။ Login ဝင်ပါ။');
+    switchAuthView('login');
 }
 
-// Handle Login
+// Login Action
 function handleLogin() {
     const user = document.getElementById('loginUser').value.trim();
     const pass = document.getElementById('loginPass').value.trim();
@@ -76,12 +79,9 @@ function handleLogin() {
     let isValid = false;
     if(user === 'admin' && pass === 'admin123') {
         isValid = true;
-        localStorage.setItem('flash_user_data_admin', JSON.stringify({displayName: 'Administrator', photo: ''}));
     } else if(storedDataStr) {
         const storedData = JSON.parse(storedDataStr);
-        if(storedData.pass === pass) {
-            isValid = true;
-        }
+        if(storedData.pass === pass) isValid = true;
     }
 
     if(isValid) {
@@ -92,29 +92,80 @@ function handleLogin() {
     }
 }
 
-// Handle Logout
+// Logout Action
 function handleLogout() {
     localStorage.removeItem('flash_logged_user');
     checkUserSession();
 }
 
-// Load Profile Data
+// Load Profile
 function loadUserProfile(username) {
     const dataStr = localStorage.getItem('flash_user_data_' + username);
     if(dataStr) {
         const data = JSON.parse(dataStr);
         document.getElementById('profileNameDisplay').innerText = data.displayName || username;
         document.getElementById('profileUserDisplay').innerText = `@${username}`;
-        if(data.photo) {
-            document.getElementById('profileImgDisplay').src = data.photo;
-        }
+        if(data.photo) document.getElementById('profileImgDisplay').src = data.photo;
     } else {
         document.getElementById('profileNameDisplay').innerText = username;
         document.getElementById('profileUserDisplay').innerText = `@${username}`;
     }
 }
 
-// Bottom Navigation Full Page Switcher
+// Telegram Style Chat (Send, Edit, Delete, Reply)
+function sendTgMessage() {
+    const input = document.getElementById('tgMessageInput');
+    const text = input.value.trim();
+    const currentUser = localStorage.getItem('flash_logged_user') || 'Guest';
+
+    if(text) {
+        let messages = JSON.parse(localStorage.getItem('flash_tg_messages') || '[]');
+        messages.push({ id: Date.now(), user: currentUser, text: text });
+        localStorage.setItem('flash_tg_messages', JSON.stringify(messages));
+        input.value = '';
+        loadTgMessages();
+    }
+}
+
+function loadTgMessages() {
+    const container = document.getElementById('tgChatContainer');
+    let messages = JSON.parse(localStorage.getItem('flash_tg_messages') || '[]');
+    
+    container.innerHTML = '';
+    messages.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'tg-msg';
+        div.innerHTML = `
+            <strong>@${msg.user}:</strong> ${escapeHtml(msg.text)}
+            <br><span class="tg-msg-actions" onclick="editTgMessage(${msg.id})">Edit</span> | 
+            <span class="tg-msg-actions" style="color:#cc0000;" onclick="deleteTgMessage(${msg.id})">Delete</span>
+        `;
+        container.appendChild(div);
+    });
+    container.scrollTop = container.scrollHeight;
+}
+
+function editTgMessage(id) {
+    let messages = JSON.parse(localStorage.getItem('flash_tg_messages') || '[]');
+    const msg = messages.find(m => m.id === id);
+    if(msg) {
+        const newText = prompt("မက်ဆေ့ချ်ကို ပြင်ရန်:", msg.text);
+        if(newText !== null && newText.trim() !== '') {
+            msg.text = newText + " (Edited)";
+            localStorage.setItem('flash_tg_messages', JSON.stringify(messages));
+            loadTgMessages();
+        }
+    }
+}
+
+function deleteTgMessage(id) {
+    let messages = JSON.parse(localStorage.getItem('flash_tg_messages') || '[]');
+    messages = messages.filter(m => m.id !== id);
+    localStorage.setItem('flash_tg_messages', JSON.stringify(messages));
+    loadTgMessages();
+}
+
+// Bottom Navigation Switcher
 function switchMainPage(pageName) {
     document.querySelectorAll('.main-section').forEach(sec => sec.classList.add('hidden'));
     document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.remove('active'));
@@ -147,36 +198,25 @@ function startLiveTimer() {
     }, 1000);
 }
 
-// Admin / Actions Helpers
-function adminAction(msg) {
-    alert(msg);
-}
-
+// Admin Helpers
+function adminAction(msg) { alert(msg); }
 function loadAdminVideos() {
-    const list = document.getElementById('adminVideoList');
-    list.innerHTML = `
+    document.getElementById('adminVideoList').innerHTML = `
         <div class="approval-item">
-            <span>📹 Action Movie.mp4 (by @user1)</span>
-            <button class="btn-danger" onclick="deleteVideo(this)">ဖျက်မည်</button>
+            <span>📹 Action Movie Trailer.mp4 (@user1)</span>
+            <button class="btn-danger" onclick="this.parentElement.remove()">ဖျက်မည်</button>
         </div>
     `;
 }
-
-function deleteVideo(btn) {
-    if(confirm('ဤဗီဒီယိုကို ဖျက်လိုသည်မှာ သေချာပါသလား?')) {
-        alert('ဗီဒီယိုကို အောင်မြင်စွာ ဖျက်ဆီးပြီးပါပြီ။');
-        btn.parentElement.remove();
-    }
-}
-
 function sendNotification() {
-    const title = document.getElementById('notifTitle').value;
-    const msg = document.getElementById('notifMessage').value;
-    if(title && msg) {
-        alert('အသုံးပြုသူများထံ အသိပေးစာ အောင်မြင်စွာ ပို့ပြီးပါပြီ!');
+    if(document.getElementById('notifTitle').value && document.getElementById('notifMessage').value) {
+        alert('အသိပေးစာ အောင်မြင်စွာ ပို့ပြီးပါပြီ!');
         document.getElementById('notifTitle').value = '';
         document.getElementById('notifMessage').value = '';
     } else {
-        alert('ခေါင်းစဉ်နှင့် အကြောင်းအရာကို အပြည့်အစုံ ဖြည့်ပါ။');
+        alert('အချက်အလက် ဖြည့်ပါ။');
     }
+}
+function escapeHtml(text) {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
