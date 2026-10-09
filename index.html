@@ -51,26 +51,16 @@
             <h2 class="logo-text">⚡ Flâsh Movie</h2>
             <div style="display: flex; align-items: center; gap: 8px;">
                 <div id="account-timer" class="timer-box">0D / 0H / 0M / 0S</div>
-                <button onclick="handleLogout()" class="logout-btn">Logout</button>
+                <button onclick="switchMainPage('settings')" class="logout-btn" style="background:#181820; border:1px solid #333344;">⚙️ Settings</button>
             </div>
         </header>
 
         <main class="main-content">
-            <!-- 1. HOME PAGE (With Playlist Filters & On/Off Toggle) -->
+            <!-- 1. HOME PAGE -->
             <section id="page-home" class="main-section">
                 <div style="margin-bottom: 15px;">
                     <input type="text" id="movieSearchInput" placeholder="🔍 ရုပ်ရှင် သို့မဟုတ် ဗီဒီယို ရှာရန်..." oninput="filterHomeVideos()" style="width: 100%; background: #111116; border: 1px solid #333344; color: #fff; padding: 10px; border-radius: 8px; outline: none; box-sizing: border-box;">
                 </div>
-                
-                <!-- Playlist Selector Bar -->
-                <div class="playlist-filter-bar">
-                    <button class="playlist-filter-btn active" onclick="filterPlaylist('all')">All</button>
-                    <button class="playlist-filter-btn" onclick="filterPlaylist('Action')">Action</button>
-                    <button class="playlist-filter-btn" onclick="filterPlaylist('Comedy')">Comedy</button>
-                    <button class="playlist-filter-btn" onclick="filterPlaylist('Romance')">Romance</button>
-                    <button class="playlist-filter-btn" onclick="filterPlaylist('Series')">Series</button>
-                </div>
-
                 <div id="homeVideoFeedContainer" class="video-feed-list"></div>
             </section>
 
@@ -95,7 +85,7 @@
                 <div id="fbFeedContainer" class="fb-feed-list"></div>
             </section>
 
-            <!-- 3. UPLOAD PAGE (With Playlist Category & On/Off Feature) -->
+            <!-- 3. UPLOAD PAGE (Custom Playlist Input) -->
             <section id="page-upload" class="main-section hidden">
                 <div class="create-post-header">
                     <span style="font-weight: bold; font-size: 1.1rem;">📤 Upload Video / Movie</span>
@@ -103,18 +93,11 @@
                 <div class="create-post-body">
                     <input type="text" id="uploadVideoTitle" placeholder="ဗီဒီယို သို့မဟုတ် ရုပ်ရှင် ခေါင်းစဉ်..." class="fb-textarea" style="margin-bottom: 10px;">
                     
-                    <!-- Playlist Category Selection -->
                     <div style="margin-bottom: 10px;">
-                        <label style="font-size: 0.8rem; color: #00ffff; display: block; margin-bottom: 4px;">📂 Playlist Category:</label>
-                        <select id="uploadPlaylistCategory" class="fb-textarea" style="background: #181820;">
-                            <option value="Action">Action</option>
-                            <option value="Comedy">Comedy</option>
-                            <option value="Romance">Romance</option>
-                            <option value="Series">Series</option>
-                        </select>
+                        <label style="font-size: 0.8rem; color: #00ffff; display: block; margin-bottom: 4px;">📂 Playlist အမည် (ဥပမာ: Action, Series, etc.):</label>
+                        <input type="text" id="uploadPlaylistInput" placeholder="Playlist အမည် ရေးပါ..." class="fb-textarea" value="General">
                     </div>
 
-                    <!-- Playlist Feature ON/OFF Toggle -->
                     <div style="display: flex; justify-content: space-between; align-items: center; background: #181820; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #333344;">
                         <span style="font-size: 0.85rem; color: #fff;">Playlist Feature (Enable/Disable):</span>
                         <input type="checkbox" id="playlistToggleSwitch" checked style="width: 20px; height: 20px; accent-color: #ff0033; cursor: pointer;">
@@ -208,7 +191,7 @@
                 </div>
             </section>
 
-            <!-- 5. PROFILE PAGE -->
+            <!-- 5. PROFILE PAGE (With Playlist Button) -->
             <section id="page-profile" class="main-section hidden">
                 <div id="adminNotifBanner" class="hidden" style="background: #ff0033; padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85rem;">
                     <strong id="adminNotifTitle">Notification</strong>: <span id="adminNotifText"></span>
@@ -216,7 +199,6 @@
 
                 <div class="profile-top-bar">
                     <div class="profile-top-actions">
-                        <button class="top-icon-btn" onclick="switchMainPage('settings')">⚙️ Settings</button>
                         <button class="top-icon-btn admin-btn-top" onclick="switchMainPage('admin')">🛠️ Admin</button>
                     </div>
                 </div>
@@ -234,6 +216,11 @@
                     <h2 id="profileNameDisplay" class="profile-name">Account Name</h2>
                     <p id="profileUserDisplay" class="profile-username">@username</p>
                     
+                    <!-- Playlist Button on Profile -->
+                    <div style="margin: 10px 0;">
+                        <button class="primary-btn" style="width: 80%; margin: 0 auto; padding: 8px; font-size: 0.85rem;" onclick="openUserProfilePlaylists()">📂 View Playlists (ပလေးလစ်များ)</button>
+                    </div>
+
                     <div class="profile-stats">
                         <div class="stat-item"><span class="stat-num" id="statPosts">0</span><span class="stat-label">Posts</span></div>
                         <div class="stat-item"><span class="stat-num" id="statVideos">0</span><span class="stat-label">Videos</span></div>
@@ -252,18 +239,45 @@
                 </div>
             </section>
 
-            <!-- SETTINGS PAGE -->
+            <!-- PROFILE PLAYLIST SCREEN -->
+            <section id="page-profile-playlists" class="main-section hidden">
+                <div class="create-post-header">
+                    <button class="top-icon-btn" onclick="switchMainPage('profile')">⬅ Back</button>
+                    <span style="font-weight: bold; color: #00ffff;">📂 My Playlists</span>
+                    <span></span>
+                </div>
+                <div id="profilePlaylistContainer"></div>
+            </section>
+
+            <!-- SETTINGS PAGE (Username/Name edit & Sign Out at the bottom) -->
             <section id="page-settings" class="main-section hidden">
-                <h2>⚙️ App Settings</h2>
+                <div class="create-post-header">
+                    <button class="top-icon-btn" onclick="switchMainPage('profile')">⬅ Back</button>
+                    <span style="font-weight: bold;">⚙️ App Settings</span>
+                    <span></span>
+                </div>
+                <div class="admin-card">
+                    <h3>👤 Edit Account Info</h3>
+                    <label style="font-size: 0.75rem; color: #aaa;">Username:</label>
+                    <input type="text" id="settingsUsernameInput" placeholder="Username" style="-webkit-text-security: none; margin-bottom: 8px;">
+                    <label style="font-size: 0.75rem; color: #aaa;">Account Name:</label>
+                    <input type="text" id="settingsDisplayNameInput" placeholder="Account Name" style="-webkit-text-security: none; margin-bottom: 10px;">
+                    <button class="primary-btn" onclick="updateAccountInfo()">အချက်အလက် သိမ်းဆည်းမည်</button>
+                </div>
                 <div class="admin-card">
                     <h3>🔒 Security</h3>
-                    <input type="password" id="currentPassInput" placeholder="Current Password" style="-webkit-text-security: disc;">
-                    <input type="password" id="newPassInput" placeholder="New Password" style="-webkit-text-security: disc;">
+                    <input type="password" id="currentPassInput" placeholder="Current Password" style="-webkit-text-security: disc; margin-bottom: 8px;">
+                    <input type="password" id="newPassInput" placeholder="New Password" style="-webkit-text-security: disc; margin-bottom: 10px;">
                     <button class="primary-btn" onclick="changeUserPassword()">စကားဝှက်ပြောင်းမည်</button>
                 </div>
                 <div class="admin-card">
                     <h3>💾 Storage</h3>
-                    <button class="btn-danger" onclick="clearAppCache()">Cache ရှင်းလင်းမည်</button>
+                    <button class="btn-danger" onclick="clearAppCache()" style="width: 100%; margin-bottom: 15px;">Cache ရှင်းလင်းမည်</button>
+                </div>
+                
+                <!-- Sign Out at the absolute bottom of Settings -->
+                <div style="margin-top: 20px; text-align: center;">
+                    <button onclick="handleLogout()" class="btn-danger" style="width: 100%; padding: 12px; font-size: 1rem; background: #ff0033;">🚪 Sign Out (အကောင့်ထွက်မည်)</button>
                 </div>
             </section>
         </main>
