@@ -10,15 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const file = e.target.files[0];
             if (file) {
                 if (file.size > 5 * 1024 * 1024) {
-                    alert('⚠️ ဖိုင်ဆိုဒ် ကြီးလွန်းပါသည် (5MB အောက်သာ)။');
+                    showToast('⚠️ ဖိုင်ဆိုဒ် ကြီးလွန်းပါသည် (5MB အောက်သာ)။', 'error');
                     this.value = '';
                     return;
                 }
                 tempMediaType = file.type.startsWith('image') ? 'image' : 'video';
                 document.getElementById('selectedMediaName').innerText = `ရွေးပြီး: ${file.name}`;
-                const reader = new FileReader();
-                reader.onload = (ev) => { tempFbMediaData = ev.target.result; };
-                reader.readAsDataURL(file);
+                compressImageOrFile(file, (base64) => { tempFbMediaData = base64; });
             }
         });
     }
@@ -29,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const file = e.target.files[0];
             if(file) {
                 if(file.size > 5 * 1024 * 1024) {
-                    alert('⚠️ ဖိုင်ဆိုဒ် ကြီးလွန်းပါသည် (5MB အောက်သာ)။');
+                    showToast('⚠️ ဖိုင်ဆိုဒ် ကြီးလွန်းပါသည် (5MB အောက်သာ)။', 'error');
                     this.value = '';
                     return;
                 }
@@ -42,10 +40,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+function compressImageOrFile(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 500;
+            const MAX_HEIGHT = 500;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+            } else {
+                if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            callback(canvas.toDataURL('image/jpeg', 0.7));
+        };
+        img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
 async function handleCreateFbPost() {
     const text = document.getElementById('fbPostTextInput').value.trim();
     const currentUser = localStorage.getItem('flash_logged_user');
-    if(!text && !tempFbMediaData) return alert('စာ သို့မဟုတ် ဖိုင်ထည့်ပါ။');
+    if(!text && !tempFbMediaData) return showToast('စာ သို့မဟုတ် ဖိုင်ထည့်ပါ။', 'error');
 
     let userPhoto = 'https://via.placeholder.com/35';
     let displayName = currentUser;
@@ -74,12 +100,26 @@ async function handleCreateFbPost() {
     tempMediaType = "";
     switchMainPage('feed');
     loadFbFeed();
+    showToast('ပို့စ်တင်ခြင်း အောင်မြင်ပါသည်။', 'success');
 }
 
 async function handleDirectVideoUpload() {
     const title = document.getElementById('uploadVideoTitle').value.trim();
+    const telegramLink = document.getElementById('telegramVideoLinkInput').value.trim();
     const currentUser = localStorage.getItem('flash_logged_user');
-    if(!title || !tempAppVideoData) return alert('ခေါင်းစဉ်နှင့် ဗီဒီယိုဖိုင် ရွေးပါ။');
+
+    if(!title) return showToast('ခေါင်းစဉ် ထည့်ပါ။', 'error');
+
+    let finalMediaUrl = tempAppVideoData;
+    let finalMediaType = 'video';
+
+    // Telegram link ထည့်ထားရင် Telegram link ကိုသုံးမည်
+    if(telegramLink) {
+        finalMediaUrl = telegramLink;
+        finalMediaType = 'telegram_video';
+    } else if(!tempAppVideoData) {
+        return showToast('Telegram Link (သို့မဟုတ်) ဗီဒီယိုဖိုင် ရွေးပါ။', 'error');
+    }
 
     const progressBox = document.getElementById('uploadProgressBox');
     const progressBar = document.getElementById('lightningProgressBar');
@@ -88,7 +128,7 @@ async function handleDirectVideoUpload() {
 
     let progress = 0;
     let interval = setInterval(async () => {
-        progress += 20;
+        progress += 25;
         if(progressBar) progressBar.style.width = progress + '%';
         if(progressText) progressText.innerText = progress + '%';
 
@@ -108,8 +148,8 @@ async function handleDirectVideoUpload() {
                 display_name: displayName,
                 user_photo: userPhoto,
                 post_text: title,
-                media_url: tempAppVideoData,
-                media_type: 'video',
+                media_url: finalMediaUrl,
+                media_type: finalMediaType,
                 likes: [],
                 comments: [],
                 reports: 0,
@@ -117,16 +157,17 @@ async function handleDirectVideoUpload() {
             }]);
 
             document.getElementById('uploadVideoTitle').value = '';
+            document.getElementById('telegramVideoLinkInput').value = '';
             document.getElementById('uploadVideoPreviewName').innerText = '';
             tempAppVideoData = "";
             if(progressBox) progressBox.classList.add('hidden');
             if(progressBar) progressBar.style.width = '0%';
 
-            alert('ဗီဒီယို တင်ခြင်း အောင်မြင်ပါသည်။');
+            showToast('ဗီဒီယို တင်ခြင်း အောင်မြင်ပါသည်။', 'success');
             switchMainPage('home');
             loadHomeVideos();
         }
-    }, 150);
+    }, 120);
 }
 
 async function loadHomeVideos(searchQuery = '') {
@@ -145,6 +186,14 @@ async function loadHomeVideos(searchQuery = '') {
     filtered.forEach(v => {
         const div = document.createElement('div');
         div.className = 'video-card-item';
+        
+        let mediaHtml = '';
+        if(v.media_type === 'telegram_video') {
+            mediaHtml = `<a href="${v.media_url}" target="_blank" style="display:block; background:#181820; border:1px solid #00ffff; color:#00ffff; text-align:center; padding:15px; border-radius:8px; text-decoration:none; font-weight:bold; margin-top:8px;">🎬 Telegram ဖြင့် ကြည့်ရန် (Watch on Telegram)</a>`;
+        } else {
+            mediaHtml = `<video src="${v.media_url}" controls width="100%" style="border-radius:8px; background:#000; margin-top:8px;"></video>`;
+        }
+
         div.innerHTML = `
             <div class="fb-post-header">
                 <img src="${v.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar">
@@ -154,7 +203,7 @@ async function loadHomeVideos(searchQuery = '') {
                 </div>
             </div>
             <h4 style="margin: 8px 0; font-size:0.95rem;">${escapeHtml(v.post_text)}</h4>
-            <video src="${v.media_url}" controls width="100%" style="border-radius:8px; background:#000;"></video>
+            ${mediaHtml}
             <div style="text-align:right; margin-top:6px;">
                 <button onclick="reportPost('${v.id}')" style="background:none; border:none; color:#ff0033; font-size:0.75rem; cursor:pointer;">🚩 Report</button>
             </div>
@@ -218,7 +267,7 @@ async function reportPost(postId) {
     if(post) {
         let currentReports = post.reports || 0;
         await supabaseClient.from('flash_posts').update({ reports: currentReports + 1 }).eq('id', postId);
-        alert('Report တင်ပြီးပါပြီ။ Admin စစ်ဆေးပေးပါမည်။');
+        showToast('Report တင်ပြီးပါပြီ။', 'success');
     }
 }
 
@@ -275,7 +324,7 @@ function setupLongPressDelete(element, postId) {
         pressTimer = setTimeout(async () => {
             if(confirm('ဤအချက်အလက်ကို ဖျက်မည်မှာ သေချာပါသလား?')) {
                 await supabaseClient.from('flash_posts').delete().eq('id', postId);
-                alert('ဖျက်ပြီးပါပြီ။');
+                showToast('ဖျက်ပြီးပါပြီ။', 'success');
                 loadUserProfile(localStorage.getItem('flash_logged_user'));
                 loadHomeVideos();
                 loadFbFeed();
