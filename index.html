@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flâsh Movie Pro - Cyber Edition</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <!-- Cute Intro Screen with Bears & Typing Text -->
+    <!-- Intro Screen -->
     <div id="intro-screen" class="intro-container">
+        <div class="intro-bg-overlay"></div>
         <div class="intro-content-box">
             <div class="intro-bears-img-wrapper">
-                <!-- Panda & Bear Image from user source -->
                 <img src="1000126782.jpg" alt="Bears Intro" class="intro-bears-img">
                 <div class="speech-bubble">Welcome To Flâsh Movie!</div>
             </div>
@@ -46,15 +47,22 @@
         <header class="app-header">
             <h2 class="logo-text">⚡ Flâsh Movie</h2>
             <div style="display: flex; align-items: center; gap: 8px;">
-                <div id="account-timer" class="timer-box">0Y / 0M / 0D / 0H / 0M / 0S</div>
+                <div id="account-timer" class="timer-box">0D / 0H / 0M / 0S</div>
                 <button onclick="handleLogout()" class="logout-btn">Logout</button>
             </div>
         </header>
 
         <main class="main-content">
-            <!-- HOME PAGE (Facebook Style Feed & Posts) -->
+            <!-- 1. HOME PAGE (Movie / Video Search Feed) -->
             <section id="page-home" class="main-section">
-                <!-- Facebook Style Create Post Box -->
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="movieSearchInput" placeholder="🔍 ရုပ်ရှင် သို့မဟုတ် ဗီဒီယို ရှာရန်..." oninput="filterHomeVideos()" style="width: 100%; background: #111116; border: 1px solid #333344; color: #fff; padding: 10px; border-radius: 8px; outline: none;">
+                </div>
+                <div id="homeVideoFeedContainer" class="video-feed-list"></div>
+            </section>
+
+            <!-- 2. FEED PAGE (Facebook Style Posts) -->
+            <section id="page-feed" class="main-section hidden">
                 <div class="fb-create-post-card">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                         <img id="currentUserAvatarFeed" src="https://via.placeholder.com/35" class="contact-avatar">
@@ -71,30 +79,69 @@
                         <button class="primary-btn" style="width: auto; padding: 6px 16px;" onclick="handleCreateFbPost()">တင်မည်</button>
                     </div>
                 </div>
-
-                <!-- Facebook Feed Container -->
                 <div id="fbFeedContainer" class="fb-feed-list"></div>
             </section>
 
-            <!-- CHAT PAGE -->
+            <!-- 3. UPLOAD PAGE -->
+            <section id="page-upload" class="main-section hidden">
+                <div class="create-post-header">
+                    <span style="font-weight: bold; font-size: 1.1rem;">📤 Upload Video / Movie</span>
+                </div>
+                <div class="create-post-body">
+                    <input type="text" id="uploadVideoTitle" placeholder="ဗီဒီယို ခေါင်းစဉ်..." class="fb-textarea" style="margin-bottom: 10px;">
+                    <label class="fb-media-upload-label" style="display:block; text-align:center; padding: 12px; margin-bottom: 10px;">
+                        🎬 ဗီဒီယိုဖိုင် ရွေးရန် (Max 5MB)
+                        <input type="file" id="appVideoPicker" accept="video/*" style="display:none;">
+                    </label>
+                    <div id="uploadVideoPreviewName" style="color:#00ffff; font-size:0.8rem; margin-bottom: 10px; text-align:center;"></div>
+                    
+                    <!-- Real-time Lightning Progress Bar -->
+                    <div id="uploadProgressBox" class="hidden" style="width: 100%; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #ff0033; margin-bottom: 4px;">
+                            <span>Uploading...</span>
+                            <span id="progressPercentText">0%</span>
+                        </div>
+                        <div class="lightning-progress-track">
+                            <div id="lightningProgressBar" class="lightning-progress-fill"></div>
+                        </div>
+                    </div>
+
+                    <button class="primary-btn" onclick="handleDirectVideoUpload()">တင်မည်</button>
+                </div>
+            </section>
+
+            <!-- 4. CHAT PAGE (Conversation List Only) -->
             <section id="page-chat" class="main-section hidden">
-                <div class="messenger-container">
-                    <div class="chat-sidebar" id="chatSidebar">
-                        <div class="sidebar-header">💬 စကားပြောများ</div>
+                <div id="chatListView" class="messenger-container" style="display: flex; flex-direction: column;">
+                    <div class="chat-sidebar" style="width: 100%;">
+                        <div class="sidebar-header">💬 Conversations (စကားပြောရန် လူများ)</div>
                         <div id="contactListContainer" class="contact-list"></div>
                     </div>
-                    <div class="chat-room" id="chatRoomArea">
-                        <div class="chat-room-header" id="activeChatHeader">
-                            <span>စကားပြောရန် လူတစ်ဦးကို ရွေးပါ</span>
-                        </div>
-                        <div id="activeChatMessages" class="chat-messages-body">
-                            <p style="color: #666; text-align: center; margin-top: 40px;">မက်ဆေ့ချ် မရှိသေးပါ။</p>
-                        </div>
-                        <div class="chat-input-footer">
-                            <input type="text" id="chatMessageInput" placeholder="စကားလက်ဆုံပြောရန် ရေးပါ...">
-                            <button onclick="sendChatMessage()">ပို့မည်</button>
-                        </div>
+                </div>
+                <div id="chatRoomView" class="chat-room-screen hidden">
+                    <div class="chat-room-header">
+                        <button class="top-icon-btn" onclick="backToChatList()">⬅ Back</button>
+                        <span id="activeChatHeader" style="font-weight: bold;">Chat</span>
                     </div>
+                    <div id="activeChatMessages" class="chat-messages-body"></div>
+                    <div class="chat-input-footer">
+                        <input type="text" id="chatMessageInput" placeholder="စကားလက်ဆုံပြောရန် ရေးပါ...">
+                        <button onclick="sendChatMessage()">ပို့မည်</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- COMMENT PAGE -->
+            <section id="page-comment" class="main-section hidden">
+                <div class="create-post-header">
+                    <button class="top-icon-btn" onclick="switchMainPage('feed')">⬅ Back</button>
+                    <span style="font-weight: bold;">Comments</span>
+                    <span></span>
+                </div>
+                <div id="commentScreenContent" style="margin-top: 10px;"></div>
+                <div class="chat-input-footer" style="margin-top: 15px;">
+                    <input type="text" id="screenCommentInput" placeholder="မှတ်ချက် ရေးပါ...">
+                    <button onclick="submitScreenComment()">ပို့</button>
                 </div>
             </section>
 
@@ -116,8 +163,12 @@
                 </div>
             </section>
 
-            <!-- PROFILE PAGE -->
+            <!-- 5. PROFILE PAGE -->
             <section id="page-profile" class="main-section hidden">
+                <div id="adminNotifBanner" class="hidden" style="background: #ff0033; padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85rem;">
+                    <strong id="adminNotifTitle">Notification</strong>: <span id="adminNotifText"></span>
+                </div>
+
                 <div class="profile-top-bar">
                     <div class="profile-top-actions">
                         <button class="top-icon-btn" onclick="switchMainPage('settings')">⚙️ Settings</button>
@@ -126,30 +177,34 @@
                 </div>
 
                 <div class="profile-card-modern">
-                    <div class="profile-banner"></div>
-                    <div class="profile-avatar-wrapper">
-                        <img id="profileImgDisplay" src="" alt="Profile Photo" class="profile-img-preview-modern">
+                    <div id="profileBannerBg" class="profile-banner" style="position:relative; cursor:pointer;" title="ဖိထား၍ နောက်ခံပုံပြောင်းရန်">
+                        <input type="file" id="bgPhotoPicker" accept="image/*" style="display:none;">
                     </div>
+                    
+                    <div class="profile-avatar-wrapper" style="cursor:pointer;" title="ဖိထား၍ Profile ပုံပြောင်းရန်">
+                        <img id="profileImgDisplay" src="" alt="Profile Photo" class="profile-img-preview-modern">
+                        <input type="file" id="profilePhotoPicker" accept="image/*" style="display:none;">
+                    </div>
+                    
                     <h2 id="profileNameDisplay" class="profile-name">Account Name</h2>
                     <p id="profileUserDisplay" class="profile-username">@username</p>
                     
-                    <div class="edit-profile-box">
-                        <input type="text" id="editDisplayNameInput" placeholder="နာမည်အသစ်ပြောင်းရန်...">
-                        <input type="file" id="editPhotoPicker" accept="image/*" style="font-size: 0.75rem; color: #aaa;">
-                        <button class="primary-btn" style="padding: 6px; font-size: 0.8rem;" onclick="updateProfileInfo()">Profile ပြင်ဆင်မည်</button>
-                    </div>
-
                     <div class="profile-stats">
-                        <div class="stat-item"><span class="stat-num" id="statVideos">0</span><span class="stat-label">Posts</span></div>
+                        <div class="stat-item"><span class="stat-num" id="statPosts">0</span><span class="stat-label">Posts</span></div>
+                        <div class="stat-item"><span class="stat-num" id="statVideos">0</span><span class="stat-label">Videos</span></div>
                         <div class="stat-item"><span class="stat-num">0</span><span class="stat-label">Followers</span></div>
-                        <div class="stat-item"><span class="stat-num">0</span><span class="stat-label">Following</span></div>
-                        <div class="stat-item"><span class="stat-num">0</span><span class="stat-label">Likes</span></div>
+                        <div class="stat-item"><span class="stat-num" id="statLikes">0</span><span class="stat-label">Likes</span></div>
                     </div>
                 </div>
 
+                <!-- Profile Tabs (Posts / Videos) -->
+                <div class="profile-tabs-bar">
+                    <button class="profile-tab-btn active" onclick="switchProfileTab('posts')">Posts</button>
+                    <button class="profile-tab-btn" onclick="switchProfileTab('videos')">Videos</button>
+                </div>
+
                 <div class="user-uploads-section">
-                    <h3>📂 တင်ထားသော ပို့စ်များနှင့် ဗီဒီယိုများ</h3>
-                    <div id="userUploadsFeed" class="uploads-grid"></div>
+                    <div id="profileTabContent" class="uploads-grid"></div>
                 </div>
             </section>
 
@@ -169,15 +224,18 @@
             </section>
         </main>
 
-        <!-- Bottom Navigation -->
+        <!-- Bottom Navigation (Home, Feed, Upload, Chat, Profile) -->
         <nav class="bottom-nav">
             <button onclick="switchMainPage('home')" id="nav-btn-home" class="nav-btn active">🏠 Home</button>
+            <button onclick="switchMainPage('feed')" id="nav-btn-feed" class="nav-btn">📰 Feed</button>
+            <button onclick="switchMainPage('upload')" id="nav-btn-upload" class="nav-btn" style="color:#00ffff;">➕ Upload</button>
             <button onclick="switchMainPage('chat')" id="nav-btn-chat" class="nav-btn">💬 Chat</button>
             <button onclick="switchMainPage('profile')" id="nav-btn-profile" class="nav-btn">👤 Profile</button>
         </nav>
     </div>
 
     <!-- Modular Script Files -->
+    <script src="supabase.js"></script>
     <script src="feed.js"></script>
     <script src="chat.js"></script>
     <script src="app.js"></script>
