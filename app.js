@@ -4,7 +4,7 @@ window.addEventListener('load', () => {
     setTimeout(() => {
         document.getElementById('intro-screen').classList.add('hidden');
         checkUserSession();
-    }, 1500);
+    }, 1200);
     startLiveTimer();
     loadTgMessages();
 });
@@ -25,11 +25,11 @@ function switchAuthView(viewName) {
     if(viewName === 'register') {
         document.getElementById('view-login').classList.add('hidden');
         document.getElementById('view-register').classList.remove('hidden');
-        document.getElementById('auth-title').innerText = '📝 Register New Account';
+        document.getElementById('auth-title').innerText = '📝 Register';
     } else {
         document.getElementById('view-register').classList.add('hidden');
         document.getElementById('view-login').classList.remove('hidden');
-        document.getElementById('auth-title').innerText = '🔑 Login to Flâsh Movie';
+        document.getElementById('auth-title').innerText = '🔑 Login';
     }
 }
 
@@ -54,7 +54,7 @@ function handleRegister() {
         return;
     }
 
-    const userData = { pass, displayName, photo: tempProfilePhotoData };
+    const userData = { pass, displayName, photo: tempProfilePhotoData, uploads: [] };
     localStorage.setItem('flash_user_data_' + user, JSON.stringify(userData));
     alert('အကောင့်ဖွင့်ခြင်း အောင်မြင်ပါသည်။ Login ဝင်ပါ။');
     switchAuthView('login');
@@ -96,13 +96,36 @@ function loadUserProfile(username) {
         if(data.photo) {
             document.getElementById('profileImgDisplay').src = data.photo;
         }
+        
+        // Load Real User Uploads & Stats
+        const uploadsFeed = document.getElementById('userUploadsFeed');
+        uploadsFeed.innerHTML = '';
+        if(data.uploads && data.uploads.length > 0) {
+            document.getElementById('statVideos').innerText = data.uploads.length;
+            data.uploads.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'upload-item-card';
+                div.innerHTML = `<p style="font-size: 0.85rem; margin: 5px 0;">📹 ${escapeHtml(item)}</p>`;
+                uploadsFeed.appendChild(div);
+            });
+        } else {
+            document.getElementById('statVideos').innerText = '0';
+            uploadsFeed.innerHTML = '<p style="color: #666; font-size: 0.85rem; text-align: center; padding: 15px;">တင်ထားသော ဗီဒီယို မရှိသေးပါ။</p>';
+        }
     } else {
         document.getElementById('profileNameDisplay').innerText = username;
         document.getElementById('profileUserDisplay').innerText = `@${username}`;
+        document.getElementById('statVideos').innerText = '0';
+        document.getElementById('userUploadsFeed').innerHTML = '<p style="color: #666; font-size: 0.85rem; text-align: center; padding: 15px;">တင်ထားသော ဗီဒီယို မရှိသေးပါ။</p>';
     }
 }
 
-// Admin Password Verification (295802)
+function viewOtherProfile(username) {
+    loadUserProfile(username);
+    switchMainPage('profile');
+}
+
+// Admin Verification (Password: 295802)
 function verifyAdminPassword() {
     const enteredPass = document.getElementById('adminPassInput').value.trim();
     if(enteredPass === "295802") {
@@ -148,6 +171,7 @@ function clearAppCache() {
     }
 }
 
+// Telegram Real-time Chat System
 function sendTgMessage() {
     const input = document.getElementById('tgMessageInput');
     const text = input.value.trim();
@@ -167,11 +191,16 @@ function loadTgMessages() {
     let messages = JSON.parse(localStorage.getItem('flash_tg_messages') || '[]');
     
     container.innerHTML = '';
+    if(messages.length === 0) {
+        container.innerHTML = '<p style="color: #666; font-size: 0.85rem; text-align: center; margin-top: 20px;">မက်ဆေ့ချ် မရှိသေးပါ။</p>';
+        return;
+    }
+
     messages.forEach(msg => {
         const div = document.createElement('div');
         div.className = 'tg-msg';
         div.innerHTML = `
-            <strong>@${msg.user}:</strong> ${escapeHtml(msg.text)}
+            <strong style="cursor:pointer; color:#3ea6ff;" onclick="viewOtherProfile('${msg.user}')">@${msg.user}:</strong> ${escapeHtml(msg.text)}
             <br><span class="tg-msg-actions" onclick="editTgMessage(${msg.id})">Edit</span> | 
             <span class="tg-msg-actions" style="color:#cc0000;" onclick="deleteTgMessage(${msg.id})">Delete</span>
         `;
@@ -209,7 +238,6 @@ function switchMainPage(pageName) {
         document.getElementById('nav-btn-home').classList.add('active');
     } else if(pageName === 'admin') {
         document.getElementById('page-admin').classList.remove('hidden');
-        document.getElementById('nav-btn-admin').classList.add('active');
         
         if(sessionStorage.getItem('admin_verified') === 'true') {
             document.getElementById('admin-lock-screen').classList.add('hidden');
@@ -221,9 +249,9 @@ function switchMainPage(pageName) {
     } else if(pageName === 'profile') {
         document.getElementById('page-profile').classList.remove('hidden');
         document.getElementById('nav-btn-profile').classList.add('active');
+        loadUserProfile(localStorage.getItem('flash_logged_user'));
     } else if(pageName === 'settings') {
         document.getElementById('page-settings').classList.remove('hidden');
-        document.getElementById('nav-btn-settings').classList.add('active');
     }
 }
 
@@ -259,4 +287,4 @@ function sendNotification() {
 
 function escapeHtml(text) {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
+                                               }
