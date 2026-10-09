@@ -79,7 +79,7 @@ async function handleCreateFbPost() {
         if(uData.display_name) displayName = uData.display_name;
     }
 
-    await supabaseClient.from('flash_posts').insert([{
+    const { error } = await supabaseClient.from('flash_posts').insert([{
         username: currentUser,
         display_name: displayName,
         user_photo: userPhoto,
@@ -91,6 +91,11 @@ async function handleCreateFbPost() {
         reports: 0,
         is_video: false
     }]);
+
+    if(error) {
+        showToast('ပို့စ်တင်၍မရပါ: ' + error.message, 'error');
+        return;
+    }
 
     document.getElementById('fbPostTextInput').value = '';
     document.getElementById('selectedMediaName').innerText = '';
@@ -142,7 +147,7 @@ async function handleDirectVideoUpload() {
                 if(uData.display_name) displayName = uData.display_name;
             }
 
-            await supabaseClient.from('flash_posts').insert([{
+            const { error } = await supabaseClient.from('flash_posts').insert([{
                 username: currentUser,
                 display_name: displayName,
                 user_photo: userPhoto,
@@ -157,12 +162,18 @@ async function handleDirectVideoUpload() {
                 is_video: true
             }]);
 
+            if(progressBox) progressBox.classList.add('hidden');
+            if(progressBar) progressBar.style.width = '0%';
+
+            if(error) {
+                showToast('ဗီဒီယိုတင်၍မရပါ: ' + error.message, 'error');
+                return;
+            }
+
             document.getElementById('uploadVideoTitle').value = '';
             document.getElementById('telegramVideoLinkInput').value = '';
             document.getElementById('uploadVideoPreviewName').innerText = '';
             tempAppVideoData = "";
-            if(progressBox) progressBox.classList.add('hidden');
-            if(progressBar) progressBar.style.width = '0%';
 
             showToast('ဗီဒီယို တင်ခြင်း အောင်မြင်ပါသည်။', 'success');
             switchMainPage('home');
@@ -175,21 +186,32 @@ async function loadHomeVideos(searchQuery = '') {
     const container = document.getElementById('homeVideoFeedContainer');
     if(!container) return;
 
-    const { data: posts } = await supabaseClient.from('flash_posts').select('*').eq('is_video', true).order('created_at', { ascending: false });
-    if(!posts || posts.length === 0) {
+    // အားလုံးကို ဆွဲထုတ်ပြီး JavaScript ဘက်မှ စစ်ဆေးခြင်းဖြင့် Error ကင်းစေသည်
+    const { data: posts, error } = await supabaseClient.from('flash_posts').select('*').order('created_at', { ascending: false });
+    
+    if(error || !posts) {
+        container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ဗီဒီယိုများ ရယူရာတွင် အမှားရှိနေပါသည်။</p>';
+        return;
+    }
+
+    let videoPosts = posts.filter(p => p.is_video === true);
+
+    if(videoPosts.length === 0) {
         container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ဗီဒီယိုများ မရှိသေးပါ။</p>';
         return;
     }
 
-    let filtered = posts.filter(p => {
-        const matchSearch = (p.post_text || '').toLowerCase().includes(searchQuery.toLowerCase());
+    let filtered = videoPosts.filter(p => {
+        const matchSearch = (p.post_text || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            (p.username || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            (p.display_name || '').toLowerCase().includes(searchQuery.toLowerCase());
         const matchActive = p.playlist_active !== false;
         return matchSearch && matchActive;
     });
 
     container.innerHTML = '';
     if(filtered.length === 0) {
-        container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ဗီဒီယို မရှိသေးပါ။</p>';
+        container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ရှာမတွေ့ပါ။</p>';
         return;
     }
 
@@ -231,8 +253,14 @@ async function loadFbFeed() {
     const container = document.getElementById('fbFeedContainer');
     if(!container) return;
 
-    const { data: posts } = await supabaseClient.from('flash_posts').select('*').eq('is_video', false).order('created_at', { ascending: false });
-    if(!posts || posts.length === 0) {
+    const { data: posts, error } = await supabaseClient.from('flash_posts').select('*').order('created_at', { ascending: false });
+    if(error || !posts) {
+        container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ပို့စ်များ မရှိသေးပါ။</p>';
+        return;
+    }
+
+    let feedPosts = posts.filter(p => p.is_video !== true);
+    if(feedPosts.length === 0) {
         container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ပို့စ်များ မရှိသေးပါ။</p>';
         return;
     }
@@ -240,7 +268,7 @@ async function loadFbFeed() {
     const currentUser = localStorage.getItem('flash_logged_user');
     container.innerHTML = '';
 
-    posts.forEach(post => {
+    feedPosts.forEach(post => {
         const likesArr = post.likes || [];
         const isLiked = likesArr.includes(currentUser);
         const commentsArr = post.comments || [];
@@ -342,4 +370,4 @@ function setupLongPressDelete(element, postId) {
         }, 800);
     });
     element.addEventListener('touchend', () => clearTimeout(pressTimer));
-}
+                             }
