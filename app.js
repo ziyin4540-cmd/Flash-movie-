@@ -7,7 +7,6 @@ window.addEventListener('load', () => {
         checkUserSession();
     }, 1000);
     startLiveTimer();
-    loadTgMessages();
     loadVideoFeed();
 });
 
@@ -20,6 +19,7 @@ function checkUserSession() {
         document.getElementById('page-auth').classList.add('hidden');
         document.getElementById('app-container').classList.remove('hidden');
         loadUserProfile(loggedUser);
+        loadContactList();
     }
 }
 
@@ -75,7 +75,6 @@ function handleLogout() {
     checkUserSession();
 }
 
-// Profile Loading & Editing
 function loadUserProfile(username) {
     const dataStr = localStorage.getItem('flash_user_data_' + username);
     if(dataStr) {
@@ -135,7 +134,6 @@ function viewOtherProfile(username) {
     switchMainPage('profile');
 }
 
-// Video Upload Logic
 function openUploadModal() { document.getElementById('uploadModal').classList.remove('hidden'); }
 function closeUploadModal() { document.getElementById('uploadModal').classList.add('hidden'); }
 
@@ -157,13 +155,11 @@ function handleVideoUpload() {
         return;
     }
 
-    // Save to global feed
     let allVideos = JSON.parse(localStorage.getItem('flash_all_videos') || '[]');
     const newVideo = { id: Date.now(), user: currentUser, title: title, url: tempUploadVideoData };
     allVideos.unshift(newVideo);
     localStorage.setItem('flash_all_videos', JSON.stringify(allVideos));
 
-    // Save to user profile uploads
     const dataStr = localStorage.getItem('flash_user_data_' + currentUser);
     if(dataStr) {
         let data = JSON.parse(dataStr);
@@ -200,36 +196,6 @@ function loadVideoFeed() {
     });
 }
 
-// Chat System
-function sendTgMessage() {
-    const input = document.getElementById('tgMessageInput');
-    const text = input.value.trim();
-    const currentUser = localStorage.getItem('flash_logged_user') || 'Guest';
-
-    if(text) {
-        let messages = JSON.parse(localStorage.getItem('flash_tg_messages') || '[]');
-        messages.push({ id: Date.now(), user: currentUser, text: text });
-        localStorage.setItem('flash_tg_messages', JSON.stringify(messages));
-        input.value = '';
-        loadTgMessages();
-    }
-}
-
-function loadTgMessages() {
-    const container = document.getElementById('tgChatContainer');
-    if(!container) return;
-    let messages = JSON.parse(localStorage.getItem('flash_tg_messages') || '[]');
-    container.innerHTML = messages.length === 0 ? '<p style="color: #666; font-size: 0.85rem; text-align: center;">မက်ဆေ့ချ် မရှိသေးပါ။</p>' : '';
-    
-    messages.forEach(msg => {
-        const div = document.createElement('div');
-        div.className = 'tg-msg';
-        div.innerHTML = `<strong style="cursor:pointer; color:#3ea6ff;" onclick="viewOtherProfile('${msg.user}')">@${msg.user}:</strong> ${escapeHtml(msg.text)}`;
-        container.appendChild(div);
-    });
-    container.scrollTop = container.scrollHeight;
-}
-
 function verifyAdminPassword() {
     if(document.getElementById('adminPassInput').value.trim() === "295802") {
         sessionStorage.setItem('admin_verified', 'true');
@@ -258,9 +224,7 @@ function changeUserPassword() {
 
 function clearAppCache() {
     if(confirm('Cache များကို ရှင်းလင်းမည်မှာ သေချာပါသလား?')) {
-        localStorage.removeItem('flash_tg_messages');
         alert('ရှင်းလင်းပြီးပါပြီ။');
-        loadTgMessages();
     }
 }
 
@@ -275,7 +239,7 @@ function switchMainPage(pageName) {
     } else if(pageName === 'chat') {
         document.getElementById('page-chat').classList.remove('hidden');
         document.getElementById('nav-btn-chat').classList.add('active');
-        loadTgMessages();
+        loadContactList();
     } else if(pageName === 'admin') {
         document.getElementById('page-admin').classList.remove('hidden');
         if(sessionStorage.getItem('admin_verified') === 'true') {
@@ -316,4 +280,3 @@ function sendNotification() {
 function escapeHtml(text) {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
-
