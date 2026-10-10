@@ -55,7 +55,9 @@ function openAdminAuthModal() {
 }
 
 function verifyAdminPassword() {
-    const pass = document.getElementById('adminPassInput')?.value.trim();
+    const inputElem = document.getElementById('adminPassInput');
+    const pass = inputElem ? String(inputElem.value).trim() : '';
+
     if(pass === "296802") {
         isAdminAuthenticated = true;
         document.getElementById('adminAuthModal')?.remove();
@@ -104,7 +106,7 @@ async function loadAdminPanel() {
                         </div>
                         <p style="font-size:0.8rem; margin:0 0 8px 0; color:#fff;">${escapeHtml(p.post_text || '')}</p>
                         <div style="display:flex; gap:8px;">
-                            <button onclick="adminDeletePost('${p.id}')" style="background:#ff0033; color:#fff; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; font-size:0.7rem; cursor:pointer;">❌ Delete Post</button>
+                            <button onclick="adminDeletePost('${p.id}')" style="background:#ff0033; color:#fff; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; font-size:0.7rem; cursor:pointer;">❌ Delete Post/Video</button>
                         </div>
                     `;
                     postContainer.appendChild(div);
@@ -128,20 +130,4 @@ async function adminDeletePost(postId) {
     await supabaseClient.from('flash_posts').delete().eq('id', postId);
     showToast(`Post ကို ပယ်ဖျက်လိုက်ပါပြီ`, 'success');
     loadAdminPanel();
-}
-
-function switchAuthView(viewName) {
-    const loginView = document.getElementById('view-login');
-    const regView = document.getElementById('view-register');
-    const title = document.getElementById('auth-title');
-
-    if(viewName === 'register') {
-        if(loginView) loginView.classList.add('hidden');
-        if(regView) regView.classList.remove('hidden');
-        if(title) title.innerText = '📝 Register';
-    } else {
-        if(regView) regView.classList.add('hidden');
-        if(loginView) loginView.classList.remove('hidden');
-        if(title) title.innerText = '🔑 Login';
-    }
 }
