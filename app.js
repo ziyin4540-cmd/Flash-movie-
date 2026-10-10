@@ -12,7 +12,6 @@ function safeSetLocalStorage(key, value) {
         localStorage.setItem(key, value);
     } catch (e) {
         console.warn('LocalStorage quota exceeded, clearing old caches...');
-        // Capacity ပြည့်ပါက Cache အဟောင်းများကို ရှင်းထုတ်ပေးခြင်း
         for (let i = 0; i < localStorage.length; i++) {
             const k = localStorage.key(i);
             if (k && k.startsWith('flash_cache_')) {
@@ -69,11 +68,11 @@ function checkUserSession() {
     if(introScreen && !introScreen.classList.contains('hidden')) return;
 
     if (!loggedUser) {
-        document.getElementById('page-auth').classList.remove('hidden');
-        document.getElementById('app-container').classList.add('hidden');
+        if(document.getElementById('page-auth')) document.getElementById('page-auth').classList.remove('hidden');
+        if(document.getElementById('app-container')) document.getElementById('app-container').classList.add('hidden');
     } else {
-        document.getElementById('page-auth').classList.add('hidden');
-        document.getElementById('app-container').classList.remove('hidden');
+        if(document.getElementById('page-auth')) document.getElementById('page-auth').classList.add('hidden');
+        if(document.getElementById('app-container')) document.getElementById('app-container').classList.remove('hidden');
 
         if(typeof switchMainPage === 'function') {
             switchMainPage('home');
@@ -116,8 +115,8 @@ async function handleLogin() {
 
         showToast(`✅ မင်္ဂလာပါ @${username}`, 'success');
 
-        document.getElementById('page-auth').classList.add('hidden');
-        document.getElementById('app-container').classList.remove('hidden');
+        if(document.getElementById('page-auth')) document.getElementById('page-auth').classList.add('hidden');
+        if(document.getElementById('app-container')) document.getElementById('app-container').classList.remove('hidden');
 
         if(typeof switchMainPage === 'function') {
             switchMainPage('home');
@@ -159,8 +158,8 @@ async function handleRegister() {
         } else {
             showToast('✅ အကောင့်ဖွင့်ခြင်း အောင်မြင်သည်', 'success');
             localStorage.setItem('flash_logged_user', username);
-            document.getElementById('page-auth').classList.add('hidden');
-            document.getElementById('app-container').classList.remove('hidden');
+            if(document.getElementById('page-auth')) document.getElementById('page-auth').classList.add('hidden');
+            if(document.getElementById('app-container')) document.getElementById('app-container').classList.remove('hidden');
             if(typeof switchMainPage === 'function') switchMainPage('home');
         }
     } catch(e) {
@@ -224,7 +223,7 @@ function renderUserProfileUI(data, username) {
 
     if(userPosts) {
         userPosts.forEach(p => {
-            if(p.is_video || p.media_type === 'video' || p.media_type === 'gdrive_video' || p.media_type === 'telegram_video') videosCount++;
+            if(p.is_video || p.media_type === 'video' || p.media_type === 'gdrive_video' || (p.media_url && p.media_url.includes('drive.google.com'))) videosCount++;
             else postsCount++;
             if(p.likes) totalLikes += p.likes.length;
         });
@@ -244,7 +243,7 @@ function renderUserProfileUI(data, username) {
     }
 
     if(currentProfileTab === 'posts') {
-        const filterPosts = userPosts.filter(p => !p.is_video && p.media_type !== 'gdrive_video' && p.media_type !== 'telegram_video');
+        const filterPosts = userPosts.filter(p => !p.is_video && p.media_type !== 'gdrive_video' && !(p.media_url && p.media_url.includes('drive.google.com')));
         if(filterPosts.length === 0) {
             tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Posts မရှိသေးပါ။</p>';
             return;
@@ -259,7 +258,7 @@ function renderUserProfileUI(data, username) {
             tabContent.appendChild(item);
         });
     } else if(currentProfileTab === 'videos') {
-        const filterVideos = userPosts.filter(p => p.is_video || p.media_type === 'video' || p.media_type === 'gdrive_video' || p.media_type === 'telegram_video');
+        const filterVideos = userPosts.filter(p => p.is_video || p.media_type === 'video' || p.media_type === 'gdrive_video' || (p.media_url && p.media_url.includes('drive.google.com')));
         if(filterVideos.length === 0) {
             tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Videos မရှိသေးပါ။</p>';
             return;
@@ -269,8 +268,8 @@ function renderUserProfileUI(data, username) {
             item.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; overflow:hidden; position:relative;';
             item.innerHTML = `
                 <div onclick="openWatchVideoScreen('${v.id}')" style="cursor:pointer;">
-                    <div style="width:100%; height:80px; background:#000; display:flex; justify-content:center; align-items:center; color:#00ffff;">
-                        ${v.media_type === 'gdrive_video' ? '▶️ Drive' : (v.media_type === 'telegram_video' ? '🎬 Telegram' : `<video src="${v.media_url}" style="width:100%; height:100%; object-fit:cover;"></video>`)}
+                    <div style="width:100%; height:80px; background:#000; display:flex; justify-content:center; align-items:center; color:#00ffff; font-weight:bold;">
+                        ${(v.media_type === 'gdrive_video' || (v.media_url && v.media_url.includes('drive.google.com'))) ? '▶️ Drive' : `<video src="${v.media_url}" style="width:100%; height:100%; object-fit:cover;"></video>`}
                     </div>
                     <div style="padding:6px;">
                         <p style="font-size:0.75rem; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(v.post_text)}</p>
