@@ -1,7 +1,7 @@
 function switchMainPage(pageName) {
     if(typeof closeWatchVideoScreen === 'function') closeWatchVideoScreen();
 
-    // 1. UI ခလုတ်များနှင့် Screen များကို ချက်ချင်း ပြောင်းလဲပေးခြင်း
+    // UI Screen များကို ချက်ချင်း ဖုံး/ဖွင့် ပြုလုပ်ခြင်း
     document.querySelectorAll('.main-section').forEach(sec => sec.classList.add('hidden'));
     document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.remove('active'));
 
@@ -11,16 +11,20 @@ function switchMainPage(pageName) {
     const targetNav = document.getElementById(`nav-btn-${pageName}`);
     if(targetNav) targetNav.classList.add('active');
 
-    // 2. Data ခေါ်ယူခြင်းကို Async ဖြင့် ချက်ချင်း လုပ်ဆောင်စေခြင်း
-    requestAnimationFrame(() => {
-        if(pageName === 'home' && typeof loadHomeVideos === 'function') loadHomeVideos();
-        if(pageName === 'feed' && typeof loadFbFeed === 'function') loadFbFeed();
-        if(pageName === 'chat' && typeof loadContactList === 'function') loadContactList();
-        if(pageName === 'admin' && typeof loadAdminPanel === 'function') loadAdminPanel();
-        if(pageName === 'profile' && typeof loadUserProfile === 'function') {
-            loadUserProfile(localStorage.getItem('flash_logged_user'));
+    // Data Load လုပ်ခြင်းကို Async သီးသန့် ခေါ်ယူခြင်း
+    setTimeout(() => {
+        try {
+            if(pageName === 'home' && typeof loadHomeVideos === 'function') loadHomeVideos();
+            if(pageName === 'feed' && typeof loadFbFeed === 'function') loadFbFeed();
+            if(pageName === 'chat' && typeof loadContactList === 'function') loadContactList();
+            if(pageName === 'admin' && typeof loadAdminPanel === 'function') loadAdminPanel();
+            if(pageName === 'profile' && typeof loadUserProfile === 'function') {
+                loadUserProfile(localStorage.getItem('flash_logged_user'));
+            }
+        } catch(e) {
+            console.error('Data Load Error:', e);
         }
-    });
+    }, 50);
 }
 
 function closeWatchVideoScreen() {
@@ -44,4 +48,4 @@ function switchAuthView(viewName) {
         if(loginView) loginView.classList.remove('hidden');
         if(title) title.innerText = '🔑 Login';
     }
-}
+        }
