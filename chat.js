@@ -1,5 +1,5 @@
 let activeChatReceiver = null;
-let chatRealtimeSubscription = null;
+let tempChatAttachment = "";
 
 async function loadContactList() {
     const container = document.getElementById('contactListContainer');
@@ -48,16 +48,34 @@ async function openChatRoom(username, displayName, photoUrl) {
         </div>
         <div id="chatMessagesBody" class="chat-messages-body"></div>
         <div class="chat-input-footer">
+            <label style="color:#00ffff; font-size:1.2rem; cursor:pointer; padding:0 5px;">
+                📎
+                <input type="file" id="chatFilePicker" style="display:none;" onchange="handleChatFileSelect(event)">
+            </label>
             <input type="text" id="chatInputText" placeholder="Message ရေးရန်..." onkeypress="if(event.key==='Enter') sendChatMessage()">
             <button onclick="sendChatMessage()">Send</button>
         </div>
+        <div id="chatFilePreviewName" style="font-size:0.7rem; color:#00ffff; padding:2px 10px; background:#14141c;"></div>
     `;
 
     loadChatMessages();
 }
 
+function handleChatFileSelect(e) {
+    const file = e.target.files[0];
+    if(file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            tempChatAttachment = ev.target.result;
+            document.getElementById('chatFilePreviewName').innerText = `ရွေးပြီး: ${file.name}`;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
 function closeChatRoom() {
     activeChatReceiver = null;
+    tempChatAttachment = "";
     const roomScreen = document.getElementById('chatRoomView');
     const sidebar = document.getElementById('chatSidebarView');
     if(roomScreen) roomScreen.classList.add('hidden');
@@ -81,7 +99,17 @@ async function loadChatMessages() {
             const isOut = m.sender === currentUser;
             const div = document.createElement('div');
             div.className = `chat-msg-bubble ${isOut ? 'outgoing' : 'incoming'}`;
-            div.innerText = m.message;
+            
+            let contentHtml = escapeHtml(m.message);
+            if(m.attachment_url) {
+                if(m.attachment_url.startsWith('data:image')) {
+                    contentHtml += `<br><img src="${m.attachment_url}" style="max-width:100%; border-radius:6px; margin-top:5px;">`;
+                } else if(m.attachment_url.startsWith('data:video')) {
+                    contentHtml += `<br><video src="${m.attachment_url}" controls style="max-width:100%; border-radius:6px; margin-top:5px;"></video>`;
+                }
+            }
+
+            div.innerHTML = contentHtml;
             body.appendChild(div);
         });
         body.scrollTop = body.scrollHeight;
@@ -92,7 +120,7 @@ async function sendChatMessage() {
     const input = document.getElementById('chatInputText');
     if(!input) return;
     const msg = input.value.trim();
-    if(!msg || !activeChatReceiver) return;
+    if((!msg && !tempChatAttachment) || !activeChatReceiver) return;
 
     const currentUser = localStorage.getItem('flash_logged_user');
     input.value = '';
@@ -101,8 +129,13 @@ async function sendChatMessage() {
         sender: currentUser,
         receiver: activeChatReceiver,
         message: msg,
+        attachment_url: tempChatAttachment,
         created_at: new Date().toISOString()
     }]);
+
+    tempChatAttachment = "";
+    const prevElem = document.getElementById('chatFilePreviewName');
+    if(prevElem) prevElem.innerText = "";
 
     loadChatMessages();
 }
