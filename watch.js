@@ -35,6 +35,14 @@ async function openWatchVideoScreen(videoId) {
         const isLiked = likesArr.includes(currentUser);
         const commentsArr = v.comments || [];
 
+        // Follow Status စစ်ဆေးခြင်း
+        const { data: followCheck } = await supabaseClient.from('flash_follows')
+            .select('*')
+            .eq('follower_id', currentUser)
+            .eq('following_id', v.username)
+            .single();
+        const isFollowing = !!followCheck;
+
         let mediaContent = '';
         if(v.media_type === 'gdrive_video' || (v.media_url && v.media_url.includes('drive.google.com'))) {
             let fileId = '';
@@ -43,21 +51,16 @@ async function openWatchVideoScreen(videoId) {
             } else if(v.media_url.includes('id=')) {
                 fileId = v.media_url.split('id=')[1].split('&')[0];
             }
-            let embedPreviewUrl = fileId ? `https://drive.google.com/file/d/${fileId}/preview` : v.media_url;
+            
+            // Direct Drive Stream Link ဖြင့် HTML5 Video Player အသုံးပြုခြင်း
+            let directStreamUrl = fileId ? `https://drive.google.com/uc?export=download&id=${fileId}` : v.media_url;
 
             mediaContent = `
-                <div style="width:100%; height:240px; background:#000; position:relative; overflow:hidden;">
-                    <iframe src="${embedPreviewUrl}" width="100%" height="100%" frameborder="0" allow="autoplay" allowfullscreen style="border:none; display:block;"></iframe>
-                </div>`;
-        } else if(v.media_type === 'telegram_video' || (v.media_url && v.media_url.includes('t.me'))) {
-            let cleanUrl = v.media_url.replace('https://t.me/', '');
-            let embedUrl = `https://t.me/${cleanUrl}?embed=1&dark=1`;
-            mediaContent = `
-                <div style="width:100%; height:240px; background:#000;">
-                    <iframe src="${embedUrl}" width="100%" height="100%" frameborder="0" allowfullscreen style="border:none;"></iframe>
+                <div style="width:100%; background:#000; position:relative;">
+                    <video src="${directStreamUrl}" controls autoplay style="width:100%; max-height:300px; object-fit:contain;"></video>
                 </div>`;
         } else {
-            mediaContent = `<video src="${v.media_url}" controls autoplay width="100%" style="background:#000; max-height:260px; object-fit:contain;"></video>`;
+            mediaContent = `<video src="${v.media_url}" controls autoplay width="100%" style="background:#000; max-height:300px; object-fit:contain;"></video>`;
         }
 
         let nextVideosHtml = '';
@@ -66,7 +69,7 @@ async function openWatchVideoScreen(videoId) {
                 nextVideosHtml += `
                     <div onclick="openWatchVideoScreen('${nv.id}')" style="display:flex; gap:10px; background:#111116; padding:8px; border-radius:8px; cursor:pointer; margin-bottom:8px; border:1px solid #222233;">
                         <div style="width:100px; height:60px; background:#000; border-radius:6px; overflow:hidden; flex-shrink:0;">
-                            ${nv.media_type === 'gdrive_video' ? '<div style="color:#00ffff; text-align:center; padding-top:15px; font-size:0.7rem;">▶️ Drive</div>' : (nv.media_type === 'telegram_video' ? '<div style="color:#00ffff; text-align:center; padding-top:15px; font-size:0.7rem;">🎬 Telegram</div>' : `<video src="${nv.media_url}" width="100%" height="100%" style="object-fit:cover;"></video>`)}
+                            ${nv.media_type === 'gdrive_video' ? '<div style="color:#00ffff; text-align:center; padding-top:15px; font-size:0.7rem;">▶️ Drive</div>' : `<video src="${nv.media_url}" width="100%" height="100%" style="object-fit:cover;"></video>`}
                         </div>
                         <div>
                             <h5 style="margin:0 0 4px 0; font-size:0.85rem; color:#fff; line-height:1.2;">${escapeHtml(nv.post_text)}</h5>
@@ -80,7 +83,7 @@ async function openWatchVideoScreen(videoId) {
             <div style="background:#111116; padding:12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233; position:sticky; top:0; z-index:100;">
                 <button onclick="closeWatchVideoScreen()" style="background:none; border:none; color:#00ffff; font-weight:bold; font-size:0.9rem; cursor:pointer;">◄ နောက်သို့ (Back)</button>
                 <span style="color:#ff0033; font-weight:bold; font-size:0.9rem;">Flâsh Watch</span>
-        </div>
+            </div>
 
             ${mediaContent}
 
@@ -92,20 +95,27 @@ async function openWatchVideoScreen(videoId) {
             <div style="padding:15px;">
                 <h3 style="color:#fff; font-size:1rem; margin-bottom:8px;">${escapeHtml(v.post_text)}</h3>
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                    <!-- Uploader Profile Logo & Name ကို နှိပ်ပါက သူ၏ Profile သို့ သွားခြင်း -->
                     <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openUserProfile('${v.username}')">
-                        <img src="${v.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar">
+                        <img src="${v.user_photo || 'https://via.placeholder.com/35'}" style="width:38px; height:38px; border-radius:50%; border:1px solid #00ffff;">
                         <div>
                             <div style="font-weight:bold; font-size:0.9rem; color:#00ffff;">${escapeHtml(v.display_name || v.username)}</div>
                             <div style="color:#888; font-size:0.75rem;">@${v.username} • <span>${timeAgo(v.created_at)}</span></div>
                         </div>
                     </div>
-                    ${currentUser !== v.username ? `<button id="watchFollowBtn" onclick="toggleFollowUser('${v.username}')" style="background:#00ffff; color:#000; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:0.75rem; cursor:pointer;">Follow</button>` : ''}
+                    
+                    <!-- Follow / Unfollow Button -->
+                    ${currentUser !== v.username ? `
+                        <button id="watchFollowBtn" onclick="toggleFollowUser('${v.username}')" style="background:${isFollowing ? '#222233' : '#00ffff'}; color:${isFollowing ? '#fff' : '#000'}; border:${isFollowing ? '1px solid #444' : 'none'}; padding:6px 14px; border-radius:6px; font-weight:bold; font-size:0.75rem; cursor:pointer;">
+                            ${isFollowing ? 'Following' : 'Follow'}
+                        </button>
+                    ` : ''}
                 </div>
 
                 <div style="display:flex; justify-content:space-around; background:#111116; border:1px solid #222233; padding:10px; border-radius:12px; margin-bottom:15px;">
-                    <button class="fb-action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLikePost('${v.id}')" style="background:none; border:none; color:${isLiked ? '#ff0033' : '#aaa'}; font-weight:bold; cursor:pointer;">❤️ ${likesArr.length}</button>
-                    <button class="fb-action-btn" onclick="openCommentPage('${v.id}')" style="background:none; border:none; color:#00ffff; font-weight:bold; cursor:pointer;">💬 Comments (${commentsArr.length})</button>
-                    <button class="fb-action-btn" onclick="openShareToUserModal('${v.id}', '${escapeHtml(v.post_text)}')" style="background:none; border:none; color:#00ffff; font-weight:bold; cursor:pointer;">↗ Share</button>
+                    <button onclick="toggleLikePost('${v.id}')" style="background:none; border:none; color:${isLiked ? '#ff0033' : '#aaa'}; font-weight:bold; cursor:pointer;">❤️ ${likesArr.length}</button>
+                    <button onclick="openCommentPage('${v.id}')" style="background:none; border:none; color:#00ffff; font-weight:bold; cursor:pointer;">💬 Comments (${commentsArr.length})</button>
+                    <button onclick="openShareToUserModal('${v.id}', '${escapeHtml(v.post_text)}')" style="background:none; border:none; color:#00ffff; font-weight:bold; cursor:pointer;">↗ Share</button>
                 </div>
 
                 <h4 style="color:#00ffff; font-size:0.9rem; margin-bottom:10px;">⏭ နောက်လာမည့် ဗီဒီယိုများ (Next Videos)</h4>
@@ -117,65 +127,33 @@ async function openWatchVideoScreen(videoId) {
     }
 }
 
-function closeWatchVideoScreen() {
-    const watchPage = document.getElementById('page-watch-video');
-    if(watchPage) watchPage.remove();
-}
-
-async function openShareToUserModal(videoId, videoTitle) {
+async function toggleFollowUser(targetUsername) {
     const currentUser = localStorage.getItem('flash_logged_user');
-    const { data: users } = await supabaseClient.from('flash_users').select('*').neq('username', currentUser);
+    if(!currentUser || currentUser === targetUsername) return;
 
-    if(!users || users.length === 0) {
-        return showToast('Share ရန် အခြား User မရှိသေးပါ။', 'error');
+    const { data: existing } = await supabaseClient.from('flash_follows')
+        .select('*')
+        .eq('follower_id', currentUser)
+        .eq('following_id', targetUsername)
+        .single();
+
+    const followBtn = document.getElementById('watchFollowBtn');
+
+    if(existing) {
+        await supabaseClient.from('flash_follows').delete().eq('id', existing.id);
+        if(followBtn) {
+            followBtn.innerText = 'Follow';
+            followBtn.style.background = '#00ffff';
+            followBtn.style.color = '#000';
+        }
+        showToast(`Unfollowed @${targetUsername}`, 'success');
+    } else {
+        await supabaseClient.from('flash_follows').insert([{ follower_id: currentUser, following_id: targetUsername }]);
+        if(followBtn) {
+            followBtn.innerText = 'Following';
+            followBtn.style.background = '#222233';
+            followBtn.style.color = '#fff';
+        }
+        showToast(`Followed @${targetUsername}`, 'success');
     }
-
-    let modal = document.getElementById('shareUserModal');
-    if(!modal) {
-        modal = document.createElement('div');
-        modal.id = 'shareUserModal';
-        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99999; display:flex; justify-content:center; align-items:center;';
-        document.body.appendChild(modal);
-    }
-
-    let userListHtml = users.map(u => `
-        <div onclick="executeShareToUser('${u.username}', '${videoId}', '${videoTitle}')" style="display:flex; align-items:center; justify-content:space-between; padding:10px; border-bottom:1px solid #222233; cursor:pointer; background:#181820; margin-bottom:5px; border-radius:6px;">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <img src="${u.photo_url || 'https://via.placeholder.com/35'}" style="width:35px; height:35px; border-radius:50%;">
-                <div>
-                    <div style="color:#fff; font-weight:bold; font-size:0.85rem;">${escapeHtml(u.display_name || u.username)}</div>
-                    <div style="color:#888; font-size:0.75rem;">@${u.username}</div>
-                </div>
-            </div>
-            <button style="background:#00ffff; color:#000; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; font-size:0.75rem;">Send ↗</button>
-        </div>
-    `).join('');
-
-    modal.innerHTML = `
-        <div style="background:#111116; width:85%; max-width:380px; padding:15px; border-radius:12px; border:1px solid #00ffff; max-height:70vh; overflow-y:auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h4 style="margin:0; color:#00ffff; font-size:0.95rem;">💬 Share Video To Chat</h4>
-                <button onclick="document.getElementById('shareUserModal').remove()" style="background:none; border:none; color:#ff0033; font-weight:bold; font-size:1.1rem; cursor:pointer;">✕</button>
-            </div>
-            ${userListHtml}
-        </div>
-    `;
-}
-
-async function executeShareToUser(targetUser, videoId, videoTitle) {
-    const currentUser = localStorage.getItem('flash_logged_user');
-    const shareMessage = `🎬 ဗီဒီယို မျှဝေလိုက်သည်: ${videoTitle}\n👉 ကြည့်ရန် ID: ${videoId}`;
-
-    await supabaseClient.from('flash_chats').insert([{
-        sender: currentUser,
-        receiver: targetUser,
-        message: shareMessage,
-        attachment_url: '',
-        created_at: new Date().toISOString()
-    }]);
-
-    const modal = document.getElementById('shareUserModal');
-    if(modal) modal.remove();
-
-    showToast(`✅ @${targetUser} ထံသို့ ဗီဒီယို ပို့ပြီးပါပြီ။`, 'success');
 }
