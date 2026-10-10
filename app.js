@@ -54,15 +54,6 @@ function checkUserSession() {
     } else {
         document.getElementById('page-auth').classList.add('hidden');
         document.getElementById('app-container').classList.remove('hidden');
-        
-        const adminBtn = document.getElementById('adminPanelBtn');
-        if(adminBtn) {
-            if(loggedUser.toLowerCase() === 'admin') {
-                adminBtn.classList.remove('hidden');
-            } else {
-                adminBtn.classList.add('hidden');
-            }
-        }
 
         if(typeof switchMainPage === 'function') {
             switchMainPage('home');
@@ -70,144 +61,44 @@ function checkUserSession() {
     }
 }
 
-// Profile Tab နှိပ်လိုက်ပါက မီးအပြာရောင် ပြောင်းလဲလင်းလက်စေသည့် Function
 function switchProfileTab(tabName) {
     currentProfileTab = tabName;
+    document.querySelectorAll('.profile-tab-btn').forEach(btn => btn.classList.remove('active'));
+    const targetBtn = document.getElementById(`tab-btn-${tabName}`);
+    if (targetBtn) targetBtn.classList.add('active');
 
-    // ခလုတ်အားလုံးမှ active class နှင့် မီးလင်းမှုများကို ဖယ်ရှားခြင်း
-    document.querySelectorAll('.profile-tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-
-    // နှိပ်လိုက်သော ခလုတ်တစ်ခုတည်းကို မီးအပြာရောင် လင်းစေခြင်း
-    const activeBtn = document.getElementById(`tab-btn-${tabName}`);
-    if(activeBtn) {
-        activeBtn.classList.add('active');
-    }
-
-    // တင်ထားသော Data များကို သက်ဆိုင်ရာ Tab အလိုက် ပြန်လည် ဆွဲထုတ်ပြသခြင်း
     const loggedUser = localStorage.getItem('flash_logged_user');
-    if(loggedUser) {
-        loadUserProfile(loggedUser);
-    }
+    if (loggedUser) loadUserProfile(loggedUser);
 }
 
-async function loadAdminPanel() {
-    const container = document.getElementById('adminUserList');
-    if(!container) return;
+// Followers / Following စာရင်း ကြည့်ရှုသည့် Modal
+async function openFollowListModal(type) {
+    const { data: users } = await supabaseClient.from('flash_users').select('*');
+    if(!users) return;
 
-    const { data: users, error } = await supabaseClient.from('flash_users').select('*');
-    if(error || !users) {
-        container.innerHTML = '<p style="color:#ff0033;">User စာရင်း ယူ၍မရပါ။</p>';
-        return;
-    }
-
-    container.innerHTML = '';
-    users.forEach((u, idx) => {
-        const div = document.createElement('div');
-        div.style.cssText = 'background:#181820; padding:10px; border-radius:8px; margin-bottom:8px; border:1px solid #333; display:flex; justify-content:space-between; align-items:center;';
-        
-        div.innerHTML = `
-            <div>
-                <div style="font-weight:bold; color:#00ffff; font-size:0.85rem;">${escapeHtml(u.display_name || u.username)} (@${u.username})</div>
-                <div style="font-size:0.75rem; color:#aaa; margin-top:3px; display:flex; align-items:center; gap:6px;">
-                    <span>Password:</span>
-                    <span id="pass-mask-${idx}" style="font-weight:bold; letter-spacing:2px; color:#ff0033;">••••••••</span>
-                    <span id="pass-text-${idx}" class="hidden" style="color:#00ffff; font-weight:bold;">${escapeHtml(u.password)}</span>
-                    <button onclick="togglePasswordVisibility(${idx})" style="background:none; border:none; color:#00ffff; cursor:pointer; font-size:0.8rem;">👁️</button>
-                </div>
+    let listHtml = users.map(u => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #222233;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <img src="${u.photo_url || 'https://via.placeholder.com/35'}" style="width:30px; height:30px; border-radius:50%;">
+                <span style="color:#00ffff; font-size:0.85rem; font-weight:bold;">${escapeHtml(u.display_name || u.username)}</span>
             </div>
-            <button onclick="deleteUserByAdmin('${u.username}')" style="background:#ff0033; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer; font-weight:bold;">🗑 Delete</button>
-        `;
-        container.appendChild(div);
-    });
+            <span style="color:#888; font-size:0.75rem;">@${u.username}</span>
+        </div>
+    `).join('');
+
+    alert(`📋 ${type.toUpperCase()} List:\n\n` + users.map(u => `- ${u.display_name || u.username} (@${u.username})`).join('\n'));
 }
 
-function togglePasswordVisibility(idx) {
-    const mask = document.getElementById(`pass-mask-${idx}`);
-    const text = document.getElementById(`pass-text-${idx}`);
-    if(mask && text) {
-        mask.classList.toggle('hidden');
-        text.classList.toggle('hidden');
-    }
-}
+async function deleteUserPost(postId) {
+    if(!confirm("ဒီ ပို့စ်/ဗီဒီယို ကို ဖျက်မှာ သေချာပါသလား?")) return;
 
-async function deleteUserByAdmin(username) {
-    if(!confirm(`@${username} အကောင့်ကို ဖျက်မှာ သေချာပါသလား?`)) return;
-    const { error } = await supabaseClient.from('flash_users').delete().eq('username', username);
+    const { error } = await supabaseClient.from('flash_posts').delete().eq('id', postId);
     if(!error) {
-        showToast('✅ User ဖျက်ပြီးပါပြီ။', 'success');
-        loadAdminPanel();
+        showToast("✅ ဖျက်ပြီးပါပြီ။", "success");
+        loadUserProfile(localStorage.getItem('flash_logged_user'));
     } else {
-        showToast('❌ ဖျက်၍မရပါ: ' + error.message, 'error');
+        showToast("❌ ဖျက်၍မရပါ: " + error.message, "error");
     }
-}
-
-function setupProfilePhotoListeners() {
-    const profilePicker = document.getElementById('profilePhotoPicker');
-    const bgPicker = document.getElementById('bgPhotoPicker');
-
-    if(profilePicker) {
-        profilePicker.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if(file) {
-                compressImageFile(file, async (base64) => {
-                    const user = localStorage.getItem('flash_logged_user');
-                    const { error } = await supabaseClient.from('flash_users').update({ photo_url: base64 }).eq('username', user);
-                    if(!error) {
-                        showToast('✅ Profile ပုံ ပြောင်းလဲပြီးပါပြီ။', 'success');
-                        loadUserProfile(user);
-                    } else {
-                        showToast('❌ ပုံတင်၍မရပါ: ' + error.message, 'error');
-                    }
-                });
-            }
-        });
-    }
-
-    if(bgPicker) {
-        bgPicker.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if(file) {
-                compressImageFile(file, async (base64) => {
-                    const user = localStorage.getItem('flash_logged_user');
-                    const { error } = await supabaseClient.from('flash_users').update({ banner_url: base64 }).eq('username', user);
-                    if(!error) {
-                        showToast('✅ Background ပုံ ပြောင်းလဲပြီးပါပြီ။', 'success');
-                        loadUserProfile(user);
-                    } else {
-                        showToast('❌ ပုံတင်၍မရပါ: ' + error.message, 'error');
-                    }
-                });
-            }
-        });
-    }
-}
-
-function compressImageFile(file, callback) {
-    const reader = new FileReader();
-    reader.onload = function(event) {
-        const img = new Image();
-        img.onload = function() {
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 300;
-            const MAX_HEIGHT = 300;
-            let width = img.width;
-            let height = img.height;
-            if (width > height) {
-                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-            } else {
-                if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-            }
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            callback(canvas.toDataURL('image/jpeg', 0.6));
-        };
-        img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
 }
 
 async function loadUserProfile(username) {
@@ -228,7 +119,7 @@ async function loadUserProfile(username) {
 
     if(userPosts) {
         userPosts.forEach(p => {
-            if(p.is_video || p.media_type === 'video' || p.media_type === 'telegram_video') videosCount++;
+            if(p.is_video || p.media_type === 'video' || p.media_type === 'gdrive_video' || p.media_type === 'telegram_video') videosCount++;
             else postsCount++;
             if(p.likes) totalLikes += p.likes.length;
         });
@@ -248,17 +139,18 @@ async function loadUserProfile(username) {
     }
 
     if(currentProfileTab === 'posts') {
-        const filterPosts = userPosts.filter(p => !p.is_video && p.media_type !== 'telegram_video');
+        const filterPosts = userPosts.filter(p => !p.is_video && p.media_type !== 'gdrive_video' && p.media_type !== 'telegram_video');
         if(filterPosts.length === 0) {
             tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Posts မရှိသေးပါ။</p>';
             return;
         }
         filterPosts.forEach(p => {
             const item = document.createElement('div');
-            item.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; padding:8px;';
+            item.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; padding:8px; position:relative;';
             item.innerHTML = `
                 <p style="font-size:0.75rem; color:#fff; margin:0 0 5px 0; font-weight:bold;">${escapeHtml(p.post_text || '')}</p>
                 ${p.media_url ? `<img src="${p.media_url}" style="width:100%; height:100px; object-fit:cover; border-radius:6px;">` : ''}
+                <button onclick="deleteUserPost('${p.id}')" style="background:#ff0033; color:#fff; border:none; padding:2px 6px; border-radius:4px; font-size:0.65rem; cursor:pointer; margin-top:5px; font-weight:bold; width:100%;">🗑 Delete</button>
             `;
             tabContent.appendChild(item);
         });
@@ -285,7 +177,7 @@ async function loadUserProfile(username) {
             tabContent.appendChild(item);
         });
     } else if(currentProfileTab === 'videos') {
-        const filterVideos = userPosts.filter(p => p.is_video || p.media_type === 'video' || p.media_type === 'telegram_video');
+        const filterVideos = userPosts.filter(p => p.is_video || p.media_type === 'video' || p.media_type === 'gdrive_video' || p.media_type === 'telegram_video');
         if(filterVideos.length === 0) {
             tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Videos မရှိသေးပါ။</p>';
             return;
@@ -293,15 +185,17 @@ async function loadUserProfile(username) {
 
         filterVideos.forEach(v => {
             const item = document.createElement('div');
-            item.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; overflow:hidden; cursor:pointer;';
-            item.onclick = () => openWatchVideoScreen(v.id);
+            item.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; overflow:hidden; position:relative;';
             item.innerHTML = `
-                <div style="width:100%; height:80px; background:#000; display:flex; justify-content:center; align-items:center; color:#00ffff;">
-                    ${v.media_type === 'telegram_video' ? '🎬 Telegram' : `<video src="${v.media_url}" style="width:100%; height:100%; object-fit:cover;"></video>`}
+                <div onclick="openWatchVideoScreen('${v.id}')" style="cursor:pointer;">
+                    <div style="width:100%; height:80px; background:#000; display:flex; justify-content:center; align-items:center; color:#00ffff;">
+                        ${v.media_type === 'gdrive_video' ? '▶️ Drive' : (v.media_type === 'telegram_video' ? '🎬 Telegram' : `<video src="${v.media_url}" style="width:100%; height:100%; object-fit:cover;"></video>`)}
+                    </div>
+                    <div style="padding:6px;">
+                        <p style="font-size:0.75rem; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(v.post_text)}</p>
+                    </div>
                 </div>
-                <div style="padding:6px;">
-                    <p style="font-size:0.75rem; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(v.post_text)}</p>
-                </div>
+                <button onclick="deleteUserPost('${v.id}')" style="background:#ff0033; color:#fff; border:none; padding:2px 6px; border-radius:0 0 8px 8px; font-size:0.65rem; cursor:pointer; font-weight:bold; width:100%;">🗑 Delete</button>
             `;
             tabContent.appendChild(item);
         });
@@ -312,6 +206,60 @@ function handleLogout() {
     localStorage.removeItem('flash_logged_user');
     checkUserSession();
     showToast('အကောင့်ထွက်ပြီးပါပြီ။', 'success');
+}
+
+function setupProfilePhotoListeners() {
+    const profilePicker = document.getElementById('profilePhotoPicker');
+    const bgPicker = document.getElementById('bgPhotoPicker');
+
+    if(profilePicker) {
+        profilePicker.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(file) {
+                compressImageFile(file, async (base64) => {
+                    const user = localStorage.getItem('flash_logged_user');
+                    const { error } = await supabaseClient.from('flash_users').update({ photo_url: base64 }).eq('username', user);
+                    if(!error) {
+                        showToast('✅ Profile ပုံ ပြောင်းလဲပြီးပါပြီ။', 'success');
+                        loadUserProfile(user);
+                    }
+                });
+            }
+        });
+    }
+
+    if(bgPicker) {
+        bgPicker.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(file) {
+                compressImageFile(file, async (base64) => {
+                    const user = localStorage.getItem('flash_logged_user');
+                    const { error } = await supabaseClient.from('flash_users').update({ banner_url: base64 }).eq('username', user);
+                    if(!error) {
+                        showToast('✅ Background ပုံ ပြောင်းလဲပြီးပါပြီ။', 'success');
+                        loadUserProfile(user);
+                    }
+                });
+            }
+        });
+    }
+}
+
+function compressImageFile(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 300;
+            canvas.height = 300;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, 300, 300);
+            callback(canvas.toDataURL('image/jpeg', 0.6));
+        };
+        img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
 }
 
 function startRealTimeTimer() {
