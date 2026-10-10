@@ -12,11 +12,11 @@ async function openWatchVideoScreen(videoId) {
     }
 
     watchPage.innerHTML = `
-        <div style="background:#111116; padding:12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233;">
+        <div style="background:#111116; padding:12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233; position:sticky; top:0; z-index:100;">
             <button onclick="closeWatchVideoScreen()" style="background:none; border:none; color:#00ffff; font-weight:bold; font-size:0.9rem; cursor:pointer;">◄ နောက်သို့ (Back)</button>
             <span style="color:#ff0033; font-weight:bold; font-size:0.9rem;">Flâsh Watch</span>
         </div>
-        <div style="display:flex; justify-content:center; align-items:center; height:300px; color:#00ffff; font-weight:bold;">⚡ Loading Video...</div>
+        <div style="display:flex; justify-content:center; align-items:center; height:250px; color:#00ffff; font-weight:bold;">⚡ Loading Video...</div>
     `;
 
     const { data: v } = await supabaseClient.from('flash_posts').select('*').eq('id', videoId).single();
@@ -42,25 +42,21 @@ async function openWatchVideoScreen(videoId) {
         } else if(v.media_url.includes('id=')) {
             fileId = v.media_url.split('id=')[1].split('&')[0];
         }
-        
-        // Google Drive Direct Stream URL ပြောင်းလဲခြင်း
-        let directStreamUrl = fileId ? `https://lh3.googleusercontent.com/u/0/d/${fileId}` : v.media_url;
         let embedPreviewUrl = fileId ? `https://drive.google.com/file/d/${fileId}/preview` : v.media_url;
 
         mediaContent = `
-            <div style="width:100%; min-height:260px; background:#000; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                <video src="${directStreamUrl}" controls autoplay style="width:100%; max-height:280px; background:#000;" onerror="this.style.display='none'; document.getElementById('gdrive-fallback-iframe').style.display='block';"></video>
-                <iframe id="gdrive-fallback-iframe" src="${embedPreviewUrl}" width="100%" height="260px" frameborder="0" allow="autoplay" allowfullscreen style="display:none; border:none;"></iframe>
+            <div style="width:100%; height:240px; background:#000; position:relative; overflow:hidden;">
+                <iframe src="${embedPreviewUrl}" width="100%" height="100%" frameborder="0" allow="autoplay" allowfullscreen style="border:none; display:block;"></iframe>
             </div>`;
     } else if(v.media_type === 'telegram_video' || (v.media_url && v.media_url.includes('t.me'))) {
         let cleanUrl = v.media_url.replace('https://t.me/', '');
         let embedUrl = `https://t.me/${cleanUrl}?embed=1&dark=1`;
         mediaContent = `
-            <div style="width:100%; height:260px; background:#000;">
+            <div style="width:100%; height:240px; background:#000;">
                 <iframe src="${embedUrl}" width="100%" height="100%" frameborder="0" allowfullscreen style="border:none;"></iframe>
             </div>`;
     } else {
-        mediaContent = `<video src="${v.media_url}" controls autoplay width="100%" style="background:#000; max-height:280px;"></video>`;
+        mediaContent = `<video src="${v.media_url}" controls autoplay width="100%" style="background:#000; max-height:260px; object-fit:contain;"></video>`;
     }
 
     let nextVideosHtml = '';
@@ -108,7 +104,7 @@ async function openWatchVideoScreen(videoId) {
             <div style="display:flex; justify-content:space-around; background:#111116; border:1px solid #222233; padding:10px; border-radius:12px; margin-bottom:15px;">
                 <button class="fb-action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLikePost('${v.id}')" style="background:none; border:none; color:${isLiked ? '#ff0033' : '#aaa'}; font-weight:bold; cursor:pointer;">❤️ ${likesArr.length}</button>
                 <button class="fb-action-btn" onclick="openCommentPage('${v.id}')" style="background:none; border:none; color:#00ffff; font-weight:bold; cursor:pointer;">💬 Comments (${commentsArr.length})</button>
-                <button class="fb-action-btn" onclick="shareVideoToChat('${v.id}', '${escapeHtml(v.post_text)}')" style="background:none; border:none; color:#00ffff; font-weight:bold; cursor:pointer;">↗ Share</button>
+                <button class="fb-action-btn" onclick="openShareToUserModal('${v.id}', '${escapeHtml(v.post_text)}')" style="background:none; border:none; color:#00ffff; font-weight:bold; cursor:pointer;">↗ Share</button>
                 <button class="fb-action-btn" onclick="reportPost('${v.id}')" style="background:none; border:none; color:#ff0033; font-weight:bold; cursor:pointer;">🚩 Report</button>
             </div>
 
@@ -123,4 +119,63 @@ async function openWatchVideoScreen(videoId) {
 function closeWatchVideoScreen() {
     const watchPage = document.getElementById('page-watch-video');
     if(watchPage) watchPage.remove();
+}
+
+// Share နှိပ်လျှင် Send ရမည့် User ရွေးချယ်နိုင်သော Modal Popup
+async function openShareToUserModal(videoId, videoTitle) {
+    const currentUser = localStorage.getItem('flash_logged_user');
+    const { data: users } = await supabaseClient.from('flash_users').select('*').neq('username', currentUser);
+
+    if(!users || users.length === 0) {
+        return showToast('Share ရန် အခြား User မရှိသေးပါ။', 'error');
+    }
+
+    let modal = document.getElementById('shareUserModal');
+    if(!modal) {
+        modal = document.createElement('div');
+        modal.id = 'shareUserModal';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99999; display:flex; justify-content:center; align-items:center;';
+        document.body.appendChild(modal);
+    }
+
+    let userListHtml = users.map(u => `
+        <div onclick="executeShareToUser('${u.username}', '${videoId}', '${videoTitle}')" style="display:flex; align-items:center; justify-content:space-between; padding:10px; border-bottom:1px solid #222233; cursor:pointer; background:#181820; margin-bottom:5px; border-radius:6px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <img src="${u.photo_url || 'https://via.placeholder.com/35'}" style="width:35px; height:35px; border-radius:50%;">
+                <div>
+                    <div style="color:#fff; font-weight:bold; font-size:0.85rem;">${escapeHtml(u.display_name || u.username)}</div>
+                    <div style="color:#888; font-size:0.75rem;">@${u.username}</div>
+                </div>
+            </div>
+            <button style="background:#00ffff; color:#000; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; font-size:0.75rem;">Send ↗</button>
+        </div>
+    `).join('');
+
+    modal.innerHTML = `
+        <div style="background:#111116; width:85%; max-width:380px; padding:15px; border-radius:12px; border:1px solid #00ffff; max-height:70vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h4 style="margin:0; color:#00ffff; font-size:0.95rem;">💬 Share Video To Chat</h4>
+                <button onclick="document.getElementById('shareUserModal').remove()" style="background:none; border:none; color:#ff0033; font-weight:bold; font-size:1.1rem; cursor:pointer;">✕</button>
+            </div>
+            ${userListHtml}
+        </div>
+    `;
+}
+
+async function executeShareToUser(targetUser, videoId, videoTitle) {
+    const currentUser = localStorage.getItem('flash_logged_user');
+    const shareMessage = `🎬 ဗီဒီယို မျှဝေလိုက်သည်: ${videoTitle}\n👉 ကြည့်ရန် ID: ${videoId}`;
+
+    await supabaseClient.from('flash_chats').insert([{
+        sender: currentUser,
+        receiver: targetUser,
+        message: shareMessage,
+        attachment_url: '',
+        created_at: new Date().toISOString()
+    }]);
+
+    const modal = document.getElementById('shareUserModal');
+    if(modal) modal.remove();
+
+    showToast(`✅ @${targetUser} ထံသို့ ဗီဒီယို ပို့ပြီးပါပြီ။`, 'success');
 }
