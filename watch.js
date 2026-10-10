@@ -36,11 +36,21 @@ async function openWatchVideoScreen(videoId) {
 
     let mediaContent = '';
     if(v.media_type === 'gdrive_video' || (v.media_url && v.media_url.includes('drive.google.com'))) {
-        let fileId = v.media_url.includes('/file/d/') ? v.media_url.split('/file/d/')[1].split('/')[0] : '';
-        let embedUrl = fileId ? `https://drive.google.com/file/d/${fileId}/preview` : v.media_url;
+        let fileId = '';
+        if(v.media_url.includes('/file/d/')) {
+            fileId = v.media_url.split('/file/d/')[1].split('/')[0];
+        } else if(v.media_url.includes('id=')) {
+            fileId = v.media_url.split('id=')[1].split('&')[0];
+        }
+        
+        // Google Drive Direct Stream URL ပြောင်းလဲခြင်း
+        let directStreamUrl = fileId ? `https://lh3.googleusercontent.com/u/0/d/${fileId}` : v.media_url;
+        let embedPreviewUrl = fileId ? `https://drive.google.com/file/d/${fileId}/preview` : v.media_url;
+
         mediaContent = `
-            <div style="width:100%; height:260px; background:#000;">
-                <iframe src="${embedUrl}" width="100%" height="100%" frameborder="0" allow="autoplay" allowfullscreen style="border:none;"></iframe>
+            <div style="width:100%; min-height:260px; background:#000; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                <video src="${directStreamUrl}" controls autoplay style="width:100%; max-height:280px; background:#000;" onerror="this.style.display='none'; document.getElementById('gdrive-fallback-iframe').style.display='block';"></video>
+                <iframe id="gdrive-fallback-iframe" src="${embedPreviewUrl}" width="100%" height="260px" frameborder="0" allow="autoplay" allowfullscreen style="display:none; border:none;"></iframe>
             </div>`;
     } else if(v.media_type === 'telegram_video' || (v.media_url && v.media_url.includes('t.me'))) {
         let cleanUrl = v.media_url.replace('https://t.me/', '');
@@ -85,11 +95,11 @@ async function openWatchVideoScreen(videoId) {
         <div style="padding:15px;">
             <h3 style="color:#fff; font-size:1rem; margin-bottom:8px;">${escapeHtml(v.post_text)}</h3>
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-                <div style="display:flex; align-items:center; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openUserProfile('${v.username}')">
                     <img src="${v.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar">
                     <div>
-                        <div style="font-weight:bold; font-size:0.9rem;">${escapeHtml(v.display_name || v.username)}</div>
-                        <div style="color:#888; font-size:0.75rem;">@${v.username} • <span style="color:#00ffff;">${timeAgo(v.created_at)}</span></div>
+                        <div style="font-weight:bold; font-size:0.9rem; color:#00ffff;">${escapeHtml(v.display_name || v.username)}</div>
+                        <div style="color:#888; font-size:0.75rem;">@${v.username} • <span>${timeAgo(v.created_at)}</span></div>
                     </div>
                 </div>
                 ${currentUser !== v.username ? `<button id="watchFollowBtn" onclick="toggleFollowUser('${v.username}')" style="background:#00ffff; color:#000; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:0.75rem; cursor:pointer;">Follow</button>` : ''}
@@ -113,8 +123,4 @@ async function openWatchVideoScreen(videoId) {
 function closeWatchVideoScreen() {
     const watchPage = document.getElementById('page-watch-video');
     if(watchPage) watchPage.remove();
-}
-
-function shareVideoToChat(videoId, title) {
-    alert(`📢 Chat သို့ Share လိုက်ပါပြီ: ${title}`);
 }
