@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flâsh Movie</title>
 
-    <!-- Supabase CDN (သေချာစွာ ချိတ်ဆက်ခြင်း) -->
+    <!-- Mobile Console Debugger Tool -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
+
+    <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <link rel="stylesheet" href="style.css">
@@ -16,39 +20,25 @@
 </head>
 <body style="background:#070709; color:#ffffff; font-family:sans-serif; margin:0; padding:0;">
 
-    <!-- Intro Animation Screen -->
-    <div id="intro-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#070709; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:999999;">
-        <div style="position:relative; width:140px; height:140px; display:flex; justify-content:center; align-items:center;">
-            <div style="position:absolute; width:100%; height:100%; border-radius:50%; background:linear-gradient(45deg, #ff0033, #00ffff); filter:blur(10px); opacity:0.7;"></div>
-            <div style="position:relative; width:120px; height:120px; border-radius:50%; background:#111116; display:flex; justify-content:center; align-items:center; border:2px solid #00ffff;">
-                <span style="font-size:1.8rem;">⚡</span>
-            </div>
-        </div>
-        <div style="margin-top:20px; background:#ff0033; color:#fff; padding:4px 12px; border-radius:20px; font-weight:bold; font-size:0.8rem;">Flâsh Movie Pro</div>
-        <h2 id="typing-intro-text" style="color:#00ffff; font-size:1.1rem; margin-top:15px; font-weight:bold; height:24px;"></h2>
-    </div>
-
     <!-- Auth / Login Page -->
     <div id="page-auth" class="hidden" style="padding:20px; max-width:380px; margin:40px auto; background:#111116; border-radius:12px; border:1px solid #222233; text-align:center;">
         <h2 id="auth-title" style="color:#00ffff; margin-bottom:20px;">🔑 Login</h2>
-        
         <div id="view-login">
             <input type="text" id="loginUser" placeholder="Username" style="width:100%; padding:10px; margin-bottom:12px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box;">
             <input type="password" id="loginPass" placeholder="Password" style="width:100%; padding:10px; margin-bottom:15px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box;">
-            <button onclick="handleLogin()" style="width:100%; padding:10px; background:#00ffff; color:#000; font-weight:bold; border:none; border-radius:6px; cursor:pointer; font-size:1rem;">Login ဝင်မည်</button>
+            <button onclick="handleLogin()" style="width:100%; padding:10px; background:#00ffff; color:#000; font-weight:bold; border:none; border-radius:6px; cursor:pointer;">Login ဝင်မည်</button>
             <p style="margin-top:15px; font-size:0.85rem; color:#888;">အကောင့်မရှိသေးပါက <span onclick="switchAuthView('register')" style="color:#00ffff; cursor:pointer; font-weight:bold;">Register လုပ်ပါ</span></p>
         </div>
-
         <div id="view-register" class="hidden">
             <input type="text" id="regUser" placeholder="Username" style="width:100%; padding:10px; margin-bottom:12px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box;">
             <input type="text" id="regDisplayName" placeholder="Display Name" style="width:100%; padding:10px; margin-bottom:12px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box;">
             <input type="password" id="regPass" placeholder="Password" style="width:100%; padding:10px; margin-bottom:15px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box;">
-            <button onclick="handleRegister()" style="width:100%; padding:10px; background:#ff0033; color:#fff; font-weight:bold; border:none; border-radius:6px; cursor:pointer; font-size:1rem;">အကောင့်သစ်ဖွင့်မည်</button>
+            <button onclick="handleRegister()" style="width:100%; padding:10px; background:#ff0033; color:#fff; font-weight:bold; border:none; border-radius:6px; cursor:pointer;">အကောင့်သစ်ဖွင့်မည်</button>
             <p style="margin-top:15px; font-size:0.85rem; color:#888;">အကောင့်ရှိပြီးပါက <span onclick="switchAuthView('login')" style="color:#00ffff; cursor:pointer; font-weight:bold;">Login ဝင်ပါ</span></p>
         </div>
     </div>
 
-    <!-- Main Application UI Container -->
+    <!-- Main App Container -->
     <div id="app-container" class="hidden">
         <div style="background:#111116; padding:10px 15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233; position:sticky; top:0; z-index:1000;">
             <div style="display:flex; align-items:center; gap:8px;">
@@ -115,7 +105,6 @@
         </div>
     </div>
 
-    <!-- JS Scripts (supabase.js ကို ထိပ်ဆုံးမှာ ထားထားပါသည်) -->
     <script src="supabase.js"></script>
     <script src="navigation.js"></script>
     <script src="feed.js"></script>
