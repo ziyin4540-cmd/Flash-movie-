@@ -13,7 +13,7 @@ async function openWatchVideoScreen(videoId) {
 
     watchPage.innerHTML = `
         <div style="background:#111116; padding:12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233; position:sticky; top:0; z-index:100;">
-            <button onclick="closeWatchVideoScreen()" style="background:#222233; border:1px solid #00ffff; color:#00ffff; font-weight:bold; font-size:0.85rem; cursor:pointer; padding:6px 12px; border-radius:6px;">◄ နောက်သို့ (Back)</button>
+            <button onclick="closeWatchVideoScreen()" style="background:#222233; border:1px solid #00ffff; color:#00ffff; font-weight:bold; font-size:0.85rem; cursor:pointer; padding:6px 14px; border-radius:6px;">◄ နောက်သို့ (Back)</button>
             <span style="color:#ff0033; font-weight:bold; font-size:0.9rem;">Flâsh Watch</span>
         </div>
         <div style="display:flex; justify-content:center; align-items:center; height:250px; color:#00ffff; font-weight:bold;">⚡ Loading Video...</div>
@@ -24,7 +24,7 @@ async function openWatchVideoScreen(videoId) {
         if(!v) return;
 
         const { data: allVideoPosts } = await supabaseClient.from('flash_posts').select('*').order('created_at', { ascending: false });
-        let videoList = (allVideoPosts || []).filter(item => item.is_video === true || item.media_type === 'video' || item.media_type === 'gdrive_video' || item.media_type === 'telegram_video' || (item.media_url && (item.media_url.includes('drive.google.com') || item.media_url.includes('t.me'))));
+        let videoList = (allVideoPosts || []).filter(item => item.is_video === true || item.media_type === 'video' || item.media_type === 'gdrive_video' || (item.media_url && item.media_url.includes('drive.google.com')));
 
         let currentIndex = videoList.findIndex(item => item.id === videoId);
         let prevVideo = currentIndex > 0 ? videoList[currentIndex - 1] : null;
@@ -45,17 +45,34 @@ async function openWatchVideoScreen(videoId) {
             }
             let embedUrl = fileId ? `https://drive.google.com/file/d/${fileId}/preview` : v.media_url;
 
+            // Stream Container With Website Custom Control Overlay
             mediaContent = `
                 <div style="width:100%; height:260px; background:#000; position:relative; overflow:hidden;">
-                    <iframe src="${embedUrl}" width="100%" height="100%" frameborder="0" allow="autoplay" allowfullscreen style="border:none;"></iframe>
+                    <iframe src="${embedUrl}" width="100%" height="280px" frameborder="0" allow="autoplay" allowfullscreen style="border:none; margin-top:-10px;"></iframe>
                 </div>`;
         } else {
             mediaContent = `<video src="${v.media_url}" controls autoplay width="100%" style="background:#000; max-height:280px; object-fit:contain;"></video>`;
         }
 
+        let nextVideosHtml = '';
+        videoList.forEach(nv => {
+            if(nv.id !== videoId) {
+                nextVideosHtml += `
+                    <div onclick="openWatchVideoScreen('${nv.id}')" style="display:flex; gap:10px; background:#111116; padding:8px; border-radius:8px; cursor:pointer; margin-bottom:8px; border:1px solid #222233;">
+                        <div style="width:100px; height:60px; background:#000; border-radius:6px; overflow:hidden; flex-shrink:0;">
+                            ${nv.media_type === 'gdrive_video' ? '<div style="color:#00ffff; text-align:center; padding-top:15px; font-size:0.7rem;">▶️ Drive</div>' : `<video src="${nv.media_url}" width="100%" height="100%" style="object-fit:cover;"></video>`}
+                        </div>
+                        <div>
+                            <h5 style="margin:0 0 4px 0; font-size:0.85rem; color:#fff; line-height:1.2;">${escapeHtml(nv.post_text)}</h5>
+                            <p style="margin:0; font-size:0.7rem; color:#888;">${escapeHtml(nv.display_name || nv.username)}</p>
+                        </div>
+                    </div>`;
+            }
+        });
+
         watchPage.innerHTML = `
             <div style="background:#111116; padding:12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233; position:sticky; top:0; z-index:100;">
-                <button onclick="closeWatchVideoScreen()" style="background:#222233; border:1px solid #00ffff; color:#00ffff; font-weight:bold; font-size:0.85rem; cursor:pointer; padding:6px 12px; border-radius:6px;">◄ နောက်သို့ (Back)</button>
+                <button onclick="closeWatchVideoScreen()" style="background:#222233; border:1px solid #00ffff; color:#00ffff; font-weight:bold; font-size:0.85rem; cursor:pointer; padding:6px 14px; border-radius:6px;">◄ နောက်သို့ (Back)</button>
                 <span style="color:#ff0033; font-weight:bold; font-size:0.9rem;">Flâsh Watch</span>
             </div>
 
@@ -82,6 +99,9 @@ async function openWatchVideoScreen(videoId) {
                     <button onclick="toggleLikePost('${v.id}')" style="background:none; border:none; color:${isLiked ? '#ff0033' : '#aaa'}; font-weight:bold; cursor:pointer;">❤️ ${likesArr.length}</button>
                     <button onclick="openCommentPage('${v.id}')" style="background:none; border:none; color:#00ffff; font-weight:bold; cursor:pointer;">💬 Comments (${commentsArr.length})</button>
                 </div>
+
+                <h4 style="color:#00ffff; font-size:0.9rem; margin-bottom:10px;">⏭ နောက်လာမည့် ဗီဒီယိုများ (Next Videos)</h4>
+                ${nextVideosHtml || '<p style="color:#666; font-size:0.8rem;">ဗီဒီယို အခြားမရှိသေးပါ။</p>'}
             </div>
         `;
     } catch(err) {
