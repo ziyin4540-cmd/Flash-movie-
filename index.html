@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flâsh Movie</title>
-
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <link rel="stylesheet" href="style.css">
     <style>
         .hidden { display: none !important; }
@@ -16,43 +14,26 @@
 </head>
 <body style="background:#070709; color:#ffffff; font-family:sans-serif; margin:0; padding:0;">
 
-    <!-- Intro Animation Screen -->
-    <div id="intro-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#070709; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:999999;">
-        <div style="position:relative; width:140px; height:140px; display:flex; justify-content:center; align-items:center;">
-            <div style="position:absolute; width:100%; height:100%; border-radius:50%; background:linear-gradient(45deg, #ff0033, #00ffff); filter:blur(10px); opacity:0.7;"></div>
-            <div style="position:relative; width:120px; height:120px; border-radius:50%; background:#111116; display:flex; justify-content:center; align-items:center; border:2px solid #00ffff;">
-                <span style="font-size:1.8rem;">⚡</span>
-            </div>
-        </div>
-        <div style="margin-top:20px; background:#ff0033; color:#fff; padding:4px 12px; border-radius:20px; font-weight:bold; font-size:0.8rem;">Flâsh Movie Pro</div>
-        <h2 id="typing-intro-text" style="color:#00ffff; font-size:1.1rem; margin-top:15px; font-weight:bold; height:24px;"></h2>
-    </div>
-
     <!-- Auth / Login Page -->
     <div id="page-auth" class="hidden" style="padding:20px; max-width:380px; margin:40px auto; background:#111116; border-radius:12px; border:1px solid #222233; text-align:center;">
         <h2 id="auth-title" style="color:#00ffff; margin-bottom:20px;">🔑 Login</h2>
-        
-        <!-- Login Form -->
         <div id="view-login">
             <input type="text" id="loginUser" placeholder="Username" style="width:100%; padding:10px; margin-bottom:12px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box;">
             <input type="password" id="loginPass" placeholder="Password" style="width:100%; padding:10px; margin-bottom:15px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box;">
-            <button onclick="handleLogin()" style="width:100%; padding:10px; background:#00ffff; color:#000; font-weight:bold; border:none; border-radius:6px; cursor:pointer; font-size:1rem;">Login ဝင်မည်</button>
+            <button onclick="handleLogin()" style="width:100%; padding:10px; background:#00ffff; color:#000; font-weight:bold; border:none; border-radius:6px; cursor:pointer;">Login ဝင်မည်</button>
             <p style="margin-top:15px; font-size:0.85rem; color:#888;">အကောင့်မရှိသေးပါက <span onclick="switchAuthView('register')" style="color:#00ffff; cursor:pointer; font-weight:bold;">Register လုပ်ပါ</span></p>
         </div>
-
-        <!-- Register Form -->
         <div id="view-register" class="hidden">
-            <input type="text" id="regUser" placeholder="Username ထည့်ပါ" style="width:100%; padding:10px; margin-bottom:12px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box;">
-            <input type="text" id="regDisplayName" placeholder="Display Name (အမည်)" style="width:100%; padding:10px; margin-bottom:12px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box;">
-            <input type="password" id="regPass" placeholder="Password သတ်မှတ်ပါ" style="width:100%; padding:10px; margin-bottom:15px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box;">
-            <button onclick="handleRegister()" style="width:100%; padding:10px; background:#ff0033; color:#fff; font-weight:bold; border:none; border-radius:6px; cursor:pointer; font-size:1rem;">အကောင့်သစ်ဖွင့်မည်</button>
+            <input type="text" id="regUser" placeholder="Username" style="width:100%; padding:10px; margin-bottom:12px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box;">
+            <input type="text" id="regDisplayName" placeholder="Display Name" style="width:100%; padding:10px; margin-bottom:12px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box;">
+            <input type="password" id="regPass" placeholder="Password" style="width:100%; padding:10px; margin-bottom:15px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box;">
+            <button onclick="handleRegister()" style="width:100%; padding:10px; background:#ff0033; color:#fff; font-weight:bold; border:none; border-radius:6px; cursor:pointer;">အကောင့်သစ်ဖွင့်မည်</button>
             <p style="margin-top:15px; font-size:0.85rem; color:#888;">အကောင့်ရှိပြီးပါက <span onclick="switchAuthView('login')" style="color:#00ffff; cursor:pointer; font-weight:bold;">Login ဝင်ပါ</span></p>
         </div>
     </div>
 
-    <!-- Main Application UI Container -->
+    <!-- Main App Container -->
     <div id="app-container" class="hidden">
-        <!-- Top Header Navigation -->
         <div style="background:#111116; padding:10px 15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233; position:sticky; top:0; z-index:1000;">
             <div style="display:flex; align-items:center; gap:8px;">
                 <span style="color:#ff0033; font-size:1.3rem;">⚡</span>
@@ -64,20 +45,15 @@
             </div>
         </div>
 
-        <!-- Home Section -->
         <div id="page-home" class="main-section" style="padding:15px; padding-bottom:80px;">
-            <div style="margin-bottom:15px;">
-                <input type="text" id="movieSearchInput" oninput="filterHomeVideos()" placeholder="🔍 ဗီဒီယိုများ ရှာရန်..." style="width:100%; padding:10px 15px; background:#111116; border:1px solid #222233; color:#fff; border-radius:20px; box-sizing:border-box;">
-            </div>
+            <input type="text" id="movieSearchInput" oninput="filterHomeVideos()" placeholder="🔍 ဗီဒီယိုများ ရှာရန်..." style="width:100%; padding:10px 15px; background:#111116; border:1px solid #222233; color:#fff; border-radius:20px; box-sizing:border-box; margin-bottom:15px;">
             <div id="homeVideoFeedContainer" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px;"></div>
         </div>
 
-        <!-- Feed Section -->
         <div id="page-feed" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <div id="fbFeedContainer"></div>
         </div>
 
-        <!-- Upload Section -->
         <div id="page-upload" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <div style="background:#111116; padding:15px; border-radius:12px; border:1px solid #222233;">
                 <h3 style="color:#00ffff; margin-top:0;">📤 Post / Video တင်ရန်</h3>
@@ -88,38 +64,32 @@
             </div>
         </div>
 
-        <!-- Chat Section -->
         <div id="page-chat" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <div id="chatContactList"></div>
         </div>
 
-        <!-- Profile Section -->
         <div id="page-profile" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
-            <div id="profileBannerBg" style="height:120px; background:#222; border-radius:12px 12px 0 0; background-size:cover; background-position:center; position:relative;"></div>
-            <div style="background:#111116; padding:15px; border-radius:0 0 12px 12px; border:1px solid #222233; margin-bottom:15px; text-align:center;">
+            <div id="profileBannerBg" style="height:120px; background:#222; border-radius:12px 12px 0 0; background-size:cover; background-position:center;"></div>
+            <div style="background:#111116; padding:15px; border-radius:0 0 12px 12px; border:1px solid #222233; text-align:center;">
                 <img id="profileImgDisplay" src="https://via.placeholder.com/90" style="width:80px; height:80px; border-radius:50%; border:3px solid #00ffff; margin-top:-50px; background:#000;">
                 <h3 id="profileNameDisplay" style="margin:8px 0 2px 0; color:#fff;">User Name</h3>
                 <div id="profileUserDisplay" style="color:#00ffff; font-size:0.85rem; margin-bottom:8px;">@username</div>
                 <p id="profileBioDisplay" style="color:#aaa; font-size:0.8rem; margin-bottom:12px;"></p>
-
                 <div style="display:flex; justify-content:space-around; background:#181820; padding:10px; border-radius:8px; margin-bottom:15px;">
                     <div><b id="statPosts" style="color:#00ffff;">0</b><br><span style="font-size:0.7rem; color:#888;">Posts</span></div>
                     <div><b id="statVideos" style="color:#00ffff;">0</b><br><span style="font-size:0.7rem; color:#888;">Videos</span></div>
                     <div><b id="statFollowers" style="color:#00ffff;">0</b><br><span style="font-size:0.7rem; color:#888;">Followers</span></div>
                     <div><b id="statLikes" style="color:#00ffff;">0</b><br><span style="font-size:0.7rem; color:#888;">Likes</span></div>
                 </div>
-
                 <div style="display:flex; border-bottom:1px solid #222233; margin-bottom:15px;">
                     <button class="profile-tab-btn active" id="tab-btn-posts" onclick="switchProfileTab('posts')" style="flex:1; background:none; border:none; color:#00ffff; padding:8px; font-weight:bold; cursor:pointer;">Posts</button>
                     <button class="profile-tab-btn" id="tab-btn-playlists" onclick="switchProfileTab('playlists')" style="flex:1; background:none; border:none; color:#aaa; padding:8px; font-weight:bold; cursor:pointer;">Playlists</button>
                     <button class="profile-tab-btn" id="tab-btn-videos" onclick="switchProfileTab('videos')" style="flex:1; background:none; border:none; color:#aaa; padding:8px; font-weight:bold; cursor:pointer;">Videos</button>
                 </div>
-
                 <div id="profileTabContent" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:8px;"></div>
             </div>
         </div>
 
-        <!-- Bottom Navigation Bar -->
         <div class="bottom-nav" style="position:fixed; bottom:0; left:0; width:100%; background:#111116; display:flex; justify-content:space-around; padding:10px 0; border-top:1px solid #222233; z-index:1000;">
             <button id="nav-btn-home" onclick="switchMainPage('home')" class="active" style="background:none; border:none; color:#aaa; font-size:0.75rem; cursor:pointer;">🏠 Home</button>
             <button id="nav-btn-feed" onclick="switchMainPage('feed')" style="background:none; border:none; color:#aaa; font-size:0.75rem; cursor:pointer;">📰 Feed</button>
@@ -129,12 +99,12 @@
         </div>
     </div>
 
-    <!-- JS Scripts (မှန်ကန်သော အစဉ်လိုက်) -->
+    <!-- ⚠️ အဓိက ပြင်ဆင်ချက်: supabase.js ကို ထိပ်ဆုံးက အရင်ခေါ်ရပါမည် -->
     <script src="supabase.js"></script>
     <script src="navigation.js"></script>
     <script src="feed.js"></script>
     <script src="watch.js"></script>
     <script src="app.js"></script>
-
 </body>
 </html>
+
