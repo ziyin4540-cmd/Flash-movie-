@@ -61,12 +61,19 @@
             <div id="fbFeedContainer"></div>
         </div>
 
+        <!-- Upload Section (Google Drive Link ပါ တင်နိုင်ရန် ပြင်ဆင်ထားသည်) -->
         <div id="page-upload" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <div style="background:#111116; padding:15px; border-radius:12px; border:1px solid #222233;">
                 <h3 style="color:#00ffff; margin-top:0;">📤 Post / Video တင်ရန်</h3>
-                <textarea id="postInputText" placeholder="ဘာတွေ စဉ်းစားနေလဲ..." style="width:100%; height:80px; background:#181820; border:1px solid #333; color:#fff; border-radius:8px; padding:10px; box-sizing:border-box; margin-bottom:10px;"></textarea>
-                <input type="file" id="fbMediaPicker" accept="image/*,video/*" style="margin-bottom:10px; color:#aaa; font-size:0.8rem;">
+                <textarea id="postInputText" placeholder="ဘာတွေ စဉ်းစားနေလဲ..." style="width:100%; height:70px; background:#181820; border:1px solid #333; color:#fff; border-radius:8px; padding:10px; box-sizing:border-box; margin-bottom:12px;"></textarea>
+                
+                <label style="color:#aaa; font-size:0.75rem;">📁 Google Drive Video Link (ရှိပါက):</label>
+                <input type="text" id="gdriveLinkInput" placeholder="https://drive.google.com/file/d/..." style="width:100%; padding:8px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box; margin-bottom:12px; font-size:0.8rem;">
+
+                <label style="color:#aaa; font-size:0.75rem;">🖼️ သို့မဟုတ် ဖုန်းထဲမှ ပုံ/ဗီဒီယို ရွေးရန်:</label>
+                <input type="file" id="fbMediaPicker" accept="image/*,video/*" style="margin-bottom:10px; color:#aaa; font-size:0.8rem; display:block; margin-top:4px;">
                 <div id="selectedMediaName" style="color:#00ffff; font-size:0.75rem; margin-bottom:10px;"></div>
+
                 <button onclick="createNewPost()" style="width:100%; background:#ff0033; color:#fff; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">တင်မည်</button>
             </div>
         </div>
@@ -78,20 +85,17 @@
             </div>
         </div>
 
-        <!-- Admin Control Panel Page -->
         <div id="page-admin" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <div style="background:#111116; padding:15px; border-radius:12px; border:1px solid #222233; margin-bottom:15px;">
-                <h3 style="color:#00ffff; margin-top:0;">⚙️ Admin Management Panel</h3>
-                <p style="color:#aaa; font-size:0.8rem;">Password (296802) စစ်ဆေးပြီး အကောင့်များနှင့် ပို့စ်များကို စီမံနိုင်ပါသည်</p>
+                <h3 style="color:#00ffff; margin-top:0;">⚙️ Admin Control Panel</h3>
+                <p style="color:#aaa; font-size:0.8rem;">Password (296802) စစ်ဆေးပြီး အကောင့်များနှင့် ပို့စ်များကို စီမံနိုင်ပါသည်</p>
             </div>
-            
             <div style="background:#111116; padding:15px; border-radius:12px; border:1px solid #222233; margin-bottom:15px;">
                 <h4 style="color:#fff; margin-top:0;">👥 Accounts စီမံရန်</h4>
                 <div id="adminUsersContainer"></div>
             </div>
-
             <div style="background:#111116; padding:15px; border-radius:12px; border:1px solid #222233;">
-                <h4 style="color:#fff; margin-top:0;">🎬 Posts / Videos (Approve & Reject)</h4>
+                <h4 style="color:#fff; margin-top:0;">🎬 Posts / Videos</h4>
                 <div id="adminPostsContainer"></div>
             </div>
         </div>
