@@ -50,7 +50,7 @@ async function openChatRoom(username, displayName, photoUrl) {
         <div class="chat-input-footer">
             <label style="color:#00ffff; font-size:1.2rem; cursor:pointer; padding:0 5px;">
                 📎
-                <input type="file" id="chatFilePicker" style="display:none;" onchange="handleChatFileSelect(event)">
+                <input type="file" id="chatFilePicker" accept="image/*" style="display:none;" onchange="handleChatFileSelect(event)">
             </label>
             <input type="text" id="chatInputText" placeholder="Message ရေးရန်..." onkeypress="if(event.key==='Enter') sendChatMessage()">
             <button onclick="sendChatMessage()">Send</button>
@@ -66,8 +66,17 @@ function handleChatFileSelect(e) {
     if(file) {
         const reader = new FileReader();
         reader.onload = (ev) => {
-            tempChatAttachment = ev.target.result;
-            document.getElementById('chatFilePreviewName').innerText = `ရွေးပြီး: ${file.name}`;
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 300;
+                canvas.height = 300 * (img.height / img.width);
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                tempChatAttachment = canvas.toDataURL('image/jpeg', 0.5);
+                document.getElementById('chatFilePreviewName').innerText = `ရွေးပြီး: ${file.name}`;
+            };
+            img.src = ev.target.result;
         };
         reader.readAsDataURL(file);
     }
@@ -102,11 +111,7 @@ async function loadChatMessages() {
             
             let contentHtml = escapeHtml(m.message);
             if(m.attachment_url) {
-                if(m.attachment_url.startsWith('data:image')) {
-                    contentHtml += `<br><img src="${m.attachment_url}" style="max-width:100%; border-radius:6px; margin-top:5px;">`;
-                } else if(m.attachment_url.startsWith('data:video')) {
-                    contentHtml += `<br><video src="${m.attachment_url}" controls style="max-width:100%; border-radius:6px; margin-top:5px;"></video>`;
-                }
+                contentHtml += `<br><img src="${m.attachment_url}" style="max-width:180px; border-radius:6px; margin-top:5px; display:block;">`;
             }
 
             div.innerHTML = contentHtml;
