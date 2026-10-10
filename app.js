@@ -18,19 +18,19 @@ function runIntroTypingEffect() {
             if (index < message.length) {
                 textElement.innerText += message.charAt(index);
                 index++;
-                setTimeout(type, 40);
+                setTimeout(type, 30);
             } else {
                 setTimeout(() => {
                     const introScreen = document.getElementById('intro-screen');
                     if(introScreen) {
-                        introScreen.style.transition = 'opacity 0.5s ease';
+                        introScreen.style.transition = 'opacity 0.3s ease';
                         introScreen.style.opacity = '0';
                         setTimeout(() => {
                             introScreen.classList.add('hidden');
                             checkUserSession();
-                        }, 500);
+                        }, 300);
                     }
-                }, 800);
+                }, 400);
             }
         }
         type();
@@ -39,7 +39,7 @@ function runIntroTypingEffect() {
             const introScreen = document.getElementById('intro-screen');
             if(introScreen) introScreen.classList.add('hidden');
             checkUserSession();
-        }, 1500);
+        }, 800);
     }
 }
 
@@ -61,6 +61,98 @@ function checkUserSession() {
     }
 }
 
+// 🔑 LOGIN HANDLE FUNCTION (သေချာ ပြင်ဆင်ထားသော စနစ်)
+async function handleLogin() {
+    const uInput = document.getElementById('loginUser');
+    const pInput = document.getElementById('loginPass');
+
+    if(!uInput || !pInput) return;
+
+    const username = uInput.value.trim();
+    const password = pInput.value.trim();
+
+    if(!username || !password) {
+        return showToast('⚠️ Username နှင့် Password ဖြည့်ပါ။', 'error');
+    }
+
+    showToast('🔑 Login စစ်ဆေးနေပါသည်...', 'success');
+
+    try {
+        const { data: user, error } = await supabaseClient.from('flash_users')
+            .select('*')
+            .eq('username', username)
+            .single();
+
+        if(error || !user) {
+            return showToast('❌ Username မရှိပါ သို့မဟုတ် မှားယွင်းနေပါသည်။', 'error');
+        }
+
+        if(user.password !== password) {
+            return showToast('❌ Password မှားယွင်းနေပါသည်။', 'error');
+        }
+
+        // Login အောင်မြင်ပါက Session သိမ်းဆည်းခြင်း
+        localStorage.setItem('flash_logged_user', username);
+        uInput.value = '';
+        pInput.value = '';
+
+        showToast(`✅ မင်္ဂလာပါ @${username}`, 'success');
+
+        document.getElementById('page-auth').classList.add('hidden');
+        document.getElementById('app-container').classList.remove('hidden');
+
+        if(typeof switchMainPage === 'function') {
+            switchMainPage('home');
+        }
+    } catch(err) {
+        showToast('❌ Login ဝင်၍မရပါ: ' + err.message, 'error');
+    }
+}
+
+// 📝 REGISTER HANDLE FUNCTION
+async function handleRegister() {
+    const uInput = document.getElementById('regUser');
+    const pInput = document.getElementById('regPass');
+    const dInput = document.getElementById('regDisplayName');
+
+    const username = uInput.value.trim();
+    const password = pInput.value.trim();
+    const displayName = dInput.value.trim() || username;
+
+    if(!username || !password) {
+        return showToast('⚠️ Username နှင့် Password ဖြည့်ပါ', 'error');
+    }
+
+    const { data: existing } = await supabaseClient.from('flash_users').select('username').eq('username', username).single();
+    if(existing) {
+        return showToast('❌ ဒီ Username ကို သုံးထားပြီးဖြစ်သည်', 'error');
+    }
+
+    const { error } = await supabaseClient.from('flash_users').insert([{
+        username: username,
+        password: password,
+        display_name: displayName,
+        photo_url: 'https://via.placeholder.com/90',
+        banner_url: ''
+    }]);
+
+    if(error) {
+        showToast('❌ အကောင့်ဖွင့်၍မရပါ: ' + error.message, 'error');
+    } else {
+        showToast('✅ အကောင့်ဖွင့်ခြင်း အောင်မြင်သည်', 'success');
+        localStorage.setItem('flash_logged_user', username);
+        document.getElementById('page-auth').classList.add('hidden');
+        document.getElementById('app-container').classList.remove('hidden');
+        if(typeof switchMainPage === 'function') switchMainPage('home');
+    }
+}
+
+function handleLogout() {
+    localStorage.removeItem('flash_logged_user');
+    checkUserSession();
+    showToast('အကောင့်ထွက်ပြီးပါပြီ။', 'success');
+}
+
 function switchProfileTab(tabName) {
     currentProfileTab = tabName;
     document.querySelectorAll('.profile-tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -71,125 +163,132 @@ function switchProfileTab(tabName) {
     if (profileUsername) loadUserProfile(profileUsername);
 }
 
+// ⚡ Local Storage Instant Cache ပါသော Profile Loader
 async function loadUserProfile(username) {
+    const cachedProfile = localStorage.getItem(`flash_cache_profile_${username}`);
+    if(cachedProfile) {
+        renderUserProfileUI(JSON.parse(cachedProfile), username);
+    }
+
     try {
         const { data: user } = await supabaseClient.from('flash_users').select('*').eq('username', username).single();
-        if(!user) return;
-
-        if(document.getElementById('profileNameDisplay')) document.getElementById('profileNameDisplay').innerText = user.display_name || username;
-        if(document.getElementById('profileUserDisplay')) document.getElementById('profileUserDisplay').innerText = `@${username}`;
-        if(document.getElementById('profileBioDisplay')) document.getElementById('profileBioDisplay').innerText = user.bio || '';
-        if(user.photo_url && document.getElementById('profileImgDisplay')) document.getElementById('profileImgDisplay').src = user.photo_url;
-        if(user.banner_url && document.getElementById('profileBannerBg')) document.getElementById('profileBannerBg').style.backgroundImage = `url('${user.banner_url}')`;
-
+        const { data: userPosts } = await supabaseClient.from('flash_posts').select('*').eq('username', username).order('created_at', { ascending: false });
         const { count: followersCount } = await supabaseClient.from('flash_follows').select('*', { count: 'exact', head: true }).eq('following_id', username);
         const { count: followingCount } = await supabaseClient.from('flash_follows').select('*', { count: 'exact', head: true }).eq('follower_id', username);
 
-        if(document.getElementById('statFollowers')) document.getElementById('statFollowers').innerText = followersCount || 0;
-        if(document.getElementById('statFollowing')) document.getElementById('statFollowing').innerText = followingCount || 0;
-
-        const { data: userPosts } = await supabaseClient.from('flash_posts').select('*').eq('username', username).order('created_at', { ascending: false });
-        
-        let postsCount = 0;
-        let videosCount = 0;
-        let totalLikes = 0;
-
-        if(userPosts) {
-            userPosts.forEach(p => {
-                if(p.is_video || p.media_type === 'video' || p.media_type === 'gdrive_video' || p.media_type === 'telegram_video') videosCount++;
-                else postsCount++;
-                if(p.likes) totalLikes += p.likes.length;
-            });
-        }
-
-        if(document.getElementById('statPosts')) document.getElementById('statPosts').innerText = postsCount;
-        if(document.getElementById('statVideos')) document.getElementById('statVideos').innerText = videosCount;
-        if(document.getElementById('statLikes')) document.getElementById('statLikes').innerText = totalLikes;
-
-        const tabContent = document.getElementById('profileTabContent');
-        if(!tabContent) return;
-
-        const loggedUser = localStorage.getItem('flash_logged_user');
-        const isOwner = loggedUser === username;
-
-        tabContent.innerHTML = '';
-        if(!userPosts || userPosts.length === 0) {
-            tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">ဘာမှ မရှိသေးပါ။</p>';
-            return;
-        }
-
-        if(currentProfileTab === 'posts') {
-            const filterPosts = userPosts.filter(p => !p.is_video && p.media_type !== 'gdrive_video' && p.media_type !== 'telegram_video');
-            if(filterPosts.length === 0) {
-                tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Posts မရှိသေးပါ။</p>';
-                return;
-            }
-            filterPosts.forEach(p => {
-                const item = document.createElement('div');
-                item.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; padding:8px; position:relative;';
-                item.innerHTML = `
-                    <p style="font-size:0.75rem; color:#fff; margin:0 0 5px 0; font-weight:bold;">${escapeHtml(p.post_text || '')}</p>
-                    ${p.media_url ? `<img src="${p.media_url}" style="width:100%; height:100px; object-fit:cover; border-radius:6px;">` : ''}
-                    ${isOwner ? `<button onclick="deleteUserPost('${p.id}')" style="background:#ff0033; color:#fff; border:none; padding:2px 6px; border-radius:4px; font-size:0.65rem; cursor:pointer; margin-top:5px; font-weight:bold; width:100%;">🗑 Delete</button>` : ''}
-                `;
-                tabContent.appendChild(item);
-            });
-        } else if(currentProfileTab === 'playlists') {
-            let playlistsMap = {};
-            userPosts.filter(p => p.playlist).forEach(p => {
-                playlistsMap[p.playlist] = (playlistsMap[p.playlist] || 0) + 1;
-            });
-
-            const keys = Object.keys(playlistsMap);
-            if(keys.length === 0) {
-                tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Playlists မရှိသေးပါ။</p>';
-                return;
-            }
-
-            keys.forEach(pl => {
-                const item = document.createElement('div');
-                item.style.cssText = 'background:#181820; border:1px solid #00ffff; border-radius:8px; padding:12px; text-align:center; cursor:pointer;';
-                item.onclick = () => openPlaylistFolder(pl, username);
-                item.innerHTML = `
-                    <div style="font-size:1.5rem; margin-bottom:4px;">📂</div>
-                    <div style="font-size:0.85rem; font-weight:bold; color:#00ffff;">${escapeHtml(pl)}</div>
-                    <div style="font-size:0.7rem; color:#aaa; margin-top:2px;">${playlistsMap[pl]} Videos</div>
-                `;
-                tabContent.appendChild(item);
-            });
-        } else if(currentProfileTab === 'videos') {
-            const filterVideos = userPosts.filter(p => p.is_video || p.media_type === 'video' || p.media_type === 'gdrive_video' || p.media_type === 'telegram_video');
-            if(filterVideos.length === 0) {
-                tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Videos မရှိသေးပါ။</p>';
-                return;
-            }
-
-            filterVideos.forEach(v => {
-                const item = document.createElement('div');
-                item.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; overflow:hidden; position:relative;';
-                item.innerHTML = `
-                    <div onclick="openWatchVideoScreen('${v.id}')" style="cursor:pointer;">
-                        <div style="width:100%; height:80px; background:#000; display:flex; justify-content:center; align-items:center; color:#00ffff;">
-                            ${v.media_type === 'gdrive_video' ? '▶️ Drive' : (v.media_type === 'telegram_video' ? '🎬 Telegram' : `<video src="${v.media_url}" style="width:100%; height:100%; object-fit:cover;"></video>`)}
-                        </div>
-                        <div style="padding:6px;">
-                            <p style="font-size:0.75rem; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(v.post_text)}</p>
-                        </div>
-                    </div>
-                    ${isOwner ? `<button onclick="deleteUserPost('${v.id}')" style="background:#ff0033; color:#fff; border:none; padding:2px 6px; border-radius:0 0 8px 8px; font-size:0.65rem; cursor:pointer; font-weight:bold; width:100%;">🗑 Delete</button>` : ''}
-                `;
-                tabContent.appendChild(item);
-            });
+        if(user) {
+            const profileData = { user, userPosts: userPosts || [], followersCount: followersCount || 0, followingCount: followingCount || 0 };
+            localStorage.setItem(`flash_cache_profile_${username}`, JSON.stringify(profileData));
+            renderUserProfileUI(profileData, username);
         }
     } catch(err) {
         console.error(err);
     }
 }
 
-function handleLogout() {
-    localStorage.removeItem('flash_logged_user');
-    checkUserSession();
-    showToast('အကောင့်ထွက်ပြီးပါပြီ။', 'success');
+function renderUserProfileUI(data, username) {
+    const { user, userPosts, followersCount, followingCount } = data;
+
+    if(document.getElementById('profileNameDisplay')) document.getElementById('profileNameDisplay').innerText = user.display_name || username;
+    if(document.getElementById('profileUserDisplay')) document.getElementById('profileUserDisplay').innerText = `@${username}`;
+    if(document.getElementById('profileBioDisplay')) document.getElementById('profileBioDisplay').innerText = user.bio || '';
+    if(user.photo_url && document.getElementById('profileImgDisplay')) document.getElementById('profileImgDisplay').src = user.photo_url;
+    if(user.banner_url && document.getElementById('profileBannerBg')) document.getElementById('profileBannerBg').style.backgroundImage = `url('${user.banner_url}')`;
+
+    if(document.getElementById('statFollowers')) document.getElementById('statFollowers').innerText = followersCount || 0;
+    if(document.getElementById('statFollowing')) document.getElementById('statFollowing').innerText = followingCount || 0;
+
+    let postsCount = 0;
+    let videosCount = 0;
+    let totalLikes = 0;
+
+    if(userPosts) {
+        userPosts.forEach(p => {
+            if(p.is_video || p.media_type === 'video' || p.media_type === 'gdrive_video' || p.media_type === 'telegram_video') videosCount++;
+            else postsCount++;
+            if(p.likes) totalLikes += p.likes.length;
+        });
+    }
+
+    if(document.getElementById('statPosts')) document.getElementById('statPosts').innerText = postsCount;
+    if(document.getElementById('statVideos')) document.getElementById('statVideos').innerText = videosCount;
+    if(document.getElementById('statLikes')) document.getElementById('statLikes').innerText = totalLikes;
+
+    const tabContent = document.getElementById('profileTabContent');
+    if(!tabContent) return;
+
+    const loggedUser = localStorage.getItem('flash_logged_user');
+    const isOwner = loggedUser === username;
+
+    tabContent.innerHTML = '';
+    if(!userPosts || userPosts.length === 0) {
+        tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">ဘာမှ မရှိသေးပါ။</p>';
+        return;
+    }
+
+    if(currentProfileTab === 'posts') {
+        const filterPosts = userPosts.filter(p => !p.is_video && p.media_type !== 'gdrive_video' && p.media_type !== 'telegram_video');
+        if(filterPosts.length === 0) {
+            tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Posts မရှိသေးပါ။</p>';
+            return;
+        }
+        filterPosts.forEach(p => {
+            const item = document.createElement('div');
+            item.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; padding:8px; position:relative;';
+            item.innerHTML = `
+                <p style="font-size:0.75rem; color:#fff; margin:0 0 5px 0; font-weight:bold;">${escapeHtml(p.post_text || '')}</p>
+                ${p.media_url ? `<img src="${p.media_url}" style="width:100%; height:100px; object-fit:cover; border-radius:6px;">` : ''}
+                ${isOwner ? `<button onclick="deleteUserPost('${p.id}')" style="background:#ff0033; color:#fff; border:none; padding:2px 6px; border-radius:4px; font-size:0.65rem; cursor:pointer; margin-top:5px; font-weight:bold; width:100%;">🗑 Delete</button>` : ''}
+            `;
+            tabContent.appendChild(item);
+        });
+    } else if(currentProfileTab === 'playlists') {
+        let playlistsMap = {};
+        userPosts.filter(p => p.playlist).forEach(p => {
+            playlistsMap[p.playlist] = (playlistsMap[p.playlist] || 0) + 1;
+        });
+
+        const keys = Object.keys(playlistsMap);
+        if(keys.length === 0) {
+            tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Playlists မရှိသေးပါ။</p>';
+            return;
+        }
+
+        keys.forEach(pl => {
+            const item = document.createElement('div');
+            item.style.cssText = 'background:#181820; border:1px solid #00ffff; border-radius:8px; padding:12px; text-align:center; cursor:pointer;';
+            item.onclick = () => openPlaylistFolder(pl, username);
+            item.innerHTML = `
+                <div style="font-size:1.5rem; margin-bottom:4px;">📂</div>
+                <div style="font-size:0.85rem; font-weight:bold; color:#00ffff;">${escapeHtml(pl)}</div>
+                <div style="font-size:0.7rem; color:#aaa; margin-top:2px;">${playlistsMap[pl]} Videos</div>
+            `;
+            tabContent.appendChild(item);
+        });
+    } else if(currentProfileTab === 'videos') {
+        const filterVideos = userPosts.filter(p => p.is_video || p.media_type === 'video' || p.media_type === 'gdrive_video' || p.media_type === 'telegram_video');
+        if(filterVideos.length === 0) {
+            tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Videos မရှိသေးပါ။</p>';
+            return;
+        }
+
+        filterVideos.forEach(v => {
+            const item = document.createElement('div');
+            item.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; overflow:hidden; position:relative;';
+            item.innerHTML = `
+                <div onclick="openWatchVideoScreen('${v.id}')" style="cursor:pointer;">
+                    <div style="width:100%; height:80px; background:#000; display:flex; justify-content:center; align-items:center; color:#00ffff;">
+                        ${v.media_type === 'gdrive_video' ? '▶️ Drive' : (v.media_type === 'telegram_video' ? '🎬 Telegram' : `<video src="${v.media_url}" style="width:100%; height:100%; object-fit:cover;"></video>`)}
+                    </div>
+                    <div style="padding:6px;">
+                        <p style="font-size:0.75rem; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(v.post_text)}</p>
+                    </div>
+                </div>
+                ${isOwner ? `<button onclick="deleteUserPost('${v.id}')" style="background:#ff0033; color:#fff; border:none; padding:2px 6px; border-radius:0 0 8px 8px; font-size:0.65rem; cursor:pointer; font-weight:bold; width:100%;">🗑 Delete</button>` : ''}
+            `;
+            tabContent.appendChild(item);
+        });
+    }
 }
 
 function setupProfilePhotoListeners() {
