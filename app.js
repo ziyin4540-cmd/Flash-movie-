@@ -55,10 +55,14 @@ function checkUserSession() {
         document.getElementById('page-auth').classList.add('hidden');
         document.getElementById('app-container').classList.remove('hidden');
         
+        // Admin Button Display
         const adminBtn = document.getElementById('adminPanelBtn');
         if(adminBtn) {
-            if(loggedUser === 'admin') adminBtn.classList.remove('hidden');
-            else adminBtn.classList.add('hidden');
+            if(loggedUser.toLowerCase() === 'admin') {
+                adminBtn.classList.remove('hidden');
+            } else {
+                adminBtn.classList.add('hidden');
+            }
         }
 
         if(typeof switchMainPage === 'function') {
@@ -185,6 +189,7 @@ function compressImageFile(file, callback) {
     reader.readAsDataURL(file);
 }
 
+// Profile တင်ထားသမျှ Posts, Playlists နှင့် Videos များကို Render လုပ်ပေးသည့် စနစ်
 async function loadUserProfile(username) {
     const { data: user } = await supabaseClient.from('flash_users').select('*').eq('username', username).single();
     if(!user) return;
@@ -194,6 +199,94 @@ async function loadUserProfile(username) {
     if(document.getElementById('profileBioDisplay')) document.getElementById('profileBioDisplay').innerText = user.bio || '';
     if(user.photo_url && document.getElementById('profileImgDisplay')) document.getElementById('profileImgDisplay').src = user.photo_url;
     if(user.banner_url && document.getElementById('profileBannerBg')) document.getElementById('profileBannerBg').style.backgroundImage = `url('${user.banner_url}')`;
+
+    // Fetch user posts
+    const { data: userPosts } = await supabaseClient.from('flash_posts').select('*').eq('username', username).order('created_at', { ascending: false });
+    
+    let postsCount = 0;
+    let videosCount = 0;
+    let totalLikes = 0;
+
+    if(userPosts) {
+        userPosts.forEach(p => {
+            if(p.is_video || p.media_type === 'video' || p.media_type === 'telegram_video') videosCount++;
+            else postsCount++;
+            if(p.likes) totalLikes += p.likes.length;
+        });
+    }
+
+    if(document.getElementById('statPosts')) document.getElementById('statPosts').innerText = postsCount;
+    if(document.getElementById('statVideos')) document.getElementById('statVideos').innerText = videosCount;
+    if(document.getElementById('statLikes')) document.getElementById('statLikes').innerText = totalLikes;
+
+    const tabContent = document.getElementById('profileTabContent');
+    if(!tabContent) return;
+
+    tabContent.innerHTML = '';
+    if(!userPosts || userPosts.length === 0) {
+        tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">ဘာမှ မရှိသေးပါ။</p>';
+        return;
+    }
+
+    if(currentProfileTab === 'posts') {
+        const filterPosts = userPosts.filter(p => !p.is_video && p.media_type !== 'telegram_video');
+        if(filterPosts.length === 0) {
+            tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Posts မရှိသေးပါ။</p>';
+            return;
+        }
+        filterPosts.forEach(p => {
+            const item = document.createElement('div');
+            item.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; padding:8px;';
+            item.innerHTML = `
+                <p style="font-size:0.75rem; color:#fff; margin:0 0 5px 0; font-weight:bold;">${escapeHtml(p.post_text || '')}</p>
+                ${p.media_url ? `<img src="${p.media_url}" style="width:100%; height:100px; object-fit:cover; border-radius:6px;">` : ''}
+            `;
+            tabContent.appendChild(item);
+        });
+    } else if(currentProfileTab === 'playlists') {
+        let playlistsMap = {};
+        userPosts.filter(p => p.playlist).forEach(p => {
+            playlistsMap[p.playlist] = (playlistsMap[p.playlist] || 0) + 1;
+        });
+
+        const keys = Object.keys(playlistsMap);
+        if(keys.length === 0) {
+            tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Playlists မရှိသေးပါ။</p>';
+            return;
+        }
+
+        keys.forEach(pl => {
+            const item = document.createElement('div');
+            item.style.cssText = 'background:#181820; border:1px solid #00ffff; border-radius:8px; padding:12px; text-align:center; cursor:pointer;';
+            item.innerHTML = `
+                <div style="font-size:1.5rem; margin-bottom:4px;">📂</div>
+                <div style="font-size:0.85rem; font-weight:bold; color:#00ffff;">${escapeHtml(pl)}</div>
+                <div style="font-size:0.7rem; color:#aaa; margin-top:2px;">${playlistsMap[pl]} Videos</div>
+            `;
+            tabContent.appendChild(item);
+        });
+    } else if(currentProfileTab === 'videos') {
+        const filterVideos = userPosts.filter(p => p.is_video || p.media_type === 'video' || p.media_type === 'telegram_video');
+        if(filterVideos.length === 0) {
+            tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Videos မရှိသေးပါ။</p>';
+            return;
+        }
+
+        filterVideos.forEach(v => {
+            const item = document.createElement('div');
+            item.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; overflow:hidden; cursor:pointer;';
+            item.onclick = () => openWatchVideoScreen(v.id);
+            item.innerHTML = `
+                <div style="width:100%; height:80px; background:#000; display:flex; justify-content:center; align-items:center; color:#00ffff;">
+                    ${v.media_type === 'telegram_video' ? '🎬 Telegram' : `<video src="${v.media_url}" style="width:100%; height:100%; object-fit:cover;"></video>`}
+                </div>
+                <div style="padding:6px;">
+                    <p style="font-size:0.75rem; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(v.post_text)}</p>
+                </div>
+            `;
+            tabContent.appendChild(item);
+        });
+    }
 }
 
 function handleLogout() {
@@ -229,4 +322,3 @@ function showToast(message, type = 'success') {
     toast.style.opacity = '1';
     setTimeout(() => { toast.style.opacity = '0'; }, 3000);
 }
-    
