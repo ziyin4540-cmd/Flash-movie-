@@ -71,22 +71,71 @@ function switchProfileTab(tabName) {
     if (loggedUser) loadUserProfile(loggedUser);
 }
 
-// Followers / Following စာရင်း ကြည့်ရှုသည့် Modal
+async function toggleFollowUser(targetUser) {
+    const currentUser = localStorage.getItem('flash_logged_user');
+    if(!currentUser || currentUser === targetUser) return;
+
+    const { data: existing } = await supabaseClient.from('flash_follows')
+        .select('*')
+        .eq('follower_id', currentUser)
+        .eq('following_id', targetUser)
+        .single();
+
+    if(existing) {
+        await supabaseClient.from('flash_follows').delete().eq('id', existing.id);
+        showToast(`Unfollowed @${targetUser}`);
+    } else {
+        await supabaseClient.from('flash_follows').insert([{ follower_id: currentUser, following_id: targetUser }]);
+        showToast(`✅ Followed @${targetUser}`);
+    }
+
+    checkFollowStatus(targetUser);
+    loadUserProfile(currentUser);
+}
+
+async function checkFollowStatus(targetUser) {
+    const currentUser = localStorage.getItem('flash_logged_user');
+    const btn = document.getElementById('watchFollowBtn');
+    if(!btn || !currentUser) return;
+
+    const { data: existing } = await supabaseClient.from('flash_follows')
+        .select('*')
+        .eq('follower_id', currentUser)
+        .eq('following_id', targetUser)
+        .single();
+
+    if(existing) {
+        btn.innerText = 'Following';
+        btn.style.background = '#222233';
+        btn.style.color = '#00ffff';
+    } else {
+        btn.innerText = 'Follow';
+        btn.style.background = '#00ffff';
+        btn.style.color = '#000';
+    }
+}
+
 async function openFollowListModal(type) {
-    const { data: users } = await supabaseClient.from('flash_users').select('*');
-    if(!users) return;
+    const loggedUser = localStorage.getItem('flash_logged_user');
+    if(!loggedUser) return;
 
-    let listHtml = users.map(u => `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #222233;">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <img src="${u.photo_url || 'https://via.placeholder.com/35'}" style="width:30px; height:30px; border-radius:50%;">
-                <span style="color:#00ffff; font-size:0.85rem; font-weight:bold;">${escapeHtml(u.display_name || u.username)}</span>
-            </div>
-            <span style="color:#888; font-size:0.75rem;">@${u.username}</span>
-        </div>
-    `).join('');
+    let titleText = type === 'followers' ? 'Followers စာရင်း' : 'Following စာရင်း';
+    
+    let query = supabaseClient.from('flash_follows').select('*');
+    if(type === 'followers') {
+        query = query.eq('following_id', loggedUser);
+    } else {
+        query = query.eq('follower_id', loggedUser);
+    }
 
-    alert(`📋 ${type.toUpperCase()} List:\n\n` + users.map(u => `- ${u.display_name || u.username} (@${u.username})`).join('\n'));
+    const { data: list } = await query;
+    if(!list || list.length === 0) {
+        alert(`${titleText}: မရှိသေးပါ။`);
+        return;
+    }
+
+    let userNames = list.map(item => type === 'followers' ? item.follower_id : item.following_id);
+    alert(`📋 ${titleText} (${list.length}):\n\n` + userNames.map(u => `- @${u}`).join('\n'));
 }
 
 async function deleteUserPost(postId) {
@@ -101,6 +150,33 @@ async function deleteUserPost(postId) {
     }
 }
 
+async function openPlaylistFolder(playlistName) {
+    const currentUser = localStorage.getItem('flash_logged_user');
+    const { data: posts } = await supabaseClient.from('flash_posts').select('*').eq('username', currentUser).eq('playlist', playlistName);
+
+    if(!posts || posts.length === 0) return alert("ဒီ Playlist ထဲမှာ ဗီဒီယိုမရှိပါ။");
+
+    const tabContent = document.getElementById('profileTabContent');
+    tabContent.innerHTML = `<div style="grid-column: 1 / -1; font-weight:bold; color:#00ffff; margin-bottom:10px;">📂 ${escapeHtml(playlistName)} (ဗီဒီယိုများ) - <span onclick="loadUserProfile('${currentUser}')" style="cursor:pointer; text-decoration:underline;">နောက်သို့</span></div>`;
+
+    posts.forEach(v => {
+        const item = document.createElement('div');
+        item.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; overflow:hidden; position:relative;';
+        item.innerHTML = `
+            <div onclick="openWatchVideoScreen('${v.id}')" style="cursor:pointer;">
+                <div style="width:100%; height:80px; background:#000; display:flex; justify-content:center; align-items:center; color:#00ffff;">
+                    ${v.media_type === 'gdrive_video' ? '▶️ Drive' : (v.media_type === 'telegram_video' ? '🎬 Telegram' : `<video src="${v.media_url}" style="width:100%; height:100%; object-fit:cover;"></video>`)}
+                </div>
+                <div style="padding:6px;">
+                    <p style="font-size:0.75rem; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(v.post_text)}</p>
+                </div>
+            </div>
+            <button onclick="deleteUserPost('${v.id}')" style="background:#ff0033; color:#fff; border:none; padding:2px 6px; border-radius:0 0 8px 8px; font-size:0.65rem; cursor:pointer; font-weight:bold; width:100%;">🗑 Delete</button>
+        `;
+        tabContent.appendChild(item);
+    });
+}
+
 async function loadUserProfile(username) {
     const { data: user } = await supabaseClient.from('flash_users').select('*').eq('username', username).single();
     if(!user) return;
@@ -110,6 +186,12 @@ async function loadUserProfile(username) {
     if(document.getElementById('profileBioDisplay')) document.getElementById('profileBioDisplay').innerText = user.bio || '';
     if(user.photo_url && document.getElementById('profileImgDisplay')) document.getElementById('profileImgDisplay').src = user.photo_url;
     if(user.banner_url && document.getElementById('profileBannerBg')) document.getElementById('profileBannerBg').style.backgroundImage = `url('${user.banner_url}')`;
+
+    const { count: followersCount } = await supabaseClient.from('flash_follows').select('*', { count: 'exact', head: true }).eq('following_id', username);
+    const { count: followingCount } = await supabaseClient.from('flash_follows').select('*', { count: 'exact', head: true }).eq('follower_id', username);
+
+    if(document.getElementById('statFollowers')) document.getElementById('statFollowers').innerText = followersCount || 0;
+    if(document.getElementById('statFollowing')) document.getElementById('statFollowing').innerText = followingCount || 0;
 
     const { data: userPosts } = await supabaseClient.from('flash_posts').select('*').eq('username', username).order('created_at', { ascending: false });
     
@@ -169,6 +251,7 @@ async function loadUserProfile(username) {
         keys.forEach(pl => {
             const item = document.createElement('div');
             item.style.cssText = 'background:#181820; border:1px solid #00ffff; border-radius:8px; padding:12px; text-align:center; cursor:pointer;';
+            item.onclick = () => openPlaylistFolder(pl);
             item.innerHTML = `
                 <div style="font-size:1.5rem; margin-bottom:4px;">📂</div>
                 <div style="font-size:0.85rem; font-weight:bold; color:#00ffff;">${escapeHtml(pl)}</div>
@@ -188,7 +271,7 @@ async function loadUserProfile(username) {
             item.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; overflow:hidden; position:relative;';
             item.innerHTML = `
                 <div onclick="openWatchVideoScreen('${v.id}')" style="cursor:pointer;">
-                    <div style="width:100%; height:80px; background:#000; display:flex; justify-content:center; align-items:center; color:#00ffff;">
+                    <div style="width:100%; height:80px; background:#000; display:flex; justify-content:center; align- items:center; color:#00ffff;">
                         ${v.media_type === 'gdrive_video' ? '▶️ Drive' : (v.media_type === 'telegram_video' ? '🎬 Telegram' : `<video src="${v.media_url}" style="width:100%; height:100%; object-fit:cover;"></video>`)}
                     </div>
                     <div style="padding:6px;">
