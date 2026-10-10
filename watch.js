@@ -80,7 +80,7 @@ async function openWatchVideoScreen(videoId) {
             <div style="background:#111116; padding:12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233; position:sticky; top:0; z-index:100;">
                 <button onclick="closeWatchVideoScreen()" style="background:none; border:none; color:#00ffff; font-weight:bold; font-size:0.9rem; cursor:pointer;">◄ နောက်သို့ (Back)</button>
                 <span style="color:#ff0033; font-weight:bold; font-size:0.9rem;">Flâsh Watch</span>
-            </div>
+        </div>
 
             ${mediaContent}
 
