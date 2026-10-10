@@ -7,6 +7,26 @@ window.addEventListener('load', () => {
     setupProfilePhotoListeners();
 });
 
+function safeSetLocalStorage(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch (e) {
+        console.warn('LocalStorage quota exceeded, clearing old caches...');
+        // Capacity ပြည့်ပါက Cache အဟောင်းများကို ရှင်းထုတ်ပေးခြင်း
+        for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('flash_cache_')) {
+                localStorage.removeItem(k);
+            }
+        }
+        try {
+            localStorage.setItem(key, value);
+        } catch (err) {
+            console.error('Safe LocalStorage error:', err);
+        }
+    }
+}
+
 function runIntroTypingEffect() {
     const textElement = document.getElementById('typing-intro-text');
     const message = "Welcome To Flâsh Movie";
@@ -30,7 +50,7 @@ function runIntroTypingEffect() {
                             checkUserSession();
                         }, 300);
                     }
-                }, 400);
+                }, 300);
             }
         }
         type();
@@ -39,7 +59,7 @@ function runIntroTypingEffect() {
             const introScreen = document.getElementById('intro-screen');
             if(introScreen) introScreen.classList.add('hidden');
             checkUserSession();
-        }, 800);
+        }, 500);
     }
 }
 
@@ -61,7 +81,6 @@ function checkUserSession() {
     }
 }
 
-// 🔑 LOGIN HANDLE FUNCTION (သေချာ ပြင်ဆင်ထားသော စနစ်)
 async function handleLogin() {
     const uInput = document.getElementById('loginUser');
     const pInput = document.getElementById('loginPass');
@@ -91,7 +110,6 @@ async function handleLogin() {
             return showToast('❌ Password မှားယွင်းနေပါသည်။', 'error');
         }
 
-        // Login အောင်မြင်ပါက Session သိမ်းဆည်းခြင်း
         localStorage.setItem('flash_logged_user', username);
         uInput.value = '';
         pInput.value = '';
@@ -109,7 +127,6 @@ async function handleLogin() {
     }
 }
 
-// 📝 REGISTER HANDLE FUNCTION
 async function handleRegister() {
     const uInput = document.getElementById('regUser');
     const pInput = document.getElementById('regPass');
@@ -123,27 +140,31 @@ async function handleRegister() {
         return showToast('⚠️ Username နှင့် Password ဖြည့်ပါ', 'error');
     }
 
-    const { data: existing } = await supabaseClient.from('flash_users').select('username').eq('username', username).single();
-    if(existing) {
-        return showToast('❌ ဒီ Username ကို သုံးထားပြီးဖြစ်သည်', 'error');
-    }
+    try {
+        const { data: existing } = await supabaseClient.from('flash_users').select('username').eq('username', username).single();
+        if(existing) {
+            return showToast('❌ ဒီ Username ကို သုံးထားပြီးဖြစ်သည်', 'error');
+        }
 
-    const { error } = await supabaseClient.from('flash_users').insert([{
-        username: username,
-        password: password,
-        display_name: displayName,
-        photo_url: 'https://via.placeholder.com/90',
-        banner_url: ''
-    }]);
+        const { error } = await supabaseClient.from('flash_users').insert([{
+            username: username,
+            password: password,
+            display_name: displayName,
+            photo_url: 'https://via.placeholder.com/90',
+            banner_url: ''
+        }]);
 
-    if(error) {
-        showToast('❌ အကောင့်ဖွင့်၍မရပါ: ' + error.message, 'error');
-    } else {
-        showToast('✅ အကောင့်ဖွင့်ခြင်း အောင်မြင်သည်', 'success');
-        localStorage.setItem('flash_logged_user', username);
-        document.getElementById('page-auth').classList.add('hidden');
-        document.getElementById('app-container').classList.remove('hidden');
-        if(typeof switchMainPage === 'function') switchMainPage('home');
+        if(error) {
+            showToast('❌ အကောင့်ဖွင့်၍မရပါ: ' + error.message, 'error');
+        } else {
+            showToast('✅ အကောင့်ဖွင့်ခြင်း အောင်မြင်သည်', 'success');
+            localStorage.setItem('flash_logged_user', username);
+            document.getElementById('page-auth').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            if(typeof switchMainPage === 'function') switchMainPage('home');
+        }
+    } catch(e) {
+        showToast('❌ Error: ' + e.message, 'error');
     }
 }
 
@@ -163,23 +184,25 @@ function switchProfileTab(tabName) {
     if (profileUsername) loadUserProfile(profileUsername);
 }
 
-// ⚡ Local Storage Instant Cache ပါသော Profile Loader
 async function loadUserProfile(username) {
-    const cachedProfile = localStorage.getItem(`flash_cache_profile_${username}`);
+    const loggedUser = localStorage.getItem('flash_logged_user') || username;
+    const targetUser = username || loggedUser;
+
+    const cachedProfile = localStorage.getItem(`flash_cache_profile_${targetUser}`);
     if(cachedProfile) {
-        renderUserProfileUI(JSON.parse(cachedProfile), username);
+        try {
+            renderUserProfileUI(JSON.parse(cachedProfile), targetUser);
+        } catch(e){}
     }
 
     try {
-        const { data: user } = await supabaseClient.from('flash_users').select('*').eq('username', username).single();
-        const { data: userPosts } = await supabaseClient.from('flash_posts').select('*').eq('username', username).order('created_at', { ascending: false });
-        const { count: followersCount } = await supabaseClient.from('flash_follows').select('*', { count: 'exact', head: true }).eq('following_id', username);
-        const { count: followingCount } = await supabaseClient.from('flash_follows').select('*', { count: 'exact', head: true }).eq('follower_id', username);
-
+        const { data: user } = await supabaseClient.from('flash_users').select('*').eq('username', targetUser).single();
+        const { data: userPosts } = await supabaseClient.from('flash_posts').select('*').eq('username', targetUser).order('created_at', { ascending: false });
+        
         if(user) {
-            const profileData = { user, userPosts: userPosts || [], followersCount: followersCount || 0, followingCount: followingCount || 0 };
-            localStorage.setItem(`flash_cache_profile_${username}`, JSON.stringify(profileData));
-            renderUserProfileUI(profileData, username);
+            const profileData = { user, userPosts: userPosts || [] };
+            safeSetLocalStorage(`flash_cache_profile_${targetUser}`, JSON.stringify(profileData));
+            renderUserProfileUI(profileData, targetUser);
         }
     } catch(err) {
         console.error(err);
@@ -187,16 +210,13 @@ async function loadUserProfile(username) {
 }
 
 function renderUserProfileUI(data, username) {
-    const { user, userPosts, followersCount, followingCount } = data;
+    const { user, userPosts } = data;
 
     if(document.getElementById('profileNameDisplay')) document.getElementById('profileNameDisplay').innerText = user.display_name || username;
     if(document.getElementById('profileUserDisplay')) document.getElementById('profileUserDisplay').innerText = `@${username}`;
     if(document.getElementById('profileBioDisplay')) document.getElementById('profileBioDisplay').innerText = user.bio || '';
     if(user.photo_url && document.getElementById('profileImgDisplay')) document.getElementById('profileImgDisplay').src = user.photo_url;
     if(user.banner_url && document.getElementById('profileBannerBg')) document.getElementById('profileBannerBg').style.backgroundImage = `url('${user.banner_url}')`;
-
-    if(document.getElementById('statFollowers')) document.getElementById('statFollowers').innerText = followersCount || 0;
-    if(document.getElementById('statFollowing')) document.getElementById('statFollowing').innerText = followingCount || 0;
 
     let postsCount = 0;
     let videosCount = 0;
@@ -217,9 +237,6 @@ function renderUserProfileUI(data, username) {
     const tabContent = document.getElementById('profileTabContent');
     if(!tabContent) return;
 
-    const loggedUser = localStorage.getItem('flash_logged_user');
-    const isOwner = loggedUser === username;
-
     tabContent.innerHTML = '';
     if(!userPosts || userPosts.length === 0) {
         tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">ဘာမှ မရှိသေးပါ။</p>';
@@ -238,30 +255,6 @@ function renderUserProfileUI(data, username) {
             item.innerHTML = `
                 <p style="font-size:0.75rem; color:#fff; margin:0 0 5px 0; font-weight:bold;">${escapeHtml(p.post_text || '')}</p>
                 ${p.media_url ? `<img src="${p.media_url}" style="width:100%; height:100px; object-fit:cover; border-radius:6px;">` : ''}
-                ${isOwner ? `<button onclick="deleteUserPost('${p.id}')" style="background:#ff0033; color:#fff; border:none; padding:2px 6px; border-radius:4px; font-size:0.65rem; cursor:pointer; margin-top:5px; font-weight:bold; width:100%;">🗑 Delete</button>` : ''}
-            `;
-            tabContent.appendChild(item);
-        });
-    } else if(currentProfileTab === 'playlists') {
-        let playlistsMap = {};
-        userPosts.filter(p => p.playlist).forEach(p => {
-            playlistsMap[p.playlist] = (playlistsMap[p.playlist] || 0) + 1;
-        });
-
-        const keys = Object.keys(playlistsMap);
-        if(keys.length === 0) {
-            tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Playlists မရှိသေးပါ။</p>';
-            return;
-        }
-
-        keys.forEach(pl => {
-            const item = document.createElement('div');
-            item.style.cssText = 'background:#181820; border:1px solid #00ffff; border-radius:8px; padding:12px; text-align:center; cursor:pointer;';
-            item.onclick = () => openPlaylistFolder(pl, username);
-            item.innerHTML = `
-                <div style="font-size:1.5rem; margin-bottom:4px;">📂</div>
-                <div style="font-size:0.85rem; font-weight:bold; color:#00ffff;">${escapeHtml(pl)}</div>
-                <div style="font-size:0.7rem; color:#aaa; margin-top:2px;">${playlistsMap[pl]} Videos</div>
             `;
             tabContent.appendChild(item);
         });
@@ -271,7 +264,6 @@ function renderUserProfileUI(data, username) {
             tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Videos မရှိသေးပါ။</p>';
             return;
         }
-
         filterVideos.forEach(v => {
             const item = document.createElement('div');
             item.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; overflow:hidden; position:relative;';
@@ -284,7 +276,6 @@ function renderUserProfileUI(data, username) {
                         <p style="font-size:0.75rem; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(v.post_text)}</p>
                     </div>
                 </div>
-                ${isOwner ? `<button onclick="deleteUserPost('${v.id}')" style="background:#ff0033; color:#fff; border:none; padding:2px 6px; border-radius:0 0 8px 8px; font-size:0.65rem; cursor:pointer; font-weight:bold; width:100%;">🗑 Delete</button>` : ''}
             `;
             tabContent.appendChild(item);
         });
@@ -293,35 +284,15 @@ function renderUserProfileUI(data, username) {
 
 function setupProfilePhotoListeners() {
     const profilePicker = document.getElementById('profilePhotoPicker');
-    const bgPicker = document.getElementById('bgPhotoPicker');
-
     if(profilePicker) {
         profilePicker.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if(file) {
                 compressImageFile(file, async (base64) => {
                     const user = localStorage.getItem('flash_logged_user');
-                    const { error } = await supabaseClient.from('flash_users').update({ photo_url: base64 }).eq('username', user);
-                    if(!error) {
-                        showToast('✅ Profile ပုံ ပြောင်းလဲပြီးပါပြီ။', 'success');
-                        loadUserProfile(user);
-                    }
-                });
-            }
-        });
-    }
-
-    if(bgPicker) {
-        bgPicker.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if(file) {
-                compressImageFile(file, async (base64) => {
-                    const user = localStorage.getItem('flash_logged_user');
-                    const { error } = await supabaseClient.from('flash_users').update({ banner_url: base64 }).eq('username', user);
-                    if(!error) {
-                        showToast('✅ Background ပုံ ပြောင်းလဲပြီးပါပြီ။', 'success');
-                        loadUserProfile(user);
-                    }
+                    await supabaseClient.from('flash_users').update({ photo_url: base64 }).eq('username', user);
+                    showToast('✅ Profile ပုံ ပြောင်းလဲပြီးပါပြီ။', 'success');
+                    loadUserProfile(user);
                 });
             }
         });
@@ -348,7 +319,7 @@ function compressImageFile(file, callback) {
 function startRealTimeTimer() {
     const timerElem = document.getElementById('global-timer-display');
     if(!timerElem) return;
-    let seconds = 5 * 3600 + 30 * 60;
+    let seconds = 5 * 3600 + 29 * 60;
     setInterval(() => {
         seconds--;
         if(seconds < 0) seconds = 86400;
