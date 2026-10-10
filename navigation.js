@@ -2,14 +2,8 @@ let isAdminAuthenticated = false;
 
 function switchMainPage(pageName) {
     if(pageName === 'admin' && !isAdminAuthenticated) {
-        const pass = prompt("🔐 Admin Password ထည့်ပါ:");
-        if(pass === "296802") {
-            isAdminAuthenticated = true;
-            showToast("✅ Admin Login အောင်မြင်ပါသည်", "success");
-        } else {
-            showToast("❌ Admin Password မှားယွင်းပါသည်!", "error");
-            return;
-        }
+        openAdminAuthModal();
+        return;
     }
 
     if(typeof closeWatchVideoScreen === 'function') closeWatchVideoScreen();
@@ -38,7 +32,40 @@ function switchMainPage(pageName) {
     }, 20);
 }
 
-// ⚙️ FULL ADMIN PANEL MANAGEMENT FUNCTION
+function openAdminAuthModal() {
+    let modal = document.getElementById('adminAuthModal');
+    if(!modal) {
+        modal = document.createElement('div');
+        modal.id = 'adminAuthModal';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:999999; display:flex; justify-content:center; align-items:center;';
+        document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+        <div style="background:#111116; border:1px solid #00ffff; width:85%; max-width:320px; padding:20px; border-radius:12px; text-align:center;">
+            <h3 style="color:#00ffff; margin-top:0;">🔐 Admin Access</h3>
+            <p style="color:#aaa; font-size:0.8rem; margin-bottom:15px;">Admin Password ထည့်ပါ</p>
+            <input type="password" id="adminPassInput" placeholder="Password" style="width:100%; padding:10px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box; margin-bottom:15px; text-align:center; font-size:1rem;">
+            <div style="display:flex; gap:10px;">
+                <button onclick="document.getElementById('adminAuthModal').remove()" style="flex:1; background:#222; color:#fff; border:none; padding:8px; border-radius:6px; cursor:pointer;">မလုပ်တော့ပါ</button>
+                <button onclick="verifyAdminPassword()" style="flex:1; background:#00ffff; color:#000; border:none; padding:8px; border-radius:6px; font-weight:bold; cursor:pointer;">ဝင်မည်</button>
+            </div>
+        </div>
+    `;
+}
+
+function verifyAdminPassword() {
+    const pass = document.getElementById('adminPassInput')?.value.trim();
+    if(pass === "296802") {
+        isAdminAuthenticated = true;
+        document.getElementById('adminAuthModal')?.remove();
+        showToast("✅ Admin Login အောင်မြင်ပါသည်", "success");
+        switchMainPage('admin');
+    } else {
+        showToast("❌ Admin Password မှားယွင်းပါသည်!", "error");
+    }
+}
+
 async function loadAdminPanel() {
     const userContainer = document.getElementById('adminUsersContainer');
     const postContainer = document.getElementById('adminPostsContainer');
@@ -47,7 +74,6 @@ async function loadAdminPanel() {
     try {
         if(!window.supabaseClient) return;
 
-        // 1. Fetch Users
         const { data: users } = await supabaseClient.from('flash_users').select('*');
         userContainer.innerHTML = '';
         if(users && users.length > 0) {
@@ -63,11 +89,8 @@ async function loadAdminPanel() {
                 `;
                 userContainer.appendChild(div);
             });
-        } else {
-            userContainer.innerHTML = '<p style="color:#666; font-size:0.8rem;">User မရှိသေးပါ။</p>';
         }
 
-        // 2. Fetch Videos / Posts (Approve / Reject / Delete)
         if(postContainer) {
             const { data: posts } = await supabaseClient.from('flash_posts').select('*').order('created_at', { ascending: false });
             postContainer.innerHTML = '';
@@ -78,18 +101,14 @@ async function loadAdminPanel() {
                     div.innerHTML = `
                         <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
                             <span style="color:#00ffff; font-size:0.75rem;">@${p.username}</span>
-                            <span style="color:#888; font-size:0.65rem;">${p.created_at ? p.created_at.split('T')[0] : ''}</span>
                         </div>
                         <p style="font-size:0.8rem; margin:0 0 8px 0; color:#fff;">${escapeHtml(p.post_text || '')}</p>
                         <div style="display:flex; gap:8px;">
-                            <button onclick="adminApprovePost('${p.id}')" style="background:#00ff66; color:#000; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; font-size:0.7rem; cursor:pointer;">✅ Approve</button>
-                            <button onclick="adminDeletePost('${p.id}')" style="background:#ff0033; color:#fff; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; font-size:0.7rem; cursor:pointer;">❌ Reject/Delete</button>
+                            <button onclick="adminDeletePost('${p.id}')" style="background:#ff0033; color:#fff; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; font-size:0.7rem; cursor:pointer;">❌ Delete Post</button>
                         </div>
                     `;
                     postContainer.appendChild(div);
                 });
-            } else {
-                postContainer.innerHTML = '<p style="color:#666; font-size:0.8rem;">Post မရှိသေးပါ။</p>';
             }
         }
     } catch(err) {
@@ -109,15 +128,6 @@ async function adminDeletePost(postId) {
     await supabaseClient.from('flash_posts').delete().eq('id', postId);
     showToast(`Post ကို ပယ်ဖျက်လိုက်ပါပြီ`, 'success');
     loadAdminPanel();
-}
-
-async function adminApprovePost(postId) {
-    showToast(`Post ကို အတည်ပြုလိုက်ပါပြီ ✅`, 'success');
-}
-
-function closeWatchVideoScreen() {
-    const modalContainer = document.getElementById('video-watch-modal-container');
-    if(modalContainer) modalContainer.innerHTML = '';
 }
 
 function switchAuthView(viewName) {
