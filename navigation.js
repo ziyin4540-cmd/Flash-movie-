@@ -1,8 +1,7 @@
-// Main Screen မြားသို့ မြှနျမွနျဆနျဆနျ ပြောင်းလဲပေးသညျ့ Function
 function switchMainPage(pageName) {
     if(typeof closeWatchVideoScreen === 'function') closeWatchVideoScreen();
 
-    // 1. UI Screen အားလုံးကို ချက်ချင်း ဖုံးပြီး နှိပ်လိုက်သည့် Screen ကို ချက်ချင်း ပွင့်စေခြင်း
+    // 1. UI ခလုတ်များနှင့် Screen များကို ချက်ချင်း ပြောင်းလဲပေးခြင်း
     document.querySelectorAll('.main-section').forEach(sec => sec.classList.add('hidden'));
     document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.remove('active'));
 
@@ -12,7 +11,7 @@ function switchMainPage(pageName) {
     const targetNav = document.getElementById(`nav-btn-${pageName}`);
     if(targetNav) targetNav.classList.add('active');
 
-    // 2. Data များကို Async ဖြင့် ချက်ချင်း ခေါ်ယူပေးခြင်း (No Waiting Delay)
+    // 2. Data ခေါ်ယူခြင်းကို Async ဖြင့် ချက်ချင်း လုပ်ဆောင်စေခြင်း
     requestAnimationFrame(() => {
         if(pageName === 'home' && typeof loadHomeVideos === 'function') loadHomeVideos();
         if(pageName === 'feed' && typeof loadFbFeed === 'function') loadFbFeed();
@@ -24,7 +23,6 @@ function switchMainPage(pageName) {
     });
 }
 
-// Watch Video Screen ကို ပိတ်ပေးသည့် Function
 function closeWatchVideoScreen() {
     const watchPage = document.getElementById('page-watch-video');
     if(watchPage) {
@@ -32,7 +30,6 @@ function closeWatchVideoScreen() {
     }
 }
 
-// Login နှင့် Register View ကူးပြောင်းပေးသည့် Function
 function switchAuthView(viewName) {
     const loginView = document.getElementById('view-login');
     const regView = document.getElementById('view-register');
