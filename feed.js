@@ -1,4 +1,70 @@
-// User Profile ထို့သို့ တိုက်ရိုက်သွားရန် Function
+let tempFbMediaData = "";
+let tempMediaType = "";
+let tempAppVideoData = "";
+
+document.addEventListener('DOMContentLoaded', () => {
+    const mediaPicker = document.getElementById('fbMediaPicker');
+    if(mediaPicker) {
+        mediaPicker.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                tempMediaType = file.type.startsWith('image') ? 'image' : 'video';
+                document.getElementById('selectedMediaName').innerText = `ရွေးပြီး: ${file.name}`;
+                compressImageOrFile(file, (base64) => { tempFbMediaData = base64; });
+            }
+        });
+    }
+
+    const appVideoPicker = document.getElementById('appVideoPicker');
+    if(appVideoPicker) {
+        appVideoPicker.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(file) {
+                document.getElementById('uploadVideoPreviewName').innerText = `ရွေးပြီး: ${file.name}`;
+                const reader = new FileReader();
+                reader.onload = (ev) => { tempAppVideoData = ev.target.result; };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
+
+function compressImageOrFile(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 350;
+            canvas.height = 350 * (img.height / img.width);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            callback(canvas.toDataURL('image/jpeg', 0.5));
+        };
+        img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function timeAgo(dateString) {
+    if(!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+    let interval = Math.floor(seconds / 86400);
+    if (interval >= 1) return interval + ' ရက်ခင်က';
+    interval = Math.floor(seconds / 3600);
+    if (interval >= 1) return interval + ' နာရီခင်က';
+    interval = Math.floor(seconds / 60);
+    if (interval >= 1) return interval + ' မိနစ်ခင်က';
+    return 'ယခုလေးတင်';
+}
+
+function escapeHtml(text) {
+    if(!text) return '';
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function openUserProfile(username) {
     if(typeof closeWatchVideoScreen === 'function') closeWatchVideoScreen();
     if(typeof switchMainPage === 'function') switchMainPage('profile');
@@ -11,9 +77,10 @@ async function loadHomeVideos(searchQuery = '') {
     const container = document.getElementById('homeVideoFeedContainer');
     if(!container) return;
 
-    const { data: posts, error } = await supabaseClient.from('flash_posts').select('*').order('created_at', { ascending: false });
+    // အမြန်ဆုံး Load ဖြစ်စေရန် Select ကန့်သတ်ချက် ထည့်ထားခြင်း
+    const { data: posts, error } = await supabaseClient.from('flash_posts').select('*').order('created_at', { ascending: false }).limit(30);
     if(error || !posts) {
-        container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ဗီဒီယိုများ ရယူရာတွင် အမှားရှိနေပါသည်။</p>';
+        container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ဗီဒီယိုများ ရယူ၍မရပါ။</p>';
         return;
     }
 
@@ -70,11 +137,16 @@ async function loadHomeVideos(searchQuery = '') {
     });
 }
 
+function filterHomeVideos() {
+    const q = document.getElementById('movieSearchInput').value.trim();
+    loadHomeVideos(q);
+}
+
 async function loadFbFeed() {
     const container = document.getElementById('fbFeedContainer');
     if(!container) return;
 
-    const { data: posts, error } = await supabaseClient.from('flash_posts').select('*').order('created_at', { ascending: false });
+    const { data: posts, error } = await supabaseClient.from('flash_posts').select('*').order('created_at', { ascending: false }).limit(30);
     if(error || !posts) {
         container.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">ပို့စ်များ မရှိသေးပါ။</p>';
         return;
