@@ -108,8 +108,8 @@
                 </div>
 
                 <div style="margin-bottom:10px;">
-                    <label style="font-size:0.75rem; color:#aaa;">Google Drive Link (သို့) External Video Link:</label>
-                    <input type="text" id="externalVideoLinkInput" class="fb-textarea" placeholder="https://drive.google.com/file/d/.../view" style="height:38px; margin-top:4px;">
+                    <label style="font-size:0.75rem; color:#aaa;">Google Drive Link (သို့) External Link:</label>
+                    <input type="text" id="externalVideoLinkInput" class="fb-textarea" placeholder="https://drive.google.com/file/d/..." style="height:38px; margin-top:4px;">
                 </div>
 
                 <div style="text-align:center; margin:10px 0; color:#888; font-size:0.75rem;">(သို့မဟုတ်) ဖိုင်တိုက်ရိုက်တင်ရန် (5MB အောက်)</div>
@@ -163,8 +163,9 @@
                 <div class="profile-stats" style="margin-top:12px;">
                     <div class="stat-item"><span class="stat-num" id="statPosts">0</span><span class="stat-label">Posts</span></div>
                     <div class="stat-item"><span class="stat-num" id="statVideos">0</span><span class="stat-label">Videos</span></div>
-                    <div class="stat-item"><span class="stat-num" id="statFollowers">0</span><span class="stat-label">Followers</span></div>
-                    <div class="stat-item"><span class="stat-num" id="statFollowing">0</span><span class="stat-label">Following</span></div>
+                    <!-- Follower & Following Modal List ခေါ်ဆိုပေးမည့် ခလုတ်များ -->
+                    <div class="stat-item" onclick="openFollowListModal('followers')" style="cursor:pointer;"><span class="stat-num" id="statFollowers">0</span><span class="stat-label" style="color:#00ffff;">Followers</span></div>
+                    <div class="stat-item" onclick="openFollowListModal('following')" style="cursor:pointer;"><span class="stat-num" id="statFollowing">0</span><span class="stat-label" style="color:#00ffff;">Following</span></div>
                     <div class="stat-item"><span class="stat-num" id="statLikes">0</span><span class="stat-label">Likes</span></div>
                 </div>
             </div>
@@ -210,20 +211,6 @@
             </div>
         </section>
 
-        <!-- COMMENT PAGE SECTION -->
-        <section id="page-comment" class="main-section hidden">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-                <button onclick="switchMainPage('feed')" style="background:none; border:none; color:#00ffff; font-weight:bold; cursor:pointer;">◄ နောက်သို့</button>
-                <h3 style="color:#fff; margin:0; font-size:0.95rem;">💬 Comments</h3>
-                <div></div>
-            </div>
-            <div id="commentScreenContent" style="margin-bottom:70px;"></div>
-            <div style="position:fixed; bottom:65px; left:0; width:100%; background:#111116; padding:8px 15px; border-top:1px solid #222233; display:flex; gap:8px; box-sizing:border-box; z-index:100;">
-                <input type="text" id="screenCommentInput" placeholder="မှတ်ချက် ရေးရန်..." class="fb-textarea" style="height:38px; margin:0;">
-                <button onclick="submitScreenComment()" style="background:#00ffff; color:#000; border:none; padding:0 15px; font-weight:bold; border-radius:6px; cursor:pointer;">ပို့မည်</button>
-            </div>
-        </section>
-
         <!-- Bottom Navigation Bar -->
         <nav class="bottom-nav">
             <button id="nav-btn-home" class="active" onclick="switchMainPage('home')">🏠 Home</button>
@@ -235,11 +222,15 @@
 
     </div>
 
+    <!-- JS Files စနစ်တကျ သီးသန့် ခွဲထုတ်ထားခြင်း -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase.js"></script>
     <script src="navigation.js"></script>
     <script src="chat.js"></script>
+    <script src="watch.js"></script>
     <script src="feed.js"></script>
+    <script src="admin.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
+
