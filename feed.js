@@ -314,7 +314,6 @@ async function loadHomeVideos(searchQuery = '') {
     });
 }
 
-// Instant Watch Screen Open
 async function openWatchVideoScreen(videoId) {
     activeWatchVideoId = videoId;
 
