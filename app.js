@@ -55,7 +55,6 @@ function checkUserSession() {
         document.getElementById('page-auth').classList.add('hidden');
         document.getElementById('app-container').classList.remove('hidden');
         
-        // Admin Button Display
         const adminBtn = document.getElementById('adminPanelBtn');
         if(adminBtn) {
             if(loggedUser.toLowerCase() === 'admin') {
@@ -68,6 +67,28 @@ function checkUserSession() {
         if(typeof switchMainPage === 'function') {
             switchMainPage('home');
         }
+    }
+}
+
+// Profile Tab နှိပ်လိုက်ပါက မီးအပြာရောင် ပြောင်းလဲလင်းလက်စေသည့် Function
+function switchProfileTab(tabName) {
+    currentProfileTab = tabName;
+
+    // ခလုတ်အားလုံးမှ active class နှင့် မီးလင်းမှုများကို ဖယ်ရှားခြင်း
+    document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // နှိပ်လိုက်သော ခလုတ်တစ်ခုတည်းကို မီးအပြာရောင် လင်းစေခြင်း
+    const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+    if(activeBtn) {
+        activeBtn.classList.add('active');
+    }
+
+    // တင်ထားသော Data များကို သက်ဆိုင်ရာ Tab အလိုက် ပြန်လည် ဆွဲထုတ်ပြသခြင်း
+    const loggedUser = localStorage.getItem('flash_logged_user');
+    if(loggedUser) {
+        loadUserProfile(loggedUser);
     }
 }
 
@@ -189,7 +210,6 @@ function compressImageFile(file, callback) {
     reader.readAsDataURL(file);
 }
 
-// Profile တင်ထားသမျှ Posts, Playlists နှင့် Videos များကို Render လုပ်ပေးသည့် စနစ်
 async function loadUserProfile(username) {
     const { data: user } = await supabaseClient.from('flash_users').select('*').eq('username', username).single();
     if(!user) return;
@@ -200,7 +220,6 @@ async function loadUserProfile(username) {
     if(user.photo_url && document.getElementById('profileImgDisplay')) document.getElementById('profileImgDisplay').src = user.photo_url;
     if(user.banner_url && document.getElementById('profileBannerBg')) document.getElementById('profileBannerBg').style.backgroundImage = `url('${user.banner_url}')`;
 
-    // Fetch user posts
     const { data: userPosts } = await supabaseClient.from('flash_posts').select('*').eq('username', username).order('created_at', { ascending: false });
     
     let postsCount = 0;
