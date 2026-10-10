@@ -1,87 +1,10 @@
-let tempFbMediaData = "";
-let tempMediaType = "";
-let activeCommentPostId = null;
-let tempAppVideoData = "";
-
-document.addEventListener('DOMContentLoaded', () => {
-    const mediaPicker = document.getElementById('fbMediaPicker');
-    if(mediaPicker) {
-        mediaPicker.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-                if (file.size > 5 * 1024 * 1024) {
-                    showToast(`⚠️ ဖိုင်ဆိုဒ် ကြီးလွန်းပါသည် (${fileSizeMB}MB / 5MB အောက်သာ)။`, 'error');
-                    this.value = '';
-                    document.getElementById('selectedMediaName').innerText = '';
-                    return;
-                }
-                tempMediaType = file.type.startsWith('image') ? 'image' : 'video';
-                document.getElementById('selectedMediaName').innerText = `ရွေးပြီး: ${file.name} (${fileSizeMB}MB)`;
-                compressImageOrFile(file, (base64) => { tempFbMediaData = base64; });
-            }
-        });
-    }
-
-    const appVideoPicker = document.getElementById('appVideoPicker');
-    if(appVideoPicker) {
-        appVideoPicker.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if(file) {
-                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-                if(file.size > 5 * 1024 * 1024) {
-                    showToast(`⚠️ ဗီဒီယိုဖိုင်ဆိုဒ် ကြီးလွန်းပါသည် (${fileSizeMB}MB / 5MB အောက်သာ)။ Google Drive Link သုံးပါ။`, 'error');
-                    this.value = '';
-                    document.getElementById('uploadVideoPreviewName').innerText = '';
-                    return;
-                }
-                document.getElementById('uploadVideoPreviewName').innerText = `ရွေးပြီး: ${file.name} (${fileSizeMB}MB)`;
-                const reader = new FileReader();
-                reader.onload = (ev) => { tempAppVideoData = ev.target.result; };
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-});
-
-function compressImageOrFile(file, callback) {
-    const reader = new FileReader();
-    reader.onload = function(event) {
-        const img = new Image();
-        img.onload = function() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 400;
-            canvas.height = 400 * (img.height / img.width);
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            callback(canvas.toDataURL('image/jpeg', 0.6));
-        };
-        img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-}
-
-function timeAgo(dateString) {
-    if(!dateString) return '';
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now - date) / 1000);
-    let interval = Math.floor(seconds / 31536000);
-    if (interval > 1) return interval + ' နှစ်ခင်က';
-    interval = Math.floor(seconds / 2592000);
-    if (interval > 1) return interval + ' လခင်က';
-    interval = Math.floor(seconds / 86400);
-    if (interval > 1) return interval + ' ရက်ခင်က';
-    interval = Math.floor(seconds / 3600);
-    if (interval > 1) return interval + ' နာရီခင်က';
-    interval = Math.floor(seconds / 60);
-    if (interval > 1) return interval + ' မိနစ်ခင်က';
-    return 'ယခုလေးတင်';
-}
-
-function escapeHtml(text) {
-    if(!text) return '';
-    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+// User Profile ထို့သို့ တိုက်ရိုက်သွားရန် Function
+function openUserProfile(username) {
+    if(typeof closeWatchVideoScreen === 'function') closeWatchVideoScreen();
+    if(typeof switchMainPage === 'function') switchMainPage('profile');
+    setTimeout(() => {
+        if(typeof loadUserProfile === 'function') loadUserProfile(username);
+    }, 50);
 }
 
 async function loadHomeVideos(searchQuery = '') {
@@ -135,61 +58,16 @@ async function loadHomeVideos(searchQuery = '') {
                 <div class="video-duration-badge">HD</div>
             </div>
             <div class="video-card-info">
-                <img src="${v.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar" style="width:38px; height:38px; cursor:pointer;">
-                <div class="video-details-text" style="flex:1;" onclick="openWatchVideoScreen('${v.id}')">
-                    <h4>${escapeHtml(v.post_text)}</h4>
-                    <p>${escapeHtml(v.display_name || v.username)} • <span style="color:#00ffff;">${escapeHtml(v.playlist || 'General')}</span></p>
+                <img src="${v.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar" style="width:38px; height:38px; cursor:pointer;" onclick="openUserProfile('${v.username}')">
+                <div class="video-details-text" style="flex:1;">
+                    <h4 onclick="openWatchVideoScreen('${v.id}')" style="cursor:pointer;">${escapeHtml(v.post_text)}</h4>
+                    <p onclick="openUserProfile('${v.username}')" style="cursor:pointer;">${escapeHtml(v.display_name || v.username)} • <span style="color:#00ffff;">${escapeHtml(v.playlist || 'General')}</span></p>
                     <p style="font-size:0.65rem; color:#666; margin-top:2px;">တင်ခဲ့ချိန်: ${timeAgo(v.created_at)}</p>
                 </div>
             </div>
         `;
         container.appendChild(div);
     });
-}
-
-function filterHomeVideos() {
-    const q = document.getElementById('movieSearchInput').value.trim();
-    loadHomeVideos(q);
-}
-
-async function handleCreateFbPost() {
-    const text = document.getElementById('fbPostTextInput').value.trim();
-    const currentUser = localStorage.getItem('flash_logged_user');
-    if(!text && !tempFbMediaData) return showToast('စာ သို့မဟုတ် ဖိုင်ထည့်ပါ။', 'error');
-
-    let userPhoto = 'https://via.placeholder.com/35';
-    let displayName = currentUser;
-    const { data: uData } = await supabaseClient.from('flash_users').select('*').eq('username', currentUser).single();
-    if(uData) {
-        if(uData.photo_url) userPhoto = uData.photo_url;
-        if(uData.display_name) displayName = uData.display_name;
-    }
-
-    const { error } = await supabaseClient.from('flash_posts').insert([{
-        username: currentUser,
-        display_name: displayName,
-        user_photo: userPhoto,
-        post_text: text,
-        media_url: tempFbMediaData,
-        media_type: tempMediaType,
-        likes: [],
-        comments: [],
-        reports: 0,
-        is_video: false
-    }]);
-
-    if(error) {
-        showToast('❌ ပို့စ်တင်၍မရပါ: ' + error.message, 'error');
-        return;
-    }
-
-    document.getElementById('fbPostTextInput').value = '';
-    document.getElementById('selectedMediaName').innerText = '';
-    tempFbMediaData = "";
-    tempMediaType = "";
-    
-    showToast('✅ ပို့စ်တင်ခြင်း အောင်မြင်ပါသည်။', 'success');
-    loadFbFeed();
 }
 
 async function loadFbFeed() {
@@ -225,9 +103,9 @@ async function loadFbFeed() {
 
         div.innerHTML = `
             <div class="fb-post-header">
-                <img src="${post.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar">
-                <div>
-                    <div style="font-weight:bold; font-size:0.9rem;">${escapeHtml(post.display_name || post.username)}</div>
+                <img src="${post.user_photo || 'https://via.placeholder.com/35'}" class="contact-avatar" style="cursor:pointer;" onclick="openUserProfile('${post.username}')">
+                <div style="cursor:pointer;" onclick="openUserProfile('${post.username}')">
+                    <div style="font-weight:bold; font-size:0.9rem; color:#00ffff;">${escapeHtml(post.display_name || post.username)}</div>
                     <div style="color:#888; font-size:0.7rem;">@${post.username} • ${timeAgo(post.created_at)}</div>
                 </div>
             </div>
@@ -240,83 +118,4 @@ async function loadFbFeed() {
         `;
         container.appendChild(div);
     });
-}
-
-async function handleDirectVideoUpload() {
-    const title = document.getElementById('uploadVideoTitle').value.trim();
-    const playlistInput = document.getElementById('uploadPlaylistInput').value.trim() || 'General';
-    const externalLink = document.getElementById('externalVideoLinkInput').value.trim();
-    const isPlaylistEnabled = document.getElementById('playlistToggleSwitch').checked;
-    const currentUser = localStorage.getItem('flash_logged_user');
-
-    if(!title) return showToast('ခေါင်းစဉ် ထည့်ပါ။', 'error');
-
-    let finalMediaUrl = tempAppVideoData;
-    let finalMediaType = 'video';
-
-    if(externalLink) {
-        finalMediaUrl = externalLink;
-        if(externalLink.includes('drive.google.com')) {
-            finalMediaType = 'gdrive_video';
-        } else {
-            finalMediaType = 'telegram_video';
-        }
-    } else if(!tempAppVideoData) {
-        return showToast('Google Drive Link (သို့မဟုတ်) ဗီဒီယိုဖိုင် ရွေးပါ။', 'error');
-    }
-
-    const progressBox = document.getElementById('uploadProgressBox');
-    const progressBar = document.getElementById('lightningProgressBar');
-    const progressText = document.getElementById('progressPercentText');
-    if(progressBox) progressBox.classList.remove('hidden');
-
-    let progress = 0;
-    let interval = setInterval(async () => {
-        progress += 35;
-        if(progressBar) progressBar.style.width = progress + '%';
-        if(progressText) progressText.innerText = progress + '%';
-
-        if(progress >= 100) {
-            clearInterval(interval);
-
-            let userPhoto = 'https://via.placeholder.com/35';
-            let displayName = currentUser;
-            const { data: uData } = await supabaseClient.from('flash_users').select('*').eq('username', currentUser).single();
-            if(uData) {
-                if(uData.photo_url) userPhoto = uData.photo_url;
-                if(uData.display_name) displayName = uData.display_name;
-            }
-
-            const { error } = await supabaseClient.from('flash_posts').insert([{
-                username: currentUser,
-                display_name: displayName,
-                user_photo: userPhoto,
-                post_text: title,
-                media_url: finalMediaUrl,
-                media_type: finalMediaType,
-                playlist: playlistInput,
-                playlist_active: isPlaylistEnabled,
-                likes: [],
-                comments: [],
-                reports: 0,
-                is_video: true
-            }]);
-
-            if(progressBox) progressBox.classList.add('hidden');
-            if(progressBar) progressBar.style.width = '0%';
-
-            if(error) {
-                showToast('❌ ဗီဒီယိုတင်၍မရပါ: ' + error.message, 'error');
-                return;
-            }
-
-            document.getElementById('uploadVideoTitle').value = '';
-            document.getElementById('externalVideoLinkInput').value = '';
-            document.getElementById('uploadVideoPreviewName').innerText = '';
-            tempAppVideoData = "";
-
-            showToast('✅ ဗီဒီယို တင်ခြင်း အောင်မြင်ပါသည်။', 'success');
-            switchMainPage('home');
-        }
-    }, 80);
 }
