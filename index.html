@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flâsh Movie</title>
 
-    <!-- Mobile Console Debugger Tool -->
-    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>eruda.init();</script>
-
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -19,6 +15,11 @@
     </style>
 </head>
 <body style="background:#070709; color:#ffffff; font-family:sans-serif; margin:0; padding:0;">
+
+    <!-- Intro Screening Area -->
+    <div id="intro-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#070709; display:flex; justify-content:center; align-items:center; z-index:999999;">
+        <h1 id="typing-intro-text" style="color:#00ffff; font-size:1.5rem; letter-spacing:1px;">Welcome To Flâsh Movie</h1>
+    </div>
 
     <!-- Auth / Login Page -->
     <div id="page-auth" class="hidden" style="padding:20px; max-width:380px; margin:40px auto; background:#111116; border-radius:12px; border:1px solid #222233; text-align:center;">
@@ -52,20 +53,22 @@
             </div>
         </div>
 
+        <!-- Home Section -->
         <div id="page-home" class="main-section" style="padding:15px; padding-bottom:80px;">
             <input type="text" id="movieSearchInput" oninput="filterHomeVideos()" placeholder="🔍 ဗီဒီယိုများ ရှာရန်..." style="width:100%; padding:10px 15px; background:#111116; border:1px solid #222233; color:#fff; border-radius:20px; box-sizing:border-box; margin-bottom:15px;">
             <div id="homeVideoFeedContainer" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px;"></div>
         </div>
 
+        <!-- Feed Section -->
         <div id="page-feed" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <div id="fbFeedContainer"></div>
         </div>
 
-        <!-- Upload Section (YouTube / Google Drive Link တင်ရန်) -->
+        <!-- Upload Section -->
         <div id="page-upload" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <div style="background:#111116; padding:15px; border-radius:12px; border:1px solid #222233;">
-                <h3 style="color:#00ffff; margin-top:0;">📤 Video တင်ရန်</h3>
-                <textarea id="postInputText" placeholder="ဗီဒီယို အကြောင်းအရာ စာသားရေးပါ..." style="width:100%; height:70px; background:#181820; border:1px solid #333; color:#fff; border-radius:8px; padding:10px; box-sizing:border-box; margin-bottom:12px;"></textarea>
+                <h3 style="color:#00ffff; margin-top:0;">📤 Post / Video တင်ရန်</h3>
+                <textarea id="postInputText" placeholder="အကြောင်းအရာ စာသားရေးပါ..." style="width:100%; height:70px; background:#181820; border:1px solid #333; color:#fff; border-radius:8px; padding:10px; box-sizing:border-box; margin-bottom:12px;"></textarea>
                 
                 <label style="color:#ff0033; font-size:0.75rem; font-weight:bold;">▶️ YouTube Video Link (ကြော်ငြာမဲ့ ကြည့်ရန်):</label>
                 <input type="text" id="ytLinkInput" placeholder="https://youtu.be/... သို့မဟုတ် https://youtube.com/watch?v=..." style="width:100%; padding:8px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box; margin-bottom:12px; font-size:0.8rem;">
@@ -81,6 +84,7 @@
             </div>
         </div>
 
+        <!-- Chat Section -->
         <div id="page-chat" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <h3 style="color:#00ffff; margin-top:0;">💬 Chat Messages</h3>
             <div id="chatContactList">
@@ -88,6 +92,7 @@
             </div>
         </div>
 
+        <!-- Admin Section -->
         <div id="page-admin" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <div style="background:#111116; padding:15px; border-radius:12px; border:1px solid #222233; margin-bottom:15px;">
                 <h3 style="color:#00ffff; margin-top:0;">⚙️ Admin Control Panel</h3>
@@ -103,28 +108,10 @@
             </div>
         </div>
 
-        <div id="page-profile" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
-            <div id="profileBannerBg" style="height:120px; background:#222; border-radius:12px 12px 0 0; background-size:cover; background-position:center;"></div>
-            <div style="background:#111116; padding:15px; border-radius:0 0 12px 12px; border:1px solid #222233; text-align:center;">
-                <img id="profileImgDisplay" src="https://via.placeholder.com/90" style="width:80px; height:80px; border-radius:50%; border:3px solid #00ffff; margin-top:-50px; background:#000;">
-                <h3 id="profileNameDisplay" style="margin:8px 0 2px 0; color:#fff;">User Name</h3>
-                <div id="profileUserDisplay" style="color:#00ffff; font-size:0.85rem; margin-bottom:8px;">@username</div>
-                <p id="profileBioDisplay" style="color:#aaa; font-size:0.8rem; margin-bottom:12px;"></p>
-                <div style="display:flex; justify-content:space-around; background:#181820; padding:10px; border-radius:8px; margin-bottom:15px;">
-                    <div><b id="statPosts" style="color:#00ffff;">0</b><br><span style="font-size:0.7rem; color:#888;">Posts</span></div>
-                    <div><b id="statVideos" style="color:#00ffff;">0</b><br><span style="font-size:0.7rem; color:#888;">Videos</span></div>
-                    <div><b id="statFollowers" style="color:#00ffff;">0</b><br><span style="font-size:0.7rem; color:#888;">Followers</span></div>
-                    <div><b id="statLikes" style="color:#00ffff;">0</b><br><span style="font-size:0.7rem; color:#888;">Likes</span></div>
-                </div>
-                <div style="display:flex; border-bottom:1px solid #222233; margin-bottom:15px;">
-                    <button class="profile-tab-btn active" id="tab-btn-posts" onclick="switchProfileTab('posts')" style="flex:1; background:none; border:none; color:#00ffff; padding:8px; font-weight:bold; cursor:pointer;">Posts</button>
-                    <button class="profile-tab-btn" id="tab-btn-playlists" onclick="switchProfileTab('playlists')" style="flex:1; background:none; border:none; color:#aaa; padding:8px; font-weight:bold; cursor:pointer;">Playlists</button>
-                    <button class="profile-tab-btn" id="tab-btn-videos" onclick="switchProfileTab('videos')" style="flex:1; background:none; border:none; color:#aaa; padding:8px; font-weight:bold; cursor:pointer;">Videos</button>
-                </div>
-                <div id="profileTabContent" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:8px;"></div>
-            </div>
-        </div>
+        <!-- Profile Section -->
+        <div id="page-profile" class="main-section hidden" style="padding:15px; padding-bottom:80px;"></div>
 
+        <!-- Bottom Navigation Bar -->
         <div class="bottom-nav" style="position:fixed; bottom:0; left:0; width:100%; background:#111116; display:flex; justify-content:space-around; padding:10px 0; border-top:1px solid #222233; z-index:1000;">
             <button id="nav-btn-home" onclick="switchMainPage('home')" class="active" style="background:none; border:none; color:#aaa; font-size:0.75rem; cursor:pointer;">🏠 Home</button>
             <button id="nav-btn-feed" onclick="switchMainPage('feed')" style="background:none; border:none; color:#aaa; font-size:0.75rem; cursor:pointer;">📰 Feed</button>
@@ -133,8 +120,6 @@
             <button id="nav-btn-profile" onclick="switchMainPage('profile')" style="background:none; border:none; color:#aaa; font-size:0.75rem; cursor:pointer;">👤 Profile</button>
         </div>
     </div>
-
-    <div id="video-watch-modal-container"></div>
 
     <script src="supabase.js"></script>
     <script src="navigation.js"></script>
