@@ -61,16 +61,19 @@
             <div id="fbFeedContainer"></div>
         </div>
 
-        <!-- Upload Section (Google Drive Link ပါ တင်နိုင်ရန် ပြင်ဆင်ထားသည်) -->
+        <!-- Upload Section (YouTube / Google Drive Link တင်ရန်) -->
         <div id="page-upload" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <div style="background:#111116; padding:15px; border-radius:12px; border:1px solid #222233;">
-                <h3 style="color:#00ffff; margin-top:0;">📤 Post / Video တင်ရန်</h3>
-                <textarea id="postInputText" placeholder="ဘာတွေ စဉ်းစားနေလဲ..." style="width:100%; height:70px; background:#181820; border:1px solid #333; color:#fff; border-radius:8px; padding:10px; box-sizing:border-box; margin-bottom:12px;"></textarea>
+                <h3 style="color:#00ffff; margin-top:0;">📤 Video တင်ရန်</h3>
+                <textarea id="postInputText" placeholder="ဗီဒီယို အကြောင်းအရာ စာသားရေးပါ..." style="width:100%; height:70px; background:#181820; border:1px solid #333; color:#fff; border-radius:8px; padding:10px; box-sizing:border-box; margin-bottom:12px;"></textarea>
                 
+                <label style="color:#ff0033; font-size:0.75rem; font-weight:bold;">▶️ YouTube Video Link (ကြော်ငြာမဲ့ ကြည့်ရန်):</label>
+                <input type="text" id="ytLinkInput" placeholder="https://youtu.be/... သို့မဟုတ် https://youtube.com/watch?v=..." style="width:100%; padding:8px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box; margin-bottom:12px; font-size:0.8rem;">
+
                 <label style="color:#aaa; font-size:0.75rem;">📁 Google Drive Video Link (ရှိပါက):</label>
                 <input type="text" id="gdriveLinkInput" placeholder="https://drive.google.com/file/d/..." style="width:100%; padding:8px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box; margin-bottom:12px; font-size:0.8rem;">
 
-                <label style="color:#aaa; font-size:0.75rem;">🖼️ သို့မဟုတ် ဖုန်းထဲမှ ပုံ/ဗီဒီယို ရွေးရန်:</label>
+                <label style="color:#aaa; font-size:0.75rem;">🖼️ ဖုန်းထဲမှ ပုံ/ဗီဒီယို ရွေးရန်:</label>
                 <input type="file" id="fbMediaPicker" accept="image/*,video/*" style="margin-bottom:10px; color:#aaa; font-size:0.8rem; display:block; margin-top:4px;">
                 <div id="selectedMediaName" style="color:#00ffff; font-size:0.75rem; margin-bottom:10px;"></div>
 
