@@ -16,12 +16,12 @@
 </head>
 <body style="background:#070709; color:#ffffff; font-family:sans-serif; margin:0; padding:0;">
 
-    <!-- Intro Screening Area -->
+    <!-- Intro Screen -->
     <div id="intro-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#070709; display:flex; justify-content:center; align-items:center; z-index:999999;">
         <h1 id="typing-intro-text" style="color:#00ffff; font-size:1.5rem; letter-spacing:1px;">Welcome To Flâsh Movie</h1>
     </div>
 
-    <!-- Auth / Login Page -->
+    <!-- Auth Page -->
     <div id="page-auth" class="hidden" style="padding:20px; max-width:380px; margin:40px auto; background:#111116; border-radius:12px; border:1px solid #222233; text-align:center;">
         <h2 id="auth-title" style="color:#00ffff; margin-bottom:20px;">🔑 Login</h2>
         <div id="view-login">
@@ -53,23 +53,25 @@
             </div>
         </div>
 
-        <!-- Home Section -->
         <div id="page-home" class="main-section" style="padding:15px; padding-bottom:80px;">
-            <input type="text" id="movieSearchInput" oninput="filterHomeVideos()" placeholder="🔍 ဗီဒီယိုများ ရှာရန်..." style="width:100%; padding:10px 15px; background:#111116; border:1px solid #222233; color:#fff; border-radius:20px; box-sizing:border-box; margin-bottom:15px;">
+            <input type="text" id="movieSearchInput" oninput="filterHomeVideos()" placeholder="🔍 ဗီဒီယို ရှာရန်..." style="width:100%; padding:10px 15px; background:#111116; border:1px solid #222233; color:#fff; border-radius:20px; box-sizing:border-box; margin-bottom:15px;">
             <div id="homeVideoFeedContainer" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px;"></div>
         </div>
 
-        <!-- Feed Section -->
         <div id="page-feed" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <div id="fbFeedContainer"></div>
         </div>
 
-        <!-- Upload Section -->
         <div id="page-upload" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <div style="background:#111116; padding:15px; border-radius:12px; border:1px solid #222233;">
                 <h3 style="color:#00ffff; margin-top:0;">📤 Post / Video တင်ရန်</h3>
                 <textarea id="postInputText" placeholder="အကြောင်းအရာ စာသားရေးပါ..." style="width:100%; height:70px; background:#181820; border:1px solid #333; color:#fff; border-radius:8px; padding:10px; box-sizing:border-box; margin-bottom:12px;"></textarea>
                 
+                <label style="color:#00ffff; font-size:0.75rem; font-weight:bold;">📂 Playlist ရွေးရန် (ရှိပါက):</label>
+                <select id="playlistSelectDropdown" style="width:100%; padding:8px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; margin-bottom:12px;">
+                    <option value="">-- Playlist မရွေးပါ --</option>
+                </select>
+
                 <label style="color:#ff0033; font-size:0.75rem; font-weight:bold;">▶️ YouTube Video Link (ကြော်ငြာမဲ့ ကြည့်ရန်):</label>
                 <input type="text" id="ytLinkInput" placeholder="https://youtu.be/... သို့မဟုတ် https://youtube.com/watch?v=..." style="width:100%; padding:8px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box; margin-bottom:12px; font-size:0.8rem;">
 
@@ -84,7 +86,6 @@
             </div>
         </div>
 
-        <!-- Chat Section -->
         <div id="page-chat" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <h3 style="color:#00ffff; margin-top:0;">💬 Chat Messages</h3>
             <div id="chatContactList">
@@ -92,7 +93,6 @@
             </div>
         </div>
 
-        <!-- Admin Section -->
         <div id="page-admin" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <div style="background:#111116; padding:15px; border-radius:12px; border:1px solid #222233; margin-bottom:15px;">
                 <h3 style="color:#00ffff; margin-top:0;">⚙️ Admin Control Panel</h3>
@@ -108,10 +108,8 @@
             </div>
         </div>
 
-        <!-- Profile Section -->
         <div id="page-profile" class="main-section hidden" style="padding:15px; padding-bottom:80px;"></div>
 
-        <!-- Bottom Navigation Bar -->
         <div class="bottom-nav" style="position:fixed; bottom:0; left:0; width:100%; background:#111116; display:flex; justify-content:space-around; padding:10px 0; border-top:1px solid #222233; z-index:1000;">
             <button id="nav-btn-home" onclick="switchMainPage('home')" class="active" style="background:none; border:none; color:#aaa; font-size:0.75rem; cursor:pointer;">🏠 Home</button>
             <button id="nav-btn-feed" onclick="switchMainPage('feed')" style="background:none; border:none; color:#aaa; font-size:0.75rem; cursor:pointer;">📰 Feed</button>
