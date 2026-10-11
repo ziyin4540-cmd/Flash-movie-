@@ -35,7 +35,6 @@ async function openWatchVideoScreen(videoId) {
         const isLiked = likesArr.includes(currentUser);
         const commentsArr = v.comments || [];
 
-        // Follow Status Check
         let isFollowing = false;
         if(currentUser && currentUser !== v.username) {
             const { data: followCheck } = await supabaseClient.from('flash_follows')
@@ -48,42 +47,21 @@ async function openWatchVideoScreen(videoId) {
 
         let mediaContent = '';
 
-        // 1. YouTube Player (Clean No-Cookie Embed)
         if(v.media_type === 'youtube_video' || (v.media_url && (v.media_url.includes('youtube.com') || v.media_url.includes('youtu.be')))) {
-            let ytId = '';
-            if(v.media_url.includes('youtu.be/')) {
-                ytId = v.media_url.split('youtu.be/')[1].split('?')[0];
-            } else if(v.media_url.includes('v=')) {
-                ytId = v.media_url.split('v=')[1].split('&')[0];
-            }
-
+            let ytId = v.media_url.includes('youtu.be/') ? v.media_url.split('youtu.be/')[1].split('?')[0] : v.media_url.split('v=')[1].split('&')[0];
             mediaContent = `
                 <div style="width:100%; height:250px; background:#000; position:relative;">
-                    <iframe 
-                        src="https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&playsinline=1" 
-                        width="100%" height="100%" frameborder="0" 
-                        allow="autoplay; encrypted-media" allowfullscreen 
-                        style="border:none;">
-                    </iframe>
+                    <iframe src="https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&playsinline=1" width="100%" height="100%" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="border:none;"></iframe>
                 </div>`;
-        } 
-        // 2. Google Drive Video Player (Crop Wrapper to hide Drive Controls)
-        else if(v.media_type === 'gdrive_video' || (v.media_url && v.media_url.includes('drive.google.com'))) {
-            let fileId = '';
-            if(v.media_url.includes('/file/d/')) {
-                fileId = v.media_url.split('/file/d/')[1].split('/')[0];
-            } else if(v.media_url.includes('id=')) {
-                fileId = v.media_url.split('id=')[1].split('&')[0];
-            }
+        } else if(v.media_type === 'gdrive_video' || (v.media_url && v.media_url.includes('drive.google.com'))) {
+            let fileId = v.media_url.includes('/file/d/') ? v.media_url.split('/file/d/')[1].split('/')[0] : v.media_url.split('id=')[1].split('&')[0];
             let embedUrl = fileId ? `https://drive.google.com/file/d/${fileId}/preview` : v.media_url;
 
             mediaContent = `
                 <div style="width:100%; height:240px; background:#000; position:relative; overflow:hidden;">
                     <iframe src="${embedUrl}" width="100%" height="320px" frameborder="0" allow="autoplay" allowfullscreen style="border:none; margin-top:-50px;"></iframe>
                 </div>`;
-        } 
-        // 3. Native Video
-        else {
+        } else {
             mediaContent = `<video src="${v.media_url}" controls autoplay width="100%" style="background:#000; max-height:250px; object-fit:contain;"></video>`;
         }
 
@@ -136,7 +114,6 @@ async function openWatchVideoScreen(videoId) {
                     ` : ''}
                 </div>
 
-                <!-- Action Bar (Like / Comment / Share) -->
                 <div style="display:flex; justify-content:space-around; background:#111116; border:1px solid #222233; padding:10px; border-radius:12px; margin-bottom:15px;">
                     <button onclick="toggleLikePost('${v.id}')" style="background:none; border:none; color:${isLiked ? '#ff0033' : '#aaa'}; font-weight:bold; cursor:pointer; font-size:0.85rem;">❤️ Like (${likesArr.length})</button>
                     <button onclick="openFullCommentPage('${v.id}')" style="background:none; border:none; color:#00ffff; font-weight:bold; cursor:pointer; font-size:0.85rem;">💬 Comments (${commentsArr.length})</button>
@@ -194,7 +171,6 @@ function sharePost(postId) {
     }
 }
 
-// 💬 Full-Screen Comment Page
 async function openFullCommentPage(postId) {
     let cmtPage = document.getElementById('page-comments-full');
     if(!cmtPage) {
@@ -296,4 +272,4 @@ function replyComment(postId, username) {
 function closeWatchVideoScreen() {
     const watchPage = document.getElementById('page-watch-video');
     if(watchPage) watchPage.remove();
-    }
+}
