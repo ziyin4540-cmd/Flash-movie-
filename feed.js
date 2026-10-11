@@ -60,7 +60,6 @@ function escapeHtml(text) {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-// 📰 Feed Tab Render (Form + Posts)
 async function loadFbFeed() {
     const container = document.getElementById('fbFeedContainer');
     if(!container) return;
@@ -93,10 +92,15 @@ async function loadFbFeed() {
             return;
         }
 
+        let currentUser = localStorage.getItem('flash_logged_user');
         let feedPosts = posts.filter(p => p.is_video !== true && p.media_type !== 'youtube_video' && p.media_type !== 'gdrive_video');
         if(listContainer) listContainer.innerHTML = '';
 
         feedPosts.forEach(post => {
+            let likesArr = post.likes || [];
+            let commentsArr = post.comments || [];
+            let isLiked = likesArr.includes(currentUser);
+
             const div = document.createElement('div');
             div.style.cssText = 'background:#111116; border:1px solid #222233; padding:12px; border-radius:8px; margin-bottom:12px;';
             div.innerHTML = `
@@ -108,7 +112,14 @@ async function loadFbFeed() {
                     </div>
                 </div>
                 <p style="font-size:0.85rem; margin:0 0 8px 0; color:#fff;">${escapeHtml(post.post_text || '')}</p>
-                ${post.media_url ? `<img src="${post.media_url}" style="width:100%; max-height:250px; object-fit:cover; border-radius:6px;">` : ''}
+                ${post.media_url ? `<img src="${post.media_url}" style="width:100%; max-height:250px; object-fit:cover; border-radius:6px; margin-bottom:8px;">` : ''}
+
+                <!-- Post Actions (Like / Comment / Share) -->
+                <div style="display:flex; justify-content:space-around; border-top:1px solid #222233; padding-top:8px; margin-top:8px;">
+                    <button onclick="toggleLikePost('${post.id}')" style="background:none; border:none; color:${isLiked ? '#ff0033' : '#aaa'}; font-weight:bold; cursor:pointer; font-size:0.8rem;">❤️ Like (${likesArr.length})</button>
+                    <button onclick="openFullCommentPage('${post.id}')" style="background:none; border:none; color:#00ffff; font-weight:bold; cursor:pointer; font-size:0.8rem;">💬 Comment (${commentsArr.length})</button>
+                    <button onclick="sharePost('${post.id}')" style="background:none; border:none; color:#00ff66; font-weight:bold; cursor:pointer; font-size:0.8rem;">🔄 Share</button>
+                </div>
             `;
             if(listContainer) listContainer.appendChild(div);
         });
@@ -149,7 +160,6 @@ async function createNewFeedPost() {
     }
 }
 
-// 📤 Upload Page (YouTube / Drive Link)
 async function createNewPost() {
     const currentUser = localStorage.getItem('flash_logged_user');
     if(!currentUser) return showToast('⚠️ အရင်ဆုံး Login ဝင်ပါ', 'error');
@@ -222,8 +232,12 @@ async function toggleLikePost(postId) {
 
         await supabaseClient.from('flash_posts').update({ likes: likes }).eq('id', postId);
         showToast('❤️ Like ပြုလုပ်ပြီးပါပြီ', 'success');
-        if(typeof openWatchVideoScreen === 'function' && document.getElementById('page-watch-video')) {
+        if(document.getElementById('page-comments-full')) {
+            openFullCommentPage(postId);
+        } else if(typeof openWatchVideoScreen === 'function' && document.getElementById('page-watch-video')) {
             openWatchVideoScreen(postId);
+        } else {
+            loadFbFeed();
         }
     } catch(err) {
         console.error(err);
