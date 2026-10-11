@@ -23,6 +23,7 @@ function switchMainPage(pageName) {
             if(pageName === 'feed' && typeof loadFbFeed === 'function') loadFbFeed();
             if(pageName === 'chat' && typeof loadContactList === 'function') loadContactList();
             if(pageName === 'admin' && typeof loadAdminPanel === 'function') loadAdminPanel();
+            if(pageName === 'upload' && typeof loadPlaylistsDropdown === 'function') loadPlaylistsDropdown();
             if(pageName === 'profile' && typeof loadUserProfile === 'function') {
                 loadUserProfile(localStorage.getItem('flash_logged_user'));
             }
@@ -131,3 +132,4 @@ async function adminDeletePost(postId) {
     showToast(`Post ကို ပယ်ဖျက်လိုက်ပါပြီ`, 'success');
     loadAdminPanel();
 }
+
