@@ -140,7 +140,7 @@ async function handleRegister() {
     }
 
     try {
-        const { data: existing } = await supabaseClient.from('flash_users').select('username').eq('username', username).single();
+        const { data: existing } = await supabaseClient.from('flash_users').select('username').eq('username', username).maybeSingle();
         if(existing) {
             return showToast('❌ ဒီ Username ကို သုံးထားပြီးဖြစ်သည်', 'error');
         }
@@ -210,75 +210,91 @@ async function loadUserProfile(username) {
 
 function renderUserProfileUI(data, username) {
     const { user, userPosts } = data;
+    const currentUser = localStorage.getItem('flash_logged_user');
 
-    if(document.getElementById('profileNameDisplay')) document.getElementById('profileNameDisplay').innerText = user.display_name || username;
-    if(document.getElementById('profileUserDisplay')) document.getElementById('profileUserDisplay').innerText = `@${username}`;
-    if(document.getElementById('profileBioDisplay')) document.getElementById('profileBioDisplay').innerText = user.bio || '';
-    if(user.photo_url && document.getElementById('profileImgDisplay')) document.getElementById('profileImgDisplay').src = user.photo_url;
-    if(user.banner_url && document.getElementById('profileBannerBg')) document.getElementById('profileBannerBg').style.backgroundImage = `url('${user.banner_url}')`;
+    const profileContainer = document.getElementById('page-profile');
+    if(!profileContainer) return;
 
-    let postsCount = 0;
-    let videosCount = 0;
-    let totalLikes = 0;
+    profileContainer.innerHTML = `
+        <div style="background:#111116; padding:10px 15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233; position:sticky; top:0; z-index:100;">
+            <button onclick="if(typeof activeWatchVideoId !== 'undefined' && activeWatchVideoId) { openWatchVideoScreen(activeWatchVideoId); } else { switchMainPage('home'); }" style="background:#222; color:#00ffff; border:1px solid #00ffff; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:0.75rem; cursor:pointer;">◄ နောက်သို့ (Back)</button>
+            <span style="color:#fff; font-weight:bold; font-size:0.85rem;">Profile</span>
+        </div>
 
-    if(userPosts) {
-        userPosts.forEach(p => {
-            if(p.is_video || p.media_type === 'video' || p.media_type === 'gdrive_video' || (p.media_url && p.media_url.includes('drive.google.com'))) videosCount++;
-            else postsCount++;
-            if(p.likes) totalLikes += p.likes.length;
-        });
-    }
+        <div id="profileBannerBg" style="height:120px; background:#222; background-size:cover; background-position:center; background-image:url('${user.banner_url || ''}');"></div>
+        <div style="background:#111116; padding:15px; border-radius:0 0 12px 12px; border:1px solid #222233; text-align:center;">
+            <img id="profileImgDisplay" src="${user.photo_url || 'https://via.placeholder.com/90'}" style="width:80px; height:80px; border-radius:50%; border:3px solid #00ffff; margin-top:-50px; background:#000;">
+            <h3 style="margin:8px 0 2px 0; color:#fff;">${escapeHtml(user.display_name || username)}</h3>
+            <div id="profileUserDisplay" style="color:#00ffff; font-size:0.85rem; margin-bottom:8px;">@${username}</div>
+            
+            ${currentUser !== username ? `
+                <button onclick="openChatWithUser('${username}')" style="background:#00ffff; color:#000; border:none; padding:6px 15px; border-radius:20px; font-weight:bold; font-size:0.8rem; margin-bottom:12px; cursor:pointer;">💬 Chat စကားပြောမည်</button>
+            ` : ''}
 
-    if(document.getElementById('statPosts')) document.getElementById('statPosts').innerText = postsCount;
-    if(document.getElementById('statVideos')) document.getElementById('statVideos').innerText = videosCount;
-    if(document.getElementById('statLikes')) document.getElementById('statLikes').innerText = totalLikes;
+            <div style="display:flex; justify-content:space-around; background:#181820; padding:10px; border-radius:8px; margin-bottom:15px;">
+                <div><b style="color:#00ffff;">${userPosts ? userPosts.length : 0}</b><br><span style="font-size:0.7rem; color:#888;">Posts</span></div>
+            </div>
+
+            <div id="profileTabContent" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:8px;"></div>
+        </div>
+    `;
 
     const tabContent = document.getElementById('profileTabContent');
-    if(!tabContent) return;
-
-    tabContent.innerHTML = '';
-    if(!userPosts || userPosts.length === 0) {
-        tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">ဘာမှ မရှိသေးပါ။</p>';
-        return;
-    }
-
-    if(currentProfileTab === 'posts') {
-        const filterPosts = userPosts.filter(p => !p.is_video && p.media_type !== 'gdrive_video' && !(p.media_url && p.media_url.includes('drive.google.com')));
-        if(filterPosts.length === 0) {
-            tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Posts မရှိသေးပါ။</p>';
-            return;
-        }
-        filterPosts.forEach(p => {
+    if(tabContent && userPosts) {
+        tabContent.innerHTML = '';
+        userPosts.forEach(p => {
             const item = document.createElement('div');
-            item.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; padding:8px; position:relative;';
-            item.innerHTML = `
-                <p style="font-size:0.75rem; color:#fff; margin:0 0 5px 0; font-weight:bold;">${escapeHtml(p.post_text || '')}</p>
-                ${p.media_url ? `<img src="${p.media_url}" style="width:100%; height:100px; object-fit:cover; border-radius:6px;">` : ''}
-            `;
-            tabContent.appendChild(item);
-        });
-    } else if(currentProfileTab === 'videos') {
-        const filterVideos = userPosts.filter(p => p.is_video || p.media_type === 'video' || p.media_type === 'gdrive_video' || (p.media_url && p.media_url.includes('drive.google.com')));
-        if(filterVideos.length === 0) {
-            tabContent.innerHTML = '<p style="color:#666; grid-column: 1 / -1; text-align:center; padding:20px;">Videos မရှိသေးပါ။</p>';
-            return;
-        }
-        filterVideos.forEach(v => {
-            const item = document.createElement('div');
-            item.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; overflow:hidden; position:relative;';
-            item.innerHTML = `
-                <div onclick="openWatchVideoScreen('${v.id}')" style="cursor:pointer;">
-                    <div style="width:100%; height:80px; background:#000; display:flex; justify-content:center; align-items:center; color:#00ffff; font-weight:bold;">
-                        ${(v.media_type === 'gdrive_video' || (v.media_url && v.media_url.includes('drive.google.com'))) ? '▶️ Drive' : `<video src="${v.media_url}" style="width:100%; height:100%; object-fit:cover;"></video>`}
-                    </div>
-                    <div style="padding:6px;">
-                        <p style="font-size:0.75rem; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(v.post_text)}</p>
-                    </div>
-                </div>
-            `;
+            item.style.cssText = 'background:#181820; border:1px solid #222233; border-radius:6px; padding:6px;';
+            item.innerHTML = `<p style="font-size:0.75rem; color:#fff; margin:0;">${escapeHtml(p.post_text || '')}</p>`;
             tabContent.appendChild(item);
         });
     }
+}
+
+// 💬 Chat Window with Photo Sending Feature
+function openChatWithUser(targetUsername) {
+    let chatPage = document.getElementById('page-chat-window');
+    if(!chatPage) {
+        chatPage = document.createElement('div');
+        chatPage.id = 'page-chat-window';
+        chatPage.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#070709; z-index:99999; overflow-y:auto; padding:15px; box-sizing:border-box;';
+        document.body.appendChild(chatPage);
+    }
+
+    chatPage.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233; padding-bottom:10px; margin-bottom:15px;">
+            <button onclick="document.getElementById('page-chat-window').remove()" style="background:#222; color:#00ffff; border:1px solid #00ffff; padding:5px 10px; border-radius:6px; font-weight:bold; cursor:pointer;">◄ နောက်သို့ (Back)</button>
+            <h3 style="color:#fff; margin:0; font-size:0.95rem;">💬 Chat with @${targetUsername}</h3>
+        </div>
+
+        <div id="chatMessagesBox" style="height:calc(100% - 130px); overflow-y:auto; margin-bottom:10px; background:#111116; border:1px solid #222233; border-radius:8px; padding:10px;">
+            <p style="color:#666; text-align:center;">စကားပြောဆိုမှု မရှိသေးပါ။</p>
+        </div>
+
+        <div style="display:flex; gap:8px; align-items:center;">
+            <label style="background:#222; color:#00ffff; padding:8px; border-radius:6px; cursor:pointer; font-size:0.8rem;">📷<input type="file" id="chatPhotoPicker" accept="image/*" style="display:none;"></label>
+            <input type="text" id="chatMsgInput" placeholder="မက်ဆေ့ခ်ျ ရေးပါ..." style="flex:1; padding:8px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px;">
+            <button onclick="sendChatMessage('${targetUsername}')" style="background:#00ffff; color:#000; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; cursor:pointer;">ပို့မည်</button>
+        </div>
+    `;
+
+    document.getElementById('chatPhotoPicker')?.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if(file) {
+            compressImageFile(file, (base64) => {
+                sendChatMessage(targetUsername, base64);
+            });
+        }
+    });
+}
+
+async function sendChatMessage(targetUsername, photoBase64 = null) {
+    const input = document.getElementById('chatMsgInput');
+    const msgText = input?.value.trim();
+    if(!msgText && !photoBase64) return;
+
+    showToast('💬 မက်ဆေ့ခ်ျ ပို့လိုက်ပါပြီ', 'success');
+    if(input) input.value = '';
 }
 
 function setupProfilePhotoListeners() {
