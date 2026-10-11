@@ -49,18 +49,15 @@
             </div>
         </div>
 
-        <!-- Home Section -->
         <div id="page-home" class="main-section" style="padding:15px; padding-bottom:80px;">
             <input type="text" id="movieSearchInput" oninput="filterHomeVideos()" placeholder="🔍 ဗီဒီယို ရှာရန်..." style="width:100%; padding:10px 15px; background:#111116; border:1px solid #222233; color:#fff; border-radius:20px; box-sizing:border-box; margin-bottom:15px;">
             <div id="homeVideoFeedContainer" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px;"></div>
         </div>
 
-        <!-- Feed Section -->
         <div id="page-feed" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <div id="fbFeedContainer"></div>
         </div>
 
-        <!-- Upload Section -->
         <div id="page-upload" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <div style="background:#111116; padding:15px; border-radius:12px; border:1px solid #222233;">
                 <h3 style="color:#00ffff; margin-top:0;">📤 Post / Video တင်ရန်</h3>
@@ -85,13 +82,11 @@
             </div>
         </div>
 
-        <!-- Chat Section -->
         <div id="page-chat" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <h3 style="color:#00ffff; margin-top:0;">💬 Chat Messages</h3>
             <div id="chatContactList"></div>
         </div>
 
-        <!-- Admin Section -->
         <div id="page-admin" class="main-section hidden" style="padding:15px; padding-bottom:80px;">
             <div style="background:#111116; padding:15px; border-radius:12px; border:1px solid #222233; margin-bottom:15px;">
                 <h3 style="color:#00ffff; margin-top:0;">⚙️ Admin Control Panel</h3>
@@ -106,10 +101,8 @@
             </div>
         </div>
 
-        <!-- Profile Section -->
         <div id="page-profile" class="main-section hidden" style="padding:15px; padding-bottom:80px;"></div>
 
-        <!-- Bottom Navigation -->
         <div class="bottom-nav" style="position:fixed; bottom:0; left:0; width:100%; background:#111116; display:flex; justify-content:space-around; padding:10px 0; border-top:1px solid #222233; z-index:1000;">
             <button id="nav-btn-home" onclick="switchMainPage('home')" class="active" style="background:none; border:none; color:#aaa; font-size:0.75rem; cursor:pointer;">🏠 Home</button>
             <button id="nav-btn-feed" onclick="switchMainPage('feed')" style="background:none; border:none; color:#aaa; font-size:0.75rem; cursor:pointer;">📰 Feed</button>
@@ -119,6 +112,7 @@
         </div>
     </div>
 
+    <!-- Scripts Integration -->
     <script src="supabase.js"></script>
     <script src="js/crash-handler.js"></script>
     <script src="js/storage.js"></script>
@@ -132,6 +126,7 @@
     <script src="js/post-create.js"></script>
     <script src="js/video-upload.js"></script>
     <script src="js/upload.js"></script>
+    <script src="js/feed.js"></script>
     <script src="js/video-controls.js"></script>
     <script src="js/watch.js"></script>
     <script src="js/interactions.js"></script>
