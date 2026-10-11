@@ -1,7 +1,6 @@
-// Profile Page Layout & Render Logic
 let currentProfileTab = 'videos';
 
-function switchProfileTab(tabName) {
+window.switchProfileTab = function(tabName) {
     currentProfileTab = tabName;
     document.querySelectorAll('.profile-tab-btn').forEach(btn => btn.classList.remove('active'));
     const targetBtn = document.getElementById(`tab-btn-${tabName}`);
@@ -11,7 +10,7 @@ function switchProfileTab(tabName) {
     if (profileUsername) loadUserProfile(profileUsername);
 }
 
-async function loadUserProfile(username) {
+window.loadUserProfile = async function(username) {
     const loggedUser = localStorage.getItem('flash_logged_user') || username;
     const targetUser = username || loggedUser;
 
@@ -20,16 +19,21 @@ async function loadUserProfile(username) {
         const { data: userPosts } = await supabaseClient.from('flash_posts').select('*').eq('username', targetUser).order('created_at', { ascending: false });
         const { data: userPlaylists } = await supabaseClient.from('flash_playlists').select('*').eq('username', targetUser);
         
+        let stats = { followerCount: 0, followingCount: 0 };
+        if (typeof getUserFollowStats === 'function') {
+            stats = await getUserFollowStats(targetUser);
+        }
+
         if (user) {
-            renderUserProfileUI({ user, userPosts: userPosts || [], userPlaylists: userPlaylists || [] }, targetUser);
+            renderUserProfileUI({ user, userPosts: userPosts || [], userPlaylists: userPlaylists || [], stats }, targetUser);
         }
     } catch (err) {
         console.error(err);
     }
 }
 
-function renderUserProfileUI(data, username) {
-    const { user, userPosts, userPlaylists } = data;
+window.renderUserProfileUI = function(data, username) {
+    const { user, userPosts, userPlaylists, stats } = data;
     const currentUser = localStorage.getItem('flash_logged_user');
     const profileContainer = document.getElementById('page-profile');
     if (!profileContainer) return;
@@ -65,9 +69,12 @@ function renderUserProfileUI(data, username) {
                 <button onclick="openChatWithUser('${username}')" style="background:#00ffff; color:#000; border:none; padding:8px 20px; border-radius:20px; font-weight:bold; font-size:0.8rem; margin-bottom:15px; cursor:pointer;">💬 Chat စကားပြောမည်</button>
             ` : ''}
 
+            <!-- Followers / Following / Posts Stats -->
             <div style="display:flex; justify-content:space-around; background:#181820; padding:10px; border-radius:8px; margin-bottom:15px;">
                 <div><b style="color:#00ffff;">${postsCount}</b><br><span style="font-size:0.7rem; color:#888;">Posts</span></div>
                 <div><b style="color:#00ffff;">${videosCount}</b><br><span style="font-size:0.7rem; color:#888;">Videos</span></div>
+                <div><b style="color:#00ffff;">${stats ? stats.followerCount : 0}</b><br><span style="font-size:0.7rem; color:#888;">Followers</span></div>
+                <div><b style="color:#00ffff;">${stats ? stats.followingCount : 0}</b><br><span style="font-size:0.7rem; color:#888;">Following</span></div>
             </div>
 
             <div style="display:flex; border-bottom:1px solid #222233; margin-bottom:15px;">
@@ -83,7 +90,7 @@ function renderUserProfileUI(data, username) {
         <input type="file" id="hiddenBannerPicker" accept="image/*" style="display:none;">
     `;
 
-    setupPhotoPickers();
+    if (typeof setupPhotoPickers === 'function') setupPhotoPickers();
     const tabContent = document.getElementById('profileTabContent');
     if (!tabContent) return;
 
