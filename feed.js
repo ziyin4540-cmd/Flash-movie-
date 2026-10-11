@@ -55,15 +55,16 @@ function escapeHtml(text) {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-// 📤 Post / Video တင်သည့် စနစ်
+// 📤 Post / Video တင်သည့် စနစ် (YouTube / Drive Link တင်နိုင်ရန် ပြင်ထားသည်)
 async function createNewPost() {
     const currentUser = localStorage.getItem('flash_logged_user');
     if(!currentUser) return showToast('⚠️ အရင်ဆုံး Login ဝင်ပါ', 'error');
 
     const text = document.getElementById('postInputText')?.value.trim();
+    const ytUrl = document.getElementById('ytLinkInput')?.value.trim();
     const driveUrl = document.getElementById('gdriveLinkInput')?.value.trim();
 
-    if(!text && !tempFbMediaData && !driveUrl) {
+    if(!text && !tempFbMediaData && !ytUrl && !driveUrl) {
         return showToast('⚠️ ပို့စ်စာသား သို့မဟုတ် Media/Link ထည့်ပါ', 'error');
     }
 
@@ -72,7 +73,10 @@ async function createNewPost() {
     let finalMediaUrl = tempFbMediaData;
     let finalMediaType = tempMediaType || 'text';
 
-    if(driveUrl) {
+    if(ytUrl) {
+        finalMediaUrl = ytUrl;
+        finalMediaType = 'youtube_video';
+    } else if(driveUrl) {
         finalMediaUrl = driveUrl;
         finalMediaType = 'gdrive_video';
     }
@@ -83,7 +87,7 @@ async function createNewPost() {
             post_text: text,
             media_url: finalMediaUrl,
             media_type: finalMediaType,
-            is_video: finalMediaType === 'video' || finalMediaType === 'gdrive_video',
+            is_video: finalMediaType === 'video' || finalMediaType === 'youtube_video' || finalMediaType === 'gdrive_video',
             likes: [],
             comments: [],
             created_at: new Date().toISOString()
@@ -94,6 +98,7 @@ async function createNewPost() {
         } else {
             showToast('✅ အောင်မြင်စွာ တင်ပြီးပါပြီ', 'success');
             document.getElementById('postInputText').value = '';
+            if(document.getElementById('ytLinkInput')) document.getElementById('ytLinkInput').value = '';
             if(document.getElementById('gdriveLinkInput')) document.getElementById('gdriveLinkInput').value = '';
             tempFbMediaData = '';
             tempMediaType = '';
@@ -106,7 +111,6 @@ async function createNewPost() {
     }
 }
 
-// ❤️ Like လုပ်သည့် စနစ် (Missing Function)
 async function toggleLikePost(postId) {
     const currentUser = localStorage.getItem('flash_logged_user');
     if(!currentUser) return showToast('⚠️ Login ဝင်ပါ', 'error');
@@ -132,7 +136,6 @@ async function toggleLikePost(postId) {
     }
 }
 
-// 💬 Comment ပို့သည့် Modal/Page (Missing Function)
 function openCommentPage(postId) {
     let modal = document.getElementById('commentModal');
     if(!modal) {
@@ -149,7 +152,7 @@ function openCommentPage(postId) {
                 <button onclick="document.getElementById('commentModal').remove()" style="background:none; border:none; color:#ff0033; font-weight:bold; cursor:pointer;">✕</button>
             </div>
             <div id="commentsList" style="max-height:200px; overflow-y:auto; margin-bottom:10px; font-size:0.8rem; color:#aaa;">
-                <p>Comment မျာ: ရိုက်ထည့်ပါ...</p>
+                <p>Comment များ ရိုက်ထည့်ပါ...</p>
             </div>
             <input type="text" id="cmtInput" placeholder="Comment ရေးရန်..." style="width:100%; padding:8px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box; margin-bottom:8px;">
             <button onclick="submitComment('${postId}')" style="width:100%; background:#00ffff; color:#000; border:none; padding:8px; border-radius:6px; font-weight:bold; cursor:pointer;">ပို့မည်</button>
@@ -185,7 +188,7 @@ async function loadHomeVideos(searchQuery = '') {
             return;
         }
 
-        let videoPosts = posts.filter(p => p.is_video === true || p.media_type === 'video' || p.media_type === 'gdrive_video' || p.media_type === 'telegram_video' || (p.media_url && (p.media_url.includes('drive.google.com') || p.media_url.includes('t.me'))));
+        let videoPosts = posts.filter(p => p.is_video === true || p.media_type === 'video' || p.media_type === 'youtube_video' || p.media_type === 'gdrive_video' || (p.media_url && (p.media_url.includes('youtube.com') || p.media_url.includes('youtu.be') || p.media_url.includes('drive.google.com'))));
 
         container.innerHTML = '';
         videoPosts.forEach(v => {
@@ -193,7 +196,9 @@ async function loadHomeVideos(searchQuery = '') {
             div.style.cssText = 'background:#111116; border:1px solid #222233; border-radius:8px; overflow:hidden;';
 
             let mediaPreviewHtml = '';
-            if (v.media_type === 'gdrive_video' || (v.media_url && v.media_url.includes('drive.google.com'))) {
+            if (v.media_type === 'youtube_video' || (v.media_url && (v.media_url.includes('youtube.com') || v.media_url.includes('youtu.be')))) {
+                mediaPreviewHtml = `<div style="width:100%; height:100px; background:#181820; display:flex; justify-content:center; align-items:center; color:#ff0033; font-weight:bold;">▶️ YouTube Video</div>`;
+            } else if (v.media_type === 'gdrive_video' || (v.media_url && v.media_url.includes('drive.google.com'))) {
                 mediaPreviewHtml = `<div style="width:100%; height:100px; background:#181820; display:flex; justify-content:center; align-items:center; color:#00ffff; font-weight:bold;">▶️ Drive Video</div>`;
             } else {
                 mediaPreviewHtml = `<video src="${v.media_url}#t=0.5" preload="metadata" muted style="width:100%; height:100px; object-fit:cover;"></video>`;
@@ -228,7 +233,7 @@ async function loadFbFeed() {
             return;
         }
 
-        let feedPosts = posts.filter(p => p.is_video !== true && p.media_type !== 'gdrive_video' && p.media_type !== 'telegram_video');
+        let feedPosts = posts.filter(p => p.is_video !== true && p.media_type !== 'youtube_video' && p.media_type !== 'gdrive_video');
         container.innerHTML = '';
 
         feedPosts.forEach(post => {
