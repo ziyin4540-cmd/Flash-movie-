@@ -190,9 +190,10 @@ async function loadUserProfile(username) {
     try {
         const { data: user } = await supabaseClient.from('flash_users').select('*').eq('username', targetUser).single();
         const { data: userPosts } = await supabaseClient.from('flash_posts').select('*').eq('username', targetUser).order('created_at', { ascending: false });
+        const { data: userPlaylists } = await supabaseClient.from('flash_playlists').select('*').eq('username', targetUser);
         
         if(user) {
-            const profileData = { user, userPosts: userPosts || [] };
+            const profileData = { user, userPosts: userPosts || [], userPlaylists: userPlaylists || [] };
             renderUserProfileUI(profileData, targetUser);
         }
     } catch(err) {
@@ -201,7 +202,7 @@ async function loadUserProfile(username) {
 }
 
 function renderUserProfileUI(data, username) {
-    const { user, userPosts } = data;
+    const { user, userPosts, userPlaylists } = data;
     const currentUser = localStorage.getItem('flash_logged_user');
 
     const profileContainer = document.getElementById('page-profile');
@@ -221,6 +222,9 @@ function renderUserProfileUI(data, username) {
         <div style="background:#111116; padding:10px 15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222233; position:sticky; top:0; z-index:100;">
             <button onclick="if(typeof closeWatchVideoScreen === 'function') closeWatchVideoScreen(); switchMainPage('home');" style="background:#222; color:#00ffff; border:1px solid #00ffff; padding:5px 12px; border-radius:6px; font-weight:bold; font-size:0.75rem; cursor:pointer;">◄ နောက်သို့ (Back)</button>
             <span style="color:#fff; font-weight:bold; font-size:0.85rem;">Profile</span>
+            ${currentUser === username ? `
+                <button onclick="openAccountSettingsModal()" style="background:#00ffff; color:#000; border:none; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:0.75rem; cursor:pointer;">⚙️ Edit</button>
+            ` : '<span></span>'}
         </div>
 
         <div id="profileBannerBg" style="height:120px; background:#222; background-size:cover; background-position:center; background-image:url('${user.banner_url || ''}');"></div>
@@ -240,6 +244,7 @@ function renderUserProfileUI(data, username) {
 
             <div style="display:flex; border-bottom:1px solid #222233; margin-bottom:15px;">
                 <button class="profile-tab-btn ${currentProfileTab === 'posts' ? 'active' : ''}" id="tab-btn-posts" onclick="switchProfileTab('posts')" style="flex:1; background:none; border:none; color:#00ffff; padding:8px; font-weight:bold; cursor:pointer;">Posts</button>
+                <button class="profile-tab-btn ${currentProfileTab === 'playlists' ? 'active' : ''}" id="tab-btn-playlists" onclick="switchProfileTab('playlists')" style="flex:1; background:none; border:none; color:#aaa; padding:8px; font-weight:bold; cursor:pointer;">Playlists</button>
                 <button class="profile-tab-btn ${currentProfileTab === 'videos' ? 'active' : ''}" id="tab-btn-videos" onclick="switchProfileTab('videos')" style="flex:1; background:none; border:none; color:#aaa; padding:8px; font-weight:bold; cursor:pointer;">Videos</button>
             </div>
 
@@ -260,6 +265,18 @@ function renderUserProfileUI(data, username) {
             item.innerHTML = `<p style="font-size:0.75rem; color:#fff; margin:0;">${escapeHtml(p.post_text || '')}</p>`;
             tabContent.appendChild(item);
         });
+    } else if(currentProfileTab === 'playlists') {
+        if(currentUser === username) {
+            tabContent.innerHTML = `<button onclick="openCreatePlaylistModal()" style="grid-column:1/-1; background:#00ffff; color:#000; border:none; padding:8px; border-radius:6px; font-weight:bold; cursor:pointer; margin-bottom:10px;">➕ Create Playlist အသစ်ဆောက်မည်</button>`;
+        }
+        if(userPlaylists && userPlaylists.length > 0) {
+            userPlaylists.forEach(pl => {
+                const item = document.createElement('div');
+                item.style.cssText = 'background:#181820; border:1px solid #222233; border-radius:6px; padding:8px; text-align:left;';
+                item.innerHTML = `<h5 style="margin:0; color:#00ffff;">📂 ${escapeHtml(pl.playlist_name)}</h5>`;
+                tabContent.appendChild(item);
+            });
+        }
     } else {
         const filterVideos = userPosts.filter(p => p.is_video || p.media_type === 'youtube_video' || p.media_type === 'gdrive_video');
         filterVideos.forEach(v => {
@@ -275,6 +292,66 @@ function renderUserProfileUI(data, username) {
                 </div>
             `;
             tabContent.appendChild(item);
+        });
+    }
+}
+
+// ⚙️ Account Settings Modal (Profile Edit)
+async function openAccountSettingsModal() {
+    const currentUser = localStorage.getItem('flash_logged_user');
+    const { data: user } = await supabaseClient.from('flash_users').select('*').eq('username', currentUser).single();
+    if(!user) return;
+
+    let modal = document.getElementById('accountSettingsModal');
+    if(!modal) {
+        modal = document.createElement('div');
+        modal.id = 'accountSettingsModal';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:999999; display:flex; justify-content:center; align-items:center;';
+        document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+        <div style="background:#111116; border:1px solid #00ffff; width:85%; max-width:340px; padding:15px; border-radius:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h4 style="color:#00ffff; margin:0;">⚙️ Account Settings</h4>
+                <button onclick="document.getElementById('accountSettingsModal').remove()" style="background:none; border:none; color:#ff0033; font-weight:bold; cursor:pointer;">✕</button>
+            </div>
+            <label style="font-size:0.75rem; color:#aaa;">Display Name:</label>
+            <input type="text" id="editDisplayName" value="${escapeHtml(user.display_name || '')}" style="width:100%; padding:8px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box; margin-bottom:10px;">
+            
+            <label style="font-size:0.75rem; color:#aaa;">Password အသစ် (မပြောင်းပါက ချန်ထားပါ):</label>
+            <input type="password" id="editPassword" placeholder="Password အသစ်" style="width:100%; padding:8px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box; margin-bottom:10px;">
+
+            <label style="font-size:0.75rem; color:#aaa;">Profile Image Link/URL:</label>
+            <input type="text" id="editPhotoUrl" value="${user.photo_url || ''}" style="width:100%; padding:8px; background:#181820; border:1px solid #333; color:#fff; border-radius:6px; box-sizing:border-box; margin-bottom:15px;">
+
+            <button onclick="saveAccountSettings()" style="width:100%; background:#00ffff; color:#000; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">သိမ်းဆည်းမည်</button>
+        </div>
+    `;
+}
+
+async function saveAccountSettings() {
+    const currentUser = localStorage.getItem('flash_logged_user');
+    const newName = document.getElementById('editDisplayName')?.value.trim();
+    const newPass = document.getElementById('editPassword')?.value.trim();
+    const newPhoto = document.getElementById('editPhotoUrl')?.value.trim();
+
+    let updates = { display_name: newName, photo_url: newPhoto };
+    if(newPass) updates.password = newPass;
+
+    await supabaseClient.from('flash_users').update(updates).eq('username', currentUser);
+    showToast('✅ Profile အချက်အလက်များ ပြောင်းလဲပြီးပါပြီ', 'success');
+    document.getElementById('accountSettingsModal')?.remove();
+    loadUserProfile(currentUser);
+}
+
+function openCreatePlaylistModal() {
+    let playlistName = prompt("Playlist အမည် ရိုက်ထည့်ပါ:");
+    if(playlistName) {
+        const currentUser = localStorage.getItem('flash_logged_user');
+        supabaseClient.from('flash_playlists').insert([{ username: currentUser, playlist_name: playlistName }]).then(() => {
+            showToast('✅ Playlist အသစ် ဆောက်ပြီးပါပြီ', 'success');
+            loadUserProfile(currentUser);
         });
     }
 }
@@ -307,7 +384,7 @@ function openChatWithUser(targetUsername) {
     `;
 
     document.getElementById('chatPhotoPicker')?.addEventListener('change', function(e) {
-        const file = e.target.files[0];
+        const file = e.target.files[0];‌
         if(file) {
             compressImageFile(file, (base64) => {
                 sendChatMessage(targetUsername, base64);
