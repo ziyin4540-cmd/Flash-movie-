@@ -24,7 +24,7 @@ async function openWatchVideoScreen(videoId) {
         if(!v) return;
 
         const { data: allVideoPosts } = await supabaseClient.from('flash_posts').select('*').order('created_at', { ascending: false });
-        let videoList = (allVideoPosts || []).filter(item => item.is_video === true || item.media_type === 'video' || item.media_type === 'gdrive_video' || (item.media_url && item.media_url.includes('drive.google.com')));
+        let videoList = (allVideoPosts || []).filter(item => item.is_video === true || item.media_type === 'video' || item.media_type === 'youtube_video' || item.media_type === 'gdrive_video' || (item.media_url && (item.media_url.includes('youtube.com') || item.media_url.includes('youtu.be') || item.media_url.includes('drive.google.com'))));
 
         let currentIndex = videoList.findIndex(item => item.id === videoId);
         let prevVideo = currentIndex > 0 ? videoList[currentIndex - 1] : null;
@@ -36,7 +36,28 @@ async function openWatchVideoScreen(videoId) {
         const commentsArr = v.comments || [];
 
         let mediaContent = '';
-        if(v.media_type === 'gdrive_video' || (v.media_url && v.media_url.includes('drive.google.com'))) {
+
+        // 1. YouTube Video Player (No Ads & Data Saving)
+        if(v.media_type === 'youtube_video' || (v.media_url && (v.media_url.includes('youtube.com') || v.media_url.includes('youtu.be')))) {
+            let ytId = '';
+            if(v.media_url.includes('youtu.be/')) {
+                ytId = v.media_url.split('youtu.be/')[1].split('?')[0];
+            } else if(v.media_url.includes('v=')) {
+                ytId = v.media_url.split('v=')[1].split('&')[0];
+            }
+
+            mediaContent = `
+                <div style="width:100%; height:260px; background:#000; position:relative;">
+                    <iframe 
+                        src="https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&playsinline=1" 
+                        width="100%" height="100%" frameborder="0" 
+                        allow="autoplay; encrypted-media" allowfullscreen 
+                        style="border:none;">
+                    </iframe>
+                </div>`;
+        } 
+        // 2. Google Drive Video Player
+        else if(v.media_type === 'gdrive_video' || (v.media_url && v.media_url.includes('drive.google.com'))) {
             let fileId = '';
             if(v.media_url.includes('/file/d/')) {
                 fileId = v.media_url.split('/file/d/')[1].split('/')[0];
@@ -45,22 +66,24 @@ async function openWatchVideoScreen(videoId) {
             }
             let embedUrl = fileId ? `https://drive.google.com/file/d/${fileId}/preview` : v.media_url;
 
-            // Stream Container With Website Custom Control Overlay
             mediaContent = `
                 <div style="width:100%; height:260px; background:#000; position:relative; overflow:hidden;">
                     <iframe src="${embedUrl}" width="100%" height="280px" frameborder="0" allow="autoplay" allowfullscreen style="border:none; margin-top:-10px;"></iframe>
                 </div>`;
-        } else {
+        } 
+        // 3. MP4 Direct Video Player
+        else {
             mediaContent = `<video src="${v.media_url}" controls autoplay width="100%" style="background:#000; max-height:280px; object-fit:contain;"></video>`;
         }
 
         let nextVideosHtml = '';
         videoList.forEach(nv => {
             if(nv.id !== videoId) {
+                let badge = nv.media_type === 'youtube_video' ? '▶️ YouTube' : (nv.media_type === 'gdrive_video' ? '▶️ Drive' : '🎬 Video');
                 nextVideosHtml += `
                     <div onclick="openWatchVideoScreen('${nv.id}')" style="display:flex; gap:10px; background:#111116; padding:8px; border-radius:8px; cursor:pointer; margin-bottom:8px; border:1px solid #222233;">
-                        <div style="width:100px; height:60px; background:#000; border-radius:6px; overflow:hidden; flex-shrink:0;">
-                            ${nv.media_type === 'gdrive_video' ? '<div style="color:#00ffff; text-align:center; padding-top:15px; font-size:0.7rem;">▶️ Drive</div>' : `<video src="${nv.media_url}" width="100%" height="100%" style="object-fit:cover;"></video>`}
+                        <div style="width:100px; height:60px; background:#000; border-radius:6px; overflow:hidden; flex-shrink:0; display:flex; justify-content:center; align-items:center; color:#00ffff; font-size:0.7rem; font-weight:bold;">
+                            ${badge}
                         </div>
                         <div>
                             <h5 style="margin:0 0 4px 0; font-size:0.85rem; color:#fff; line-height:1.2;">${escapeHtml(nv.post_text)}</h5>
