@@ -1,7 +1,6 @@
-// Admin Panel Access (296802) & Management Logic
 let isAdminAuthenticated = false;
 
-function openAdminAuthModal() {
+window.openAdminAuthModal = function() {
     let modal = document.getElementById('adminAuthModal');
     if (!modal) {
         modal = document.createElement('div');
@@ -23,7 +22,7 @@ function openAdminAuthModal() {
     `;
 }
 
-function verifyAdminPassword() {
+window.verifyAdminPassword = function() {
     const inputElem = document.getElementById('adminPassInput');
     const pass = inputElem ? String(inputElem.value).trim() : '';
 
@@ -37,7 +36,7 @@ function verifyAdminPassword() {
     }
 }
 
-async function loadAdminPanel() {
+window.loadAdminPanel = async function() {
     const userContainer = document.getElementById('adminUsersContainer');
     const postContainer = document.getElementById('adminPostsContainer');
     if (!userContainer) return;
