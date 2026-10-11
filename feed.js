@@ -114,7 +114,6 @@ async function loadFbFeed() {
                 <p style="font-size:0.85rem; margin:0 0 8px 0; color:#fff;">${escapeHtml(post.post_text || '')}</p>
                 ${post.media_url ? `<img src="${post.media_url}" style="width:100%; max-height:250px; object-fit:cover; border-radius:6px; margin-bottom:8px;">` : ''}
 
-                <!-- Post Actions (Like / Comment / Share) -->
                 <div style="display:flex; justify-content:space-around; border-top:1px solid #222233; padding-top:8px; margin-top:8px;">
                     <button onclick="toggleLikePost('${post.id}')" style="background:none; border:none; color:${isLiked ? '#ff0033' : '#aaa'}; font-weight:bold; cursor:pointer; font-size:0.8rem;">❤️ Like (${likesArr.length})</button>
                     <button onclick="openFullCommentPage('${post.id}')" style="background:none; border:none; color:#00ffff; font-weight:bold; cursor:pointer; font-size:0.8rem;">💬 Comment (${commentsArr.length})</button>
@@ -160,6 +159,22 @@ async function createNewFeedPost() {
     }
 }
 
+async function loadPlaylistsDropdown() {
+    const dropdown = document.getElementById('playlistSelectDropdown');
+    const currentUser = localStorage.getItem('flash_logged_user');
+    if(!dropdown || !currentUser) return;
+
+    dropdown.innerHTML = '<option value="">-- Playlist မရွေးပါ --</option>';
+    try {
+        const { data: playlists } = await supabaseClient.from('flash_playlists').select('*').eq('username', currentUser);
+        if(playlists) {
+            playlists.forEach(pl => {
+                dropdown.innerHTML += `<option value="${pl.id}">${escapeHtml(pl.playlist_name)}</option>`;
+            });
+        }
+    } catch(e){}
+}
+
 async function createNewPost() {
     const currentUser = localStorage.getItem('flash_logged_user');
     if(!currentUser) return showToast('⚠️ အရင်ဆုံး Login ဝင်ပါ', 'error');
@@ -167,6 +182,7 @@ async function createNewPost() {
     const text = document.getElementById('postInputText')?.value.trim();
     const ytUrl = document.getElementById('ytLinkInput')?.value.trim();
     const driveUrl = document.getElementById('gdriveLinkInput')?.value.trim();
+    const playlistId = document.getElementById('playlistSelectDropdown')?.value;
 
     if(!text && !tempFbMediaData && !ytUrl && !driveUrl) {
         return showToast('⚠️ ပို့စ်စာသား သို့မဟုတ် Media/Link ထည့်ပါ', 'error');
@@ -191,6 +207,7 @@ async function createNewPost() {
             post_text: text,
             media_url: finalMediaUrl,
             media_type: finalMediaType,
+            playlist_id: playlistId || null,
             is_video: finalMediaType === 'video' || finalMediaType === 'youtube_video' || finalMediaType === 'gdrive_video',
             likes: [],
             comments: [],
